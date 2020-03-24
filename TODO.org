@@ -1,0 +1,14 @@
+* Getting Started
+** [ ] Initial Command Line Interface
+*** Execution Environment Spec
+**** Can define the rest of the inputs
+*** List of collections
+*** Location of Automation Hub/Galaxy
+*** Base Image
+*** Docker or Podman/Buildah?
+*** Path to resulting Dockerfile/containerfile stdout?
+** [ ] Dependency Resolution
+*** Will need to start base image to resolve dependencies
+**** docker run base-image <some command>
+     Add volume containing collections
+** [ ] Write Dockerfile/containerfile
