@@ -19,6 +19,7 @@ tox = "^3.14.5"
 yamllint = "^1.20.0"
 black = "^19.10b0"
 sphinx = "^2.4.4"
+ipdb = "^0.13.2"
 
 
 [tool.black]
