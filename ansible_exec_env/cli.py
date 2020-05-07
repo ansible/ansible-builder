@@ -8,7 +8,7 @@ def prepare(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(prog='ansible-exec-env')
     subparsers = parser.add_subparsers(help='The command to invoke.')
 
-    build_command_parser = subparsers.add_parser('build', help='Outputs a Containerfile, populated with resolved dependencies.')
+    build_command_parser = subparsers.add_parser('create', help='Outputs a build context, including a Containerfile, populated with dependencies.')
     build_command_parser.add_argument('-f', '--file', default='execution-environment.yml', help='The definiton file', dest='filename')
     build_command_parser.add_argument('-b', '--base-image', default='shanemcd/ansible-runner', help='The parent image for the execution environment')
     build_command_parser.add_argument('-c', '--context', default=None, dest='build_context')
