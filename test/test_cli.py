@@ -1,4 +1,4 @@
-from ansible_exec_env.cli import prepare
+from ansible_builder.cli import prepare
 
 
 def test_custom_image(exec_env_definition_file):

@@ -6,7 +6,7 @@ from shutil import copy
 default_base_image = 'shanemcd/ansible-runner'
 
 
-class AnsibleExecEnv:
+class AnsibleBuilder:
     def __init__(self, filename='execution-environment.yml', base_image=default_base_image, build_context=None):
         self.definition = Definition(filename=filename)
         self.base_image = base_image
@@ -87,5 +87,6 @@ class GalaxySteps:
         basename = os.path.basename(definition.galaxy_requirements_file)
         return [
             "ADD {} /build/".format(basename),
+            "RUN ansible-galaxy role install -r /build/{}".format(basename),
             "RUN ansible-galaxy collection install -r /build/{}".format(basename)
         ]

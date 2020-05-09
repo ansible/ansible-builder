@@ -1,7 +1,7 @@
 import pytest
 
-from ansible_exec_env import __version__
-from ansible_exec_env.main import AnsibleExecEnv
+from ansible_builder import __version__
+from ansible_builder.main import AnsibleBuilder
 
 
 def test_version():
@@ -10,13 +10,13 @@ def test_version():
 
 def test_definition_version(exec_env_definition_file):
     path = exec_env_definition_file(content={'version': 1})
-    aee = AnsibleExecEnv(filename=path)
+    aee = AnsibleBuilder(filename=path)
     assert aee.version == '1'
 
 
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
-    aee = AnsibleExecEnv(filename=path)
+    aee = AnsibleBuilder(filename=path)
 
     with pytest.raises(ValueError):
         aee.version
@@ -40,7 +40,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file)
 
     exec_env_path = exec_env_definition_file(content=exec_env_content)
 
-    aee = AnsibleExecEnv(filename=exec_env_path)
+    aee = AnsibleBuilder(filename=exec_env_path)
     aee.process()
 
     with open(aee.containerfile.path) as f:
@@ -54,7 +54,7 @@ def test_base_image(exec_env_definition_file):
         'version': 1
     }
     path = exec_env_definition_file(content=content)
-    aee = AnsibleExecEnv(filename=path)
+    aee = AnsibleBuilder(filename=path)
     aee.process()
 
     with open(aee.containerfile.path) as f:
@@ -62,7 +62,7 @@ def test_base_image(exec_env_definition_file):
 
     assert 'ansible-runner' in content
 
-    aee = AnsibleExecEnv(filename=path, base_image='my-custom-image')
+    aee = AnsibleBuilder(filename=path, base_image='my-custom-image')
     aee.process()
 
     with open(aee.containerfile.path) as f:

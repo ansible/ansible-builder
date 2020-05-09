@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ansible-exec-env"
+name = "ansible-builder"
 version = "0.1.0"
 description = ""
 authors = ["Matthew Jones <matburt@redhat.com>",
@@ -10,7 +10,7 @@ python = "^3.6"
 requests = "^2.23.0"
 
 [tool.poetry.scripts]
-ansible-exec-env = 'ansible_exec_env.cli:run'
+ansible-builder = 'ansible_builder.cli:run'
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
