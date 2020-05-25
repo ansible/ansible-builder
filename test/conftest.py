@@ -20,6 +20,8 @@ def exec_env_definition_file(tmpdir):
 good_content = {
     'version': 1
 }
+
+
 @pytest.fixture
 def good_exec_env_definition_path(tmpdir):
     path = tmpdir.mkdir('aee').join('execution-env.yml')
