@@ -1,0 +1,43 @@
+%global pypi_name ansible-builder
+
+Name:           %{pypi_name}
+Version:        {{ version }}
+Release:        {{ release }}%{?dist}
+Summary:        An Ansible execution environment builder
+
+License:        ASL 2.0
+URL:            https://github.com/ansible/ansible-builder
+Source0:        https://github.com/ansible/%{name}/archive/%{version}.tar.gz?/%{name}-%{version}-{{ release }}.tar.gz
+BuildArch:      noarch
+
+BuildRequires:  python3
+BuildRequires:  python3-setuptools
+BuildRequires:  python3-rpm-macros
+
+
+%if 0%{?fedora} || 0%{?rhel} > 7
+Requires:       python3-pyyaml
+%else
+Requires:       python36-PyYAML
+%endif
+
+%description
+An Ansible execution environment builder
+
+%prep
+%autosetup -n %{pypi_name}-%{version}
+
+%build
+%py3_build
+
+%install
+%py3_install
+
+%files
+%defattr(-,root,root)
+
+%files
+%{python3_sitelib}/*
+%{_bindir}/ansible-builder
+
+%changelog

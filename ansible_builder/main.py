@@ -30,7 +30,7 @@ class Definition:
         self.filename = filename
 
         with open(filename, 'r') as f:
-            self.raw = yaml.load(f, Loader=yaml.FullLoader)
+            self.raw = yaml.load(f)
 
     @property
     def version(self):
