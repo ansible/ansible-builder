@@ -87,6 +87,6 @@ class GalaxySteps:
         basename = os.path.basename(definition.galaxy_requirements_file)
         return [
             "ADD {} /build/".format(basename),
-            "RUN ansible-galaxy role install -r /build/{}".format(basename),
-            "RUN ansible-galaxy collection install -r /build/{}".format(basename)
+            "RUN ansible-galaxy role install --requirements-file /build/{} --roles-path /usr/share/ansible/roles".format(basename),
+            "RUN ansible-galaxy collection install --requirements-file /build/{} --collections-path /usr/share/ansible/collections".format(basename)
         ]
