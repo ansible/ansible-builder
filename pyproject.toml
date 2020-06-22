@@ -2,8 +2,8 @@
 name = "ansible-builder"
 version = "0.1.0"
 description = ""
-authors = ["Matthew Jones <matburt@redhat.com>",
-	   "Shane McDonald <shanemcd@redhat.com>"]
+authors = ["Matthew Jones <test1@redhat.com>",
+	   "Shane McDonald <test2@redhat.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
