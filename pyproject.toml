@@ -23,6 +23,7 @@ yamllint = "^1.20.0"
 black = "^19.10b0"
 sphinx = "^2.4.4"
 ipdb = "^0.13.2"
+dephell = "^0.8.3"
 
 
 [tool.black]
