@@ -7,7 +7,7 @@ authors = ["Matthew Jones <matburt@redhat.com>",
 
 [tool.poetry.dependencies]
 python = "^3.6"
-pyyaml = "^3.12"     # Do not bump this version, its the minimum for el7 and el8 packaging
+pyyaml = ">=3.12,<6.0"     # Do not bump this version, its the minimum for el7 and el8 packaging
 
 [tool.poetry.scripts]
 ansible-builder = 'ansible_builder.cli:run'
@@ -17,7 +17,7 @@ pytest = "^5.2"
 flake8 = "^3.7.9"
 pylint = "^2.4.4"
 pyparsing = "^2.4.5"
-pyyaml = "^3.12"
+pyyaml = ">=3.12,<6.0"
 tox = "^3.14.5"
 yamllint = "^1.20.0"
 black = "^19.10b0"
