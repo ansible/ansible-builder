@@ -3,6 +3,7 @@ name = "ansible-builder"
 version = "0.1.0"
 description = ""
 authors = ["Matthew Jones <matburt@redhat.com>",
+	   "Bianca Henderson <bianca@redhat.com>",
 	   "Shane McDonald <shanemcd@redhat.com>"]
 
 [tool.poetry.dependencies]
@@ -50,4 +51,3 @@ exclude = '''
 [build-system]
 requires = ["poetry>=1.0.5"]
 build-backend = "poetry.masonry.api"
-
