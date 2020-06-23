@@ -28,10 +28,10 @@ An Ansible execution environment builder
 %autosetup -n %{pypi_name}-%{version}
 
 %build
-%py3_build
+python3 setup.py build
 
 %install
-%py3_install
+python3 setup.py install -O1 --skip-build --root %{buildroot}
 
 %files
 %defattr(-,root,root)
