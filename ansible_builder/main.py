@@ -1,5 +1,6 @@
 import os
 import yaml
+import sys
 from shutil import copy
 
 
@@ -29,8 +30,14 @@ class Definition:
     def __init__(self, *args, filename):
         self.filename = filename
 
-        with open(filename, 'r') as f:
-            self.raw = yaml.load(f)
+        try:
+            with open(filename, 'r') as f:
+                self.raw = yaml.load(f)
+        except FileNotFoundError:
+            sys.exit("""
+            Could not detect 'execution-environment.yml' file in this directory.
+            Use -f to specify a different location.
+            """)
 
     @property
     def version(self):
