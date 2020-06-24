@@ -33,8 +33,7 @@ This will automatically set up the development environment under a virtualenv, w
 In this repository you will find a [`setup.py` file](https://docs.python.org/3/installing/index.html#installing-index) (for downstream packaging purposes).  If your PR makes any changes to `pyproject.toml`, then this `setup.py` file needs to reflect those changes.  Poetry can help with this.
 
 ```bash
-$ run poetry
-$ run dephell deps convert --from=pyproject.toml --to=setup.py
+$ poetry run dephell deps convert --from=pyproject.toml --to=setup.py
 ```
 
 A new `setup.py` file will be generated from these commands if edits are detected in `pyproject.toml`, which you can then commit along with any other changes.
