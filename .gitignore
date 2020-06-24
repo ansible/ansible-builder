@@ -3,6 +3,7 @@ __pycache__
 \#*\#
 .#*
 *.egg-info/
+setup-to-compare.py
 
 /.pytest_cache/
 /context/
