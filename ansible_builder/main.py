@@ -22,8 +22,11 @@ class AnsibleBuilder:
     def version(self):
         return self.definition.version
 
-    def process(self):
+    def create(self):
         return self.containerfile.write()
+
+    def build(self):
+        return self.create()
 
 
 class Definition:
