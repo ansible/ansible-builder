@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from .main import AnsibleBuilder
+from . import constants
 
 
 def prepare(args=sys.argv[1:]):
@@ -15,28 +16,30 @@ def prepare(args=sys.argv[1:]):
                                                  help='Builds the container with the Containerfile that got created via "create" command.')
 
     build_command_parser.add_argument('-t', '--tag',
-                                      default='ansible-execution-env:latest',
+                                      default=constants.default_tag,
                                       help='The name for the container being built.')
 
-    build_command_parser.add_argument('--container-runtime',
-                                      default='podman',
-                                      help='Specifies which container runtime to use.')
+
 
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
-                       default='execution-environment.yml',
+                       default=constants.default_file,
                        dest='filename',
                        help='The definiton of the execution environment.')
 
         p.add_argument('-b', '--base-image',
-                       default='shanemcd/ansible-runner',
+                       default=constants.default_base_image,
                        help='The parent image for the execution environment.')
 
         p.add_argument('-c', '--context',
                        default=None,
                        dest='build_context',
                        help='The directory to use for the build context. Defaults to $PWD/context.')
+
+        p.add_argument('--container-runtime',
+                       default=constants.default_container_runtime,
+                       help='Specifies which container runtime to use.')
 
     args = parser.parse_args(args)
 
