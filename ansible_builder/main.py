@@ -1,19 +1,26 @@
 import os
 import yaml
+import subprocess
 import sys
 from shutil import copy
 
 
 default_base_image = 'shanemcd/ansible-runner'
+default_container_runtime = 'podman'
 
 
 class AnsibleBuilder:
-    def __init__(self, filename='execution-environment.yml', base_image=default_base_image, build_context=None, tag='Collection Container'):
+    def __init__(self, filename='execution-environment.yml',
+                 base_image=default_base_image, build_context=None,
+                 tag='ansible-execution-env:latest',
+                 container_runtime=default_container_runtime):
         self.definition = Definition(filename=filename)
         self.base_image = base_image
+        self.tag = tag
         self.build_context = build_context or os.path.join(os.getcwd(), 'context')
+        self.container_runtime = container_runtime
         self.containerfile = Containerfile(
-            filename='Containerfile',
+            filename='Containerfile',  # TODO: allow this filename to be customizable
             definition=self.definition,
             base_image=base_image,
             build_context=self.build_context)
@@ -26,7 +33,16 @@ class AnsibleBuilder:
         return self.containerfile.write()
 
     def build(self):
-        return self.create()
+        self.create()
+        command = [self.container_runtime, "build"]
+        arguments = ["-f", os.path.join(self.build_context, "Containerfile"),
+                     "-t", self.tag,
+                     self.build_context]
+        for arg in arguments:
+            command.append(arg)
+        result = subprocess.run(command, capture_output=True)
+        if result.returncode == 0:
+            return True
 
 
 class Definition:
@@ -97,6 +113,6 @@ class GalaxySteps:
         basename = os.path.basename(definition.galaxy_requirements_file)
         return [
             "ADD {} /build/".format(basename),
-            "RUN ansible-galaxy role install --requirements-file /build/{} --roles-path /usr/share/ansible/roles".format(basename),
-            "RUN ansible-galaxy collection install --requirements-file /build/{} --collections-path /usr/share/ansible/collections".format(basename)
+            "RUN ansible-galaxy role install -r /build/{} --roles-path /usr/share/ansible/roles".format(basename),
+            "RUN ansible-galaxy collection install -r /build/{} --collections-path /usr/share/ansible/collections".format(basename)
         ]

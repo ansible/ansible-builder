@@ -15,8 +15,12 @@ def prepare(args=sys.argv[1:]):
                                                  help='Builds the container with the Containerfile that got created via "create" command.')
 
     build_command_parser.add_argument('-t', '--tag',
-                                      default='Collection Container',
+                                      default='ansible-execution-env:latest',
                                       help='The name for the container being built.')
+
+    build_command_parser.add_argument('--container-runtime',
+                                      default='podman',
+                                      help='Specifies which container runtime to use.')
 
     for p in [create_command_parser, build_command_parser]:
 
@@ -43,9 +47,10 @@ def run():
     ab = prepare()
 
     print('Processing...', end='\r')
+    # TO DO: stdout that prints in real-time and/or a "spinner"
 
-    my_method = getattr(ab, sys.argv[1])
-    if my_method():
+    build_or_create = getattr(ab, sys.argv[1])
+    if build_or_create():
         print("Complete! Build context is at: {}".format(ab.build_context))
         sys.exit(0)
 
