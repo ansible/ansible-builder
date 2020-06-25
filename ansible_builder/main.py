@@ -4,23 +4,26 @@ import subprocess
 import sys
 from shutil import copy
 
-
-default_base_image = 'shanemcd/ansible-runner'
-default_container_runtime = 'podman'
+from . import constants
 
 
 class AnsibleBuilder:
-    def __init__(self, filename='execution-environment.yml',
-                 base_image=default_base_image, build_context=None,
-                 tag='ansible-execution-env:latest',
-                 container_runtime=default_container_runtime):
+    def __init__(self,
+                 filename=constants.default_file,
+                 base_image=constants.default_base_image,
+                 build_context=constants.default_build_context,
+                 tag=constants.default_tag,
+                 container_runtime=constants.default_container_runtime):
         self.definition = Definition(filename=filename)
         self.base_image = base_image
         self.tag = tag
-        self.build_context = build_context or os.path.join(os.getcwd(), 'context')
+        self.build_context = build_context
         self.container_runtime = container_runtime
         self.containerfile = Containerfile(
-            filename='Containerfile',  # TODO: allow this filename to be customizable
+            filename={
+                'podman': 'Containerfile',
+                'docker': 'Dockerfile'
+            }[self.container_runtime],
             definition=self.definition,
             base_image=base_image,
             build_context=self.build_context)
@@ -35,7 +38,7 @@ class AnsibleBuilder:
     def build(self):
         self.create()
         command = [self.container_runtime, "build"]
-        arguments = ["-f", os.path.join(self.build_context, "Containerfile"),
+        arguments = ["-f", self.containerfile.path,
                      "-t", self.tag,
                      self.build_context]
         for arg in arguments:
