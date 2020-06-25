@@ -8,7 +8,7 @@ default_base_image = 'shanemcd/ansible-runner'
 
 
 class AnsibleBuilder:
-    def __init__(self, filename='execution-environment.yml', base_image=default_base_image, build_context=None):
+    def __init__(self, filename='execution-environment.yml', base_image=default_base_image, build_context=None, tag='Collection Container'):
         self.definition = Definition(filename=filename)
         self.base_image = base_image
         self.build_context = build_context or os.path.join(os.getcwd(), 'context')

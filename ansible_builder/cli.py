@@ -9,26 +9,30 @@ def prepare(args=sys.argv[1:]):
     subparsers = parser.add_subparsers(help='The command to invoke.')
 
     create_command_parser = subparsers.add_parser('create',
-                                                 help='Outputs a build context, including a Containerfile, populated with dependencies.')
+                                                  help='Outputs a build context, including a Containerfile, populated with dependencies.')
 
     build_command_parser = subparsers.add_parser('build',
                                                  help='Builds the container with the Containerfile that got created via "create" command.')
 
+    build_command_parser.add_argument('-t', '--tag',
+                                      default='Collection Container',
+                                      help='The name for the container being built.')
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
-                                          default='execution-environment.yml',
-                                          dest='filename',
-                                          help='The definiton of the execution environment.')
+                       default='execution-environment.yml',
+                       dest='filename',
+                       help='The definiton of the execution environment.')
 
         p.add_argument('-b', '--base-image',
-                                          default='shanemcd/ansible-runner',
-                                          help='The parent image for the execution environment.')
+                       default='shanemcd/ansible-runner',
+                       help='The parent image for the execution environment.')
 
         p.add_argument('-c', '--context',
-                                          default=None,
-                                          dest='build_context',
-                                          help='The directory to use for the build context. Defaults to $PWD/context.')
+                       default=None,
+                       dest='build_context',
+                       help='The directory to use for the build context. Defaults to $PWD/context.')
 
     args = parser.parse_args(args)
 

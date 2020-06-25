@@ -41,7 +41,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file)
     exec_env_path = exec_env_definition_file(content=exec_env_content)
 
     aee = AnsibleBuilder(filename=exec_env_path)
-    aee.process()
+    aee.create()
 
     with open(aee.containerfile.path) as f:
         content = f.read()
@@ -55,7 +55,7 @@ def test_base_image(exec_env_definition_file):
     }
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path)
-    aee.process()
+    aee.create()
 
     with open(aee.containerfile.path) as f:
         content = f.read()
@@ -63,7 +63,7 @@ def test_base_image(exec_env_definition_file):
     assert 'ansible-runner' in content
 
     aee = AnsibleBuilder(filename=path, base_image='my-custom-image')
-    aee.process()
+    aee.create()
 
     with open(aee.containerfile.path) as f:
         content = f.read()
