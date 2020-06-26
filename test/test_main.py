@@ -50,9 +50,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file)
 
 
 def test_base_image(exec_env_definition_file):
-    content = {
-        'version': 1
-    }
+    content = {'version': 1}
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path)
     aee.create()

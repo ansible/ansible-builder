@@ -8,12 +8,13 @@ from . import constants
 
 
 class AnsibleBuilder:
-    def __init__(self,
+    def __init__(self, action=None,
                  filename=constants.default_file,
                  base_image=constants.default_base_image,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime):
+        self.action = action
         self.definition = Definition(filename=filename)
         self.base_image = base_image
         self.tag = tag
@@ -78,7 +79,11 @@ class Definition:
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, *args, filename, definition, build_context, base_image):
+    def __init__(self, definition,
+                 filename=constants.default_file,
+                 build_context=constants.default_build_context,
+                 base_image=constants.default_base_image):
+
         self.build_context = build_context
         os.makedirs(self.build_context, exist_ok=True)
         self.definition = definition
