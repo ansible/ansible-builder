@@ -1,12 +1,18 @@
 import argparse
 import sys
 
+from . import __version__
+
 from .main import AnsibleBuilder
 from . import constants
 
 
 def prepare(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(prog='ansible-builder')
+    parser.add_argument(
+        '--version', action='version', version=__version__,
+        help='Print ansible-builder version and exit.'
+    )
     # TODO: Need to have a paragraph come up when running `ansible-builder -h` that explains what Builder is/does
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
 
