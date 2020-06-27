@@ -36,7 +36,7 @@ class AnsibleBuilder:
     def create(self):
         return self.containerfile.write()
 
-    def build(self):
+    def build_command(self):
         self.create()
         command = [self.container_runtime, "build"]
         arguments = ["-f", self.containerfile.path,
@@ -44,6 +44,10 @@ class AnsibleBuilder:
                      self.build_context]
         for arg in arguments:
             command.append(arg)
+        return command
+
+    def build(self):
+        command = self.build_command()
         result = subprocess.run(command, capture_output=True)
         if result.returncode == 0:
             return True

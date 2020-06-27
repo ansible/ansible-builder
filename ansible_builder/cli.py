@@ -21,8 +21,6 @@ def prepare(args=sys.argv[1:]):
                                       default=constants.default_tag,
                                       help='The name for the container being built.')
 
-
-
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
