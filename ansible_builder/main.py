@@ -1,19 +1,30 @@
 import os
 import yaml
+import subprocess
 import sys
 from shutil import copy
 
-
-default_base_image = 'shanemcd/ansible-runner'
+from . import constants
 
 
 class AnsibleBuilder:
-    def __init__(self, filename='execution-environment.yml', base_image=default_base_image, build_context=None):
+    def __init__(self, action=None,
+                 filename=constants.default_file,
+                 base_image=constants.default_base_image,
+                 build_context=constants.default_build_context,
+                 tag=constants.default_tag,
+                 container_runtime=constants.default_container_runtime):
+        self.action = action
         self.definition = Definition(filename=filename)
         self.base_image = base_image
-        self.build_context = build_context or os.path.join(os.getcwd(), 'context')
+        self.tag = tag
+        self.build_context = build_context
+        self.container_runtime = container_runtime
         self.containerfile = Containerfile(
-            filename='Containerfile',
+            filename={
+                'podman': 'Containerfile',
+                'docker': 'Dockerfile'
+            }[self.container_runtime],
             definition=self.definition,
             base_image=base_image,
             build_context=self.build_context)
@@ -22,8 +33,24 @@ class AnsibleBuilder:
     def version(self):
         return self.definition.version
 
-    def process(self):
+    def create(self):
         return self.containerfile.write()
+
+    def build_command(self):
+        self.create()
+        command = [self.container_runtime, "build"]
+        arguments = ["-f", self.containerfile.path,
+                     "-t", self.tag,
+                     self.build_context]
+        for arg in arguments:
+            command.append(arg)
+        return command
+
+    def build(self):
+        command = self.build_command()
+        result = subprocess.run(command, capture_output=True)
+        if result.returncode == 0:
+            return True
 
 
 class Definition:
@@ -56,7 +83,11 @@ class Definition:
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, *args, filename, definition, build_context, base_image):
+    def __init__(self, definition,
+                 filename=constants.default_file,
+                 build_context=constants.default_build_context,
+                 base_image=constants.default_base_image):
+
         self.build_context = build_context
         os.makedirs(self.build_context, exist_ok=True)
         self.definition = definition
@@ -94,6 +125,6 @@ class GalaxySteps:
         basename = os.path.basename(definition.galaxy_requirements_file)
         return [
             "ADD {} /build/".format(basename),
-            "RUN ansible-galaxy role install --requirements-file /build/{} --roles-path /usr/share/ansible/roles".format(basename),
-            "RUN ansible-galaxy collection install --requirements-file /build/{} --collections-path /usr/share/ansible/collections".format(basename)
+            "RUN ansible-galaxy role install -r /build/{} --roles-path /usr/share/ansible/roles".format(basename),
+            "RUN ansible-galaxy collection install -r /build/{} --collections-path /usr/share/ansible/collections".format(basename)
         ]

@@ -1,0 +1,5 @@
+default_file = 'execution-environment.yml'
+default_base_image = 'shanemcd/ansible-runner'
+default_container_runtime = 'podman'
+default_tag = 'ansible-execution-env:latest'
+default_build_context = 'context'

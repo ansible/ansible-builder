@@ -17,9 +17,7 @@ def exec_env_definition_file(tmpdir):
     return _write_file
 
 
-good_content = {
-    'version': 1
-}
+good_content = {'version': 1}
 
 
 @pytest.fixture
