@@ -8,7 +8,13 @@ from . import constants
 
 
 def prepare(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(prog='ansible-builder')
+    parser = argparse.ArgumentParser(
+        prog='ansible-builder',
+        description=(
+            'Tooling to help build container images for running Ansible content. '
+            'Get started by looking at the help for one of the subcommands.'
+        )
+    )
     parser.add_argument(
         '--version', action='version', version=__version__,
         help='Print ansible-builder version and exit.'
@@ -16,11 +22,26 @@ def prepare(args=sys.argv[1:]):
     # TODO: Need to have a paragraph come up when running `ansible-builder -h` that explains what Builder is/does
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
 
-    create_command_parser = subparsers.add_parser('create',
-                                                  help='Outputs a build context, including a Containerfile, populated with dependencies.')
+    create_command_parser = subparsers.add_parser(
+        'create',
+        help='Creates a build context, which can be used by podman to build an image.',
+        description=(
+            'Creates a build context (including a Containerfile) from an execution environment spec. '
+            'This build context is populated with dependencies including requirements files.'
+        )
+    )
 
-    build_command_parser = subparsers.add_parser('build',
-                                                 help='Builds the container with the Containerfile that got created via "create" command.')
+    build_command_parser = subparsers.add_parser(
+        'build',
+        help='Builds a container image.',
+        description=(
+            'This does everything that the "create" command does, and then builds the image. '
+            'The build context will be populated from the execution environment spec. '
+            'After that, the specified container runtime podman/docker will be invoked to '
+            'build an image from that definition. '
+            'After building the image, it can be used locally or published using the supplied tag.'
+        )
+    )
     # TODO: Need to update the docstrings for the create and build commands to be more specific/helpful
 
     build_command_parser.add_argument('-t', '--tag',
