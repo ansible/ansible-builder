@@ -22,7 +22,8 @@ def test_definition_version_missing(exec_env_definition_file):
         aee.version
 
 
-def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file):
+@pytest.mark.parametrize('path_spec', ('absolute', 'relative'))
+def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file, path_spec):
     galaxy_requirements_content = {
         'collections': [
             {'name': 'geerlingguy.php_roles', 'version': '0.9.3', 'source': 'https://galaxy.ansible.com'}
@@ -34,7 +35,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file)
     exec_env_content = {
         'version': 1,
         'dependencies': {
-            'galaxy': str(galaxy_requirements_path)
+            'galaxy': str(galaxy_requirements_path) if path_spec == 'absolute' else '../galaxy/requirements.yml'
         }
     }
 

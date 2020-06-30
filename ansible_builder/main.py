@@ -77,7 +77,11 @@ class Definition:
 
     @property
     def galaxy_requirements_file(self):
-        return self.raw.get('dependencies', {}).get('galaxy')
+        galaxy_file = self.raw.get('dependencies', {}).get('galaxy')
+        if galaxy_file is None or os.path.isabs(galaxy_file):
+            return galaxy_file
+        else:
+            return os.path.join(os.path.dirname(self.filename), galaxy_file)
 
 
 class Containerfile:
