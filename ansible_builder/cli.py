@@ -65,6 +65,7 @@ def prepare(args=sys.argv[1:]):
                        help='The directory to use for the build context. Defaults to $PWD/context.')
 
         p.add_argument('--container-runtime',
+                       choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use.')
 
