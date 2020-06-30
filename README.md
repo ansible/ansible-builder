@@ -1,6 +1,43 @@
 # Ansible Builder
 
-Ansible Builder is a tool that automates the process of building and shipping a set of execution environments using the schemas and tooling defined in various Ansible Collections.
+Ansible Builder is a tool that automates the process of building execution environments using the schemas and tooling defined in various Ansible Collections and by the user.
+
+## Execution Environments
+
+Execution environments are container images intended to be used by Ansible executors.
+Specifically, [ansible-runner](https://github.com/ansible/ansible-runner) can make use of these images.
+
+An execution environment is expected to contain:
+
+ - An install of Ansible (as ansible-base if 2.10 or higher)
+ - An install of ansible-runner
+ - Ansible collections
+ - Python and/or system dependencies of
+   - modules/plugins in collections
+   - or content in ansible-base
+   - or custom user needs
+
+Execution environments contain everything needed to use Ansible modules
+and plugins, as local actions, inside of automation.
+
+## Execution Environment Definition
+
+The `ansible-builder` CLI takes an execution environment definition as an input.
+It can output either the files necessary for building the execution environment image,
+or the image itself.
+The schema of the execution environment definition looks like:
+
+```yaml
+---
+version: 1
+dependencies:
+  galaxy: requirements.yml
+  python: requirements.txt
+```
+
+The entries such as `requirements.yml` and `requirements.txt` may be a relative
+path from the directory of the execution environment definition's folder,
+or an absolute path.
 
 ## Get Involved:
 
