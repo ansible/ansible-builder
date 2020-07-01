@@ -9,12 +9,12 @@ Specifically, [ansible-runner](https://github.com/ansible/ansible-runner) can ma
 
 An execution environment is expected to contain:
 
- - An install of Ansible (as ansible-base if 2.10 or higher)
- - An install of ansible-runner
+ - An install of Ansible (as `ansible-base` if 2.10 or higher)
+ - An install of `ansible-runner`
  - Ansible collections
  - Python and/or system dependencies of
    - modules/plugins in collections
-   - or content in ansible-base
+   - or content in `ansible-base`
    - or custom user needs
 
 Execution environments contain everything needed to use Ansible modules
