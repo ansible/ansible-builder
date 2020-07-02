@@ -1,6 +1,12 @@
 import yaml
-
+from unittest import mock
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def do_not_run_commands():
+    with mock.patch('ansible_builder.main.run_command', return_value=True) as cmd_mock:
+        yield cmd_mock
 
 
 @pytest.fixture

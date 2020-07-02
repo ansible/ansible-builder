@@ -5,7 +5,8 @@ Ansible Builder is a tool that automates the process of building execution envir
 ## Execution Environments
 
 Execution environments are container images intended to be used by Ansible executors.
-Specifically, [ansible-runner](https://github.com/ansible/ansible-runner) can make use of these images.
+Starting in version 2.0, [ansible-runner](https://github.com/ansible/ansible-runner)
+can make use of these images.
 
 An execution environment is expected to contain:
 
@@ -38,6 +39,31 @@ dependencies:
 The entries such as `requirements.yml` and `requirements.txt` may be a relative
 path from the directory of the execution environment definition's folder,
 or an absolute path.
+
+## Collection Execution Environment Dependencies
+
+Collections inside of the `galaxy` entry of an execution environment will
+contribute their python requirements to the image.
+
+Requirements from a collection can be recognized in two ways:
+
+ - A file `meta/execution-environment.yml` references the python requirements file
+ - A file named `requirements.txt` is in the root level of the collection
+
+In either case, the python requirements file cannot be listed in the `build_ignore`
+of the collection.
+
+### Example
+
+The example in `examples/pytz` requires the `awx.awx` collection in the
+execution environment definition.
+
+In the ansible-runner project folder at `examples/pytz/project`, there is a
+playbook that makes use of the lookup plugin `awx.awx.tower_schedule_rrule`.
+This plugin requires the PyPI `pytz` and another library to work.
+
+Running this example shows how the collection dependencies are resolved,
+installed into the container image, and made use of inside a playbook task.
 
 ## Get Involved:
 
