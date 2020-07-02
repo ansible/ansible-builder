@@ -21,10 +21,7 @@ class AnsibleBuilder:
         self.build_context = build_context
         self.container_runtime = container_runtime
         self.containerfile = Containerfile(
-            filename={
-                'podman': 'Containerfile',
-                'docker': 'Dockerfile'
-            }[self.container_runtime],
+            filename=constants.runtime_files[self.container_runtime],
             definition=self.definition,
             base_image=base_image,
             build_context=self.build_context)
