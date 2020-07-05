@@ -70,16 +70,17 @@ def test_base_image(exec_env_definition_file):
     assert 'my-custom-image' in content
 
 
-def test_build_command(exec_env_definition_file):
+def test_build_command(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
     aee = AnsibleBuilder(filename=path, tag='my-custom-image')
     command = aee.build_command()
     assert 'build' and 'my-custom-image' in command
-    # assert 'my-custom-image' in command
 
-    aee = AnsibleBuilder(filename=path, build_context='tmpdir', container_runtime='docker')
+    context_path = str(tmpdir.mkdir('exec_env'))
+    aee = AnsibleBuilder(filename=path, build_context=context_path, container_runtime='docker')
+
     command = aee.build_command()
-    print(command)
-    assert 'tmpdir/Dockerfile' in command
+    assert context_path in command
+    assert 'exec_env/Dockerfile' in " ".join(command)

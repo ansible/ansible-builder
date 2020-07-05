@@ -39,8 +39,7 @@ class AnsibleBuilder:
         arguments = ["-f", self.containerfile.path,
                      "-t", self.tag,
                      self.build_context]
-        for arg in arguments:
-            command.append(arg)
+        command.extend(arguments)
         return command
 
     def build(self):
