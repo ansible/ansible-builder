@@ -67,7 +67,8 @@ def prepare(args=sys.argv[1:]):
         p.add_argument('--container-runtime',
                        choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use.')
+                       help='Specifies which container runtime to use; use for both "build" and "create" commands. '
+                       'Defaults to podman.')
 
     args = parser.parse_args(args)
 
@@ -77,8 +78,7 @@ def prepare(args=sys.argv[1:]):
 def run():
     ab = prepare()
 
-    print('Processing...', end='\r')
-    # TODO: stdout that prints in real-time and/or a "spinner"
+    print('Processing...')
 
     build_or_create = getattr(ab, ab.action)
     if build_or_create():
