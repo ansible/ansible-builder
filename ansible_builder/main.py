@@ -44,7 +44,7 @@ class AnsibleBuilder:
 
     def build(self):
         command = self.build_command()
-        result = subprocess.run(command, capture_output=True)
+        result = subprocess.run(command)
         if result.returncode == 0:
             return True
 
