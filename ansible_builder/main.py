@@ -52,8 +52,8 @@ class CollectionManager:
         if not os.path.exists(path_root):
             # add debug statements at points like this
             return paths
-        for namespace in os.listdir(path_root):
-            for name in os.listdir(os.path.join(path_root, namespace)):
+        for namespace in sorted(os.listdir(path_root)):
+            for name in sorted(os.listdir(os.path.join(path_root, namespace))):
                 collection_dir = os.path.join(path_root, namespace, name)
                 files_list = os.listdir(collection_dir)
                 if 'galaxy.yml' in files_list or 'MANIFEST.json' in files_list:

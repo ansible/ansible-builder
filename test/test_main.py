@@ -100,8 +100,8 @@ def test_collection_metadata(data_dir, good_exec_env_definition_path):
 
     assert definition.collection_dependencies() == {
         'python': [
-            'test/reqfile/requirements.txt',
-            'test/metadata/my-requirements.txt'
+            'test/metadata/my-requirements.txt',
+            'test/reqfile/requirements.txt'
         ],
         'system': []
     }
@@ -111,7 +111,7 @@ def test_collection_metadata(data_dir, good_exec_env_definition_path):
         'WORKDIR /usr/share/ansible/collections/ansible_collections',
         '\n'.join([
             'RUN pip3 install && \\',
-            '    -r test/reqfile/requirements.txt && \\',
-            '    -r test/metadata/my-requirements.txt'
+            '    -r test/metadata/my-requirements.txt && \\',
+            '    -r test/reqfile/requirements.txt'
         ])
     ]
