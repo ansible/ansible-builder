@@ -34,6 +34,7 @@ class AnsibleBuilder:
         return self.containerfile.write()
 
     def build_command(self):
+        self.create()
         command = [self.container_runtime, "build"]
         arguments = ["-f", self.containerfile.path,
                      "-t", self.tag,
