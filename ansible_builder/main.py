@@ -7,6 +7,8 @@ import tempfile
 import atexit
 
 from . import constants
+from .steps.galaxy import GalaxySteps
+from .steps.pip import PipSteps
 
 
 def run_command(command):
@@ -84,6 +86,7 @@ class AnsibleBuilder:
         return self.definition.version
 
     def create(self):
+        self.containerfile.build_steps()
         return self.containerfile.write()
 
     def build_command(self):
@@ -169,23 +172,30 @@ class UserDefinition(BaseDefinition):
     def __init__(self, filename):
         self.filename = filename
         self.reference_path = os.path.dirname(filename)
-        self._manager = None
 
         try:
             with open(filename, 'r') as f:
-                self.raw = yaml.load(f)
+                y = yaml.load(f)
+                self.raw = y if y else {}
         except FileNotFoundError:
             sys.exit("""
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
             """.format(constants.default_file))
 
+        self.manager = CollectionManager(self.galaxy_requirements_file)
+
     def _get_dep_entry(self, entry):
-        req_file = self.raw.get('dependencies', {}).get(entry)
-        if req_file is None or os.path.isabs(req_file):
+        deps = self.raw.get('dependencies', {})
+        req_file = deps.get(entry) if deps else None
+
+        if not req_file:
+            return None
+
+        if os.path.isabs(req_file):
             return req_file
-        else:
-            return os.path.join(self.reference_path, req_file)
+
+        return os.path.join(self.reference_path, req_file)
 
     @property
     def python_requirements_file(self):
@@ -201,8 +211,6 @@ class UserDefinition(BaseDefinition):
 
     def collection_dependencies(self):
         ret = {'python': [], 'system': []}
-        if not self.manager:
-            return
         for path in self.manager.path_list():
             CD = CollectionDefinition(path)
             if not CD.python_requirements_relpath:
@@ -210,15 +218,6 @@ class UserDefinition(BaseDefinition):
             namespace, name = CD.namespace_name()
             ret['python'].append(os.path.join(namespace, name, CD.python_requirements_relpath))
         return ret
-
-    @property
-    def manager(self):
-        if self._manager:
-            return self._manager
-        if self.galaxy_requirements_file:
-            # TODO: CLI options to use existing collections on computer
-            self._manager = CollectionManager(self.galaxy_requirements_file)
-        return self._manager
 
 
 class Containerfile:
@@ -234,7 +233,6 @@ class Containerfile:
         self.definition = definition
         self.path = os.path.join(self.build_context, filename)
         self.base_image = base_image
-        self.build_steps()
 
     def build_steps(self):
         self.steps = [
@@ -245,6 +243,13 @@ class Containerfile:
             GalaxySteps(containerfile=self)
         )
 
+        # There probably needs to be an intermidiate step here
+        # where we introspect the results of running the "galaxy steps"
+        # inside of the base image.
+        self.steps.extend(
+            PipSteps(containerfile=self)
+        )
+
         return self.steps
 
     def write(self):
@@ -253,56 +258,3 @@ class Containerfile:
                 f.write(step + self.newline_char)
 
         return True
-
-
-class GalaxySteps:
-    def __new__(cls, containerfile):
-        definition = containerfile.definition
-        steps = []
-        if definition.python_requirements_file:
-            f = definition.python_requirements_file
-            f_name = os.path.basename(f)
-            steps.append(
-                "ADD {} /build/".format(f_name)
-            )
-            shutil.copy(f, containerfile.build_context)
-            steps.extend([
-                "",
-                "RUN pip3 install -r {0}".format(f_name)
-            ])
-        if definition.galaxy_requirements_file:
-            f = definition.galaxy_requirements_file
-            f_name = os.path.basename(f)
-            steps.append(
-                "ADD {} /build/".format(f_name)
-            )
-            shutil.copy(f, containerfile.build_context)
-            steps.extend([
-                "",
-                "RUN ansible-galaxy role install -r /build/{0} --roles-path {1}".format(
-                    f_name, constants.base_roles_path),
-                "RUN ansible-galaxy collection install -r /build/{0} --collections-path {1}".format(
-                    f_name, constants.base_collections_path)
-            ])
-            steps.extend(
-                cls.collection_python_steps(containerfile.definition)
-            )
-        return steps
-
-    @staticmethod
-    def collection_python_steps(user_definition):
-        steps = []
-        collection_deps = user_definition.collection_dependencies()
-        if collection_deps['python']:
-            steps.extend([
-                "",
-                "WORKDIR {0}".format(os.path.join(
-                    constants.base_collections_path, 'ansible_collections'
-                ))
-            ])
-            steps.append(
-                "RUN pip3 install && \\\n    -r {0}".format(
-                    ' && \\\n    -r '.join(collection_deps['python'])
-                )
-            )
-        return steps

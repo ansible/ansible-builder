@@ -21,6 +21,7 @@ def prepare(args=sys.argv[1:]):
     )
     # TODO: Need to have a paragraph come up when running `ansible-builder -h` that explains what Builder is/does
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
+    subparsers.required = True # This can be a kwarg in python 3.7+
 
     create_command_parser = subparsers.add_parser(
         'create',

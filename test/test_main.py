@@ -96,7 +96,7 @@ def data_dir():
 def test_collection_metadata(data_dir, good_exec_env_definition_path):
     definition = UserDefinition(good_exec_env_definition_path)
 
-    definition._manager = CollectionManager(None, custom_path=data_dir)
+    definition.manager = CollectionManager(None, custom_path=data_dir)
 
     assert definition.collection_dependencies() == {
         'python': [
