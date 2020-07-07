@@ -102,14 +102,10 @@ class AnsibleBuilder:
 
 
 class BaseDefinition:
-
-    def __init__(self, some_path):
-        """Subclasses should populate self.raw in this method"""
-        self.raw = {
-            'version': 1,
-            'dependencies': {}
-        }
-        self.reference_path = some_path
+    """Subclasses should populate these properties in the __init__ method
+    self.raw - a dict that basically is the definition
+    self.reference_path - the folder which dependencies are specified relative to
+    """
 
     @property
     def version(self):
@@ -127,13 +123,14 @@ class CollectionDefinition(BaseDefinition):
     """
 
     def __init__(self, collection_path):
-        super(CollectionDefinition, self).__init__(collection_path)
+        self.reference_path = collection_path
         meta_file = os.path.join(collection_path, 'meta', constants.default_file)
         if os.path.exists(meta_file):
             with open(meta_file, 'r') as f:
                 self.raw = yaml.load(f)
         else:
-            # A feature? Automatically infer requirements for collection
+            self.raw = {'version': 1, 'dependencies': {}}
+            # Automatically infer requirements for collection
             for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
                 candidate_file = os.path.join(collection_path, filename)
                 if os.path.exists(candidate_file):
@@ -151,9 +148,8 @@ class CollectionDefinition(BaseDefinition):
         path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
         return tuple(path_parts[-2:])
 
-    @property
-    def python_requirements_relpath(self):
-        req_file = self.raw.get('dependencies', {}).get('python')
+    def get_dependency(self, entry):
+        req_file = self.raw.get('dependencies', {}).get(entry)
         if req_file is None:
             return None
         elif os.path.isabs(req_file):
@@ -182,11 +178,10 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
 
-        self.manager = CollectionManager(self.galaxy_requirements_file)
+        self.manager = CollectionManager(self.get_dependency('galaxy'))
 
-    def _get_dep_entry(self, entry):
-        deps = self.raw.get('dependencies', {})
-        req_file = deps.get(entry) if deps else None
+    def get_dependency(self, entry):
+        req_file = self.raw.get('dependencies', {}).get(entry)
 
         if not req_file:
             return None
@@ -196,26 +191,16 @@ class UserDefinition(BaseDefinition):
 
         return os.path.join(self.reference_path, req_file)
 
-    @property
-    def python_requirements_file(self):
-        return self._get_dep_entry('python')
-
-    @property
-    def system_requirements_file(self):
-        return self._get_dep_entry('system')
-
-    @property
-    def galaxy_requirements_file(self):
-        return self._get_dep_entry('galaxy')
-
     def collection_dependencies(self, type='python'):
+        """Returns a list of files for the dependency type
+        """
         ret = []
         for path in self.manager.path_list():
             CD = CollectionDefinition(path)
-            if not CD.python_requirements_relpath:
+            if not CD.get_dependency('python'):
                 continue
             namespace, name = CD.namespace_name()
-            ret.append(os.path.join(namespace, name, CD.python_requirements_relpath))
+            ret.append(os.path.join(namespace, name, CD.get_dependency('python')))
         return ret
 
 
@@ -238,7 +223,7 @@ class Containerfile:
             "FROM {}".format(self.base_image),
             ""
         ]
-        requirements_path = self.definition.galaxy_requirements_file
+        requirements_path = self.definition.get_dependency('galaxy')
         if requirements_path:
             # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
             shutil.copy(requirements_path, self.build_context)
@@ -251,7 +236,7 @@ class Containerfile:
         # There probably needs to be an intermidiate step here
         # where we introspect the results of running the "galaxy steps"
         # inside of the base image.
-        python_req_path = self.definition.python_requirements_file
+        python_req_path = self.definition.get_dependency('python')
         if python_req_path:
             shutil.copy(python_req_path, self.build_context)
         self.steps.extend(
