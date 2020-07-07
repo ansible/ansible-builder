@@ -39,8 +39,8 @@ class GalaxySteps:
                 ))
             ])
             steps.append(
-                "RUN pip3 install && \\\n    -r {0}".format(
-                    ' && \\\n    -r '.join(collection_deps['python'])
+                "RUN pip3 install \\\n    -r {0}".format(
+                    ' \\\n    -r '.join(collection_deps['python'])
                 )
             )
         return steps
