@@ -5,10 +5,9 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def do_not_run_commands():
-    cmd_mock = mock.MagicMock(return_value=True)
+    cmd_mock = mock.MagicMock(return_value=[1, []])
     with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
-        with mock.patch('ansible_builder.collections.run_command', new=cmd_mock):
-            yield cmd_mock
+        yield cmd_mock
 
 
 @pytest.fixture

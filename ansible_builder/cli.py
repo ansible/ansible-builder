@@ -5,9 +5,32 @@ from . import __version__
 
 from .main import AnsibleBuilder
 from . import constants
+from .utils import introspect
 
 
 def prepare(args=sys.argv[1:]):
+    args = parse_args(args)
+    return AnsibleBuilder(**vars(args))
+
+
+def run():
+    args = parse_args()
+    if args.action in ['build', 'create']:
+        ab = AnsibleBuilder(**vars(args))
+        action = getattr(ab, ab.action)
+        if action():
+            print("Complete! Build context is at: {}".format(ab.build_context))
+            sys.exit(0)
+
+    if args.action == 'introspect':
+        if introspect():
+            sys.exit(0)
+
+    print("An error has occured.")
+    sys.exit(1)
+
+
+def parse_args(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         prog='ansible-builder',
         description=(
@@ -43,6 +66,8 @@ def prepare(args=sys.argv[1:]):
             'After building the image, it can be used locally or published using the supplied tag.'
         )
     )
+
+    subparsers.add_parser('introspect')
     # TODO: Need to update the docstrings for the create and build commands to be more specific/helpful
 
     build_command_parser.add_argument('-t', '--tag',
@@ -71,20 +96,7 @@ def prepare(args=sys.argv[1:]):
                        help='Specifies which container runtime to use; use for both "build" and "create" commands. '
                        'Defaults to podman.')
 
+    #import pdb; pdb.set_trace()
     args = parser.parse_args(args)
 
-    return AnsibleBuilder(**vars(args))
-
-
-def run():
-    ab = prepare()
-
-    print('Processing...')
-
-    build_or_create = getattr(ab, ab.action)
-    if build_or_create():
-        print("Complete! Build context is at: {}".format(ab.build_context))
-        sys.exit(0)
-
-    print("An error has occured.")
-    sys.exit(1)
+    return args

@@ -2,10 +2,10 @@ import os
 import yaml
 import sys
 import shutil
+import filecmp
 
 from . import constants
 from .steps import GalaxySteps, PipSteps
-from .collections import CollectionManager
 from .utils import run_command
 
 
@@ -25,16 +25,15 @@ class AnsibleBuilder:
             filename=constants.runtime_files[self.container_runtime],
             definition=self.definition,
             base_image=base_image,
-            build_context=self.build_context)
+            build_context=self.build_context,
+            container_runtime=self.container_runtime,
+            tag=self.tag)
 
     @property
     def version(self):
         return self.definition.version
 
-    def create(self):
-        self.containerfile.build_steps()
-        return self.containerfile.write()
-
+    @property
     def build_command(self):
         return [
             self.container_runtime, "build",
@@ -44,8 +43,13 @@ class AnsibleBuilder:
         ]
 
     def build(self):
-        self.create()
-        return run_command(self.build_command())
+        self.containerfile.prepare_galaxy_steps()
+        self.containerfile.write()
+        run_command(self.build_command)
+        self.containerfile.prepare_pip_steps()
+        self.containerfile.write()
+        run_command(self.build_command)
+        return True
 
 
 class BaseDefinition:
@@ -109,8 +113,8 @@ class CollectionDefinition(BaseDefinition):
                     req_file, self.reference_path
                 )
             )
-        else:
-            return req_file
+
+        return req_file
 
 
 class UserDefinition(BaseDefinition):
@@ -128,8 +132,6 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
 
-        self.manager = CollectionManager.from_requirements(self.get_dependency('galaxy'))
-
     def get_dependency(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
@@ -145,22 +147,6 @@ class UserDefinition(BaseDefinition):
 
         return os.path.join(self.reference_path, req_file)
 
-    def collection_dependencies(self, dep_type='python'):
-        """Returns a list of files for the dependency type
-        These are the dependency files declared by collections which
-        the user definition listed in its Galaxy requirement file
-        in other words, this returns indirect dependencies of given type
-        """
-        ret = []
-        for path in self.manager.path_list():
-            CD = CollectionDefinition(path)
-            dep_file = CD.get_dependency(dep_type)
-            if not dep_file:
-                continue
-            namespace, name = CD.namespace_name()
-            ret.append(os.path.join(namespace, name, dep_file))
-        return ret
-
 
 class Containerfile:
     newline_char = '\n'
@@ -168,39 +154,56 @@ class Containerfile:
     def __init__(self, definition,
                  filename=constants.default_file,
                  build_context=constants.default_build_context,
-                 base_image=constants.default_base_image):
+                 base_image=constants.default_base_image,
+                 container_runtime=constants.default_container_runtime,
+                 tag=constants.default_tag):
 
         self.build_context = build_context
         os.makedirs(self.build_context, exist_ok=True)
         self.definition = definition
         self.path = os.path.join(self.build_context, filename)
         self.base_image = base_image
+        self.container_runtime = container_runtime
+        self.tag = tag
+        self.steps = []
 
-    def build_steps(self):
+    def prepare_galaxy_steps(self):
         self.steps = [
             "FROM {}".format(self.base_image),
             ""
         ]
-        requirements_path = self.definition.get_dependency('galaxy')
-        if requirements_path:
+        galaxy_requirements_path = self.definition.get_dependency('galaxy')
+        if galaxy_requirements_path:
             # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
-            shutil.copy(requirements_path, self.build_context)
+            dest = os.path.join(self.build_context, galaxy_requirements_path)
+            exists = os.path.exists(dest)
+            if not exists or not filecmp.cmp(galaxy_requirements_path, dest, shallow=False):
+                shutil.copy(galaxy_requirements_path, dest)
+
             self.steps.extend(
                 GalaxySteps(
-                    os.path.basename(requirements_path)  # probably "requirements.yml"
+                    os.path.basename(galaxy_requirements_path)  # probably "requirements.yml"
                 )
             )
 
-        # There probably needs to be an intermidiate step here
-        # where we introspect the results of running the "galaxy steps"
-        # inside of the base image.
+    def prepare_pip_steps(self):
         python_req_path = self.definition.get_dependency('python')
         if python_req_path:
             shutil.copy(python_req_path, self.build_context)
+
+
+        command = [
+            self.container_runtime, "run", "--rm", self.tag,
+            "ansible-builder", "introspect"
+        ]
+        rc, output = run_command(command, capture_output=True)
+
+        requirements_files = yaml.load("\n".join(output)) or []
+
         self.steps.extend(
             PipSteps(
                 python_req_path,
-                self.definition.collection_dependencies()
+                requirements_files
             )
         )
 
