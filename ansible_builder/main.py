@@ -191,16 +191,17 @@ class UserDefinition(BaseDefinition):
 
         return os.path.join(self.reference_path, req_file)
 
-    def collection_dependencies(self, type='python'):
+    def collection_dependencies(self, dep_type='python'):
         """Returns a list of files for the dependency type
         """
         ret = []
         for path in self.manager.path_list():
             CD = CollectionDefinition(path)
-            if not CD.get_dependency('python'):
+            dep_file = CD.get_dependency(dep_type)
+            if not dep_file:
                 continue
             namespace, name = CD.namespace_name()
-            ret.append(os.path.join(namespace, name, CD.get_dependency('python')))
+            ret.append(os.path.join(namespace, name, dep_file))
         return ret
 
 
