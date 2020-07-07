@@ -21,7 +21,7 @@ def galaxy_steps(requirements_naming):
 
 
 def pip_steps(context_file, collection_files):
-    """Allows for 1 python requirement file that will be moved into context
+    """Allows for 1 python requirement file in the build context
     In collection files, expects a list of relative paths where python requirements files live
     returns a list of commands to put in Containerfile
     """
