@@ -93,12 +93,16 @@ def data_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
-def test_collection_metadata(data_dir, good_exec_env_definition_path):
-    definition = UserDefinition(good_exec_env_definition_path)
+def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
+    path = exec_env_definition_file(content={})
+    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
 
-    definition.manager = CollectionManager(None, custom_path=data_dir)
+    aee.definition = UserDefinition(path)
+    aee.containerfile.definition = aee.definition
 
-    assert definition.collection_dependencies() == {
+    aee.definition.manager = CollectionManager(None, custom_path=data_dir)
+
+    assert aee.definition.collection_dependencies() == {
         'python': [
             'test/metadata/my-requirements.txt',
             'test/reqfile/requirements.txt'
@@ -106,7 +110,7 @@ def test_collection_metadata(data_dir, good_exec_env_definition_path):
         'system': []
     }
 
-    assert GalaxySteps.collection_python_steps(definition) == [
+    assert GalaxySteps(containerfile=aee.containerfile).collection_python_steps() == [
         '',
         'WORKDIR /usr/share/ansible/collections/ansible_collections',
         '\n'.join([

@@ -3,19 +3,20 @@ import shutil
 
 
 class PipSteps:
-    def __new__(cls, containerfile):
+    def __init__(self, containerfile):
         definition = containerfile.definition
-        steps = []
+        self.steps = []
         if definition.python_requirements_file:
             f = definition.python_requirements_file
             f_name = os.path.basename(f)
-            steps.append(
+            self.steps.append(
                 "ADD {} /build/".format(f_name)
             )
             shutil.copy(f, containerfile.build_context)
-            steps.extend([
+            self.steps.extend([
                 "",
                 "RUN pip3 install -r {0}".format(f_name)
             ])
 
-        return steps
+    def __iter__(self):
+        return iter(self.steps)

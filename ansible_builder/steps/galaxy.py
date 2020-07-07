@@ -5,32 +5,33 @@ from .. import constants
 
 
 class GalaxySteps:
-    def __new__(cls, containerfile):
-        definition = containerfile.definition
-        steps = []
-        if definition.galaxy_requirements_file:
-            f = definition.galaxy_requirements_file
+    def __init__(self, containerfile):
+        self.definition = containerfile.definition
+        self.steps = []
+        if self.definition.galaxy_requirements_file:
+            f = self.definition.galaxy_requirements_file
             f_name = os.path.basename(f)
-            steps.append(
+            self.steps.append(
                 "ADD {} /build/".format(f_name)
             )
             shutil.copy(f, containerfile.build_context)
-            steps.extend([
+            self.steps.extend([
                 "",
                 "RUN ansible-galaxy role install -r /build/{0} --roles-path {1}".format(
                     f_name, constants.base_roles_path),
                 "RUN ansible-galaxy collection install -r /build/{0} --collections-path {1}".format(
                     f_name, constants.base_collections_path)
             ])
-            steps.extend(
-                cls.collection_python_steps(containerfile.definition)
+            self.steps.extend(
+                self.collection_python_steps()
             )
-        return steps
 
-    @staticmethod
-    def collection_python_steps(user_definition):
+    def __iter__(self):
+        return iter(self.steps)
+
+    def collection_python_steps(self):
         steps = []
-        collection_deps = user_definition.collection_dependencies()
+        collection_deps = self.definition.collection_dependencies()
         if collection_deps['python']:
             steps.extend([
                 "",
