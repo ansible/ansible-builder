@@ -3,7 +3,8 @@ import pytest
 import os
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder, CollectionManager, UserDefinition, GalaxySteps
+from ansible_builder.main import AnsibleBuilder, CollectionManager, UserDefinition
+from ansible_builder.steps import pip_steps
 
 
 def test_version():
@@ -102,20 +103,20 @@ def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
 
     aee.definition.manager = CollectionManager(None, custom_path=data_dir)
 
-    assert aee.definition.collection_dependencies() == {
-        'python': [
-            'test/metadata/my-requirements.txt',
-            'test/reqfile/requirements.txt'
-        ],
-        'system': []
-    }
+    assert aee.definition.collection_dependencies() == [
+        'test/metadata/my-requirements.txt',
+        'test/reqfile/requirements.txt'
+    ]
 
-    assert GalaxySteps(containerfile=aee.containerfile).collection_python_steps() == [
-        '',
-        'WORKDIR /usr/share/ansible/collections/ansible_collections',
+
+def test_steps_for_collection_dependencies():
+    assert pip_steps(None, [
+        'test/metadata/my-requirements.txt',
+        'test/reqfile/requirements.txt'
+    ]) == [
         '\n'.join([
             'RUN pip3 install \\',
-            '    -r test/metadata/my-requirements.txt \\',
-            '    -r test/reqfile/requirements.txt'
+            '    -r /usr/share/ansible/collections/ansible_collections/test/metadata/my-requirements.txt \\',
+            '    -r /usr/share/ansible/collections/ansible_collections/test/reqfile/requirements.txt'
         ])
     ]

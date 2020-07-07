@@ -7,8 +7,7 @@ import tempfile
 import atexit
 
 from . import constants
-from .steps.galaxy import GalaxySteps
-from .steps.pip import PipSteps
+from .steps import galaxy_steps, pip_steps
 
 
 def run_command(command):
@@ -209,14 +208,14 @@ class UserDefinition(BaseDefinition):
     def galaxy_requirements_file(self):
         return self._get_dep_entry('galaxy')
 
-    def collection_dependencies(self):
-        ret = {'python': [], 'system': []}
+    def collection_dependencies(self, type='python'):
+        ret = []
         for path in self.manager.path_list():
             CD = CollectionDefinition(path)
             if not CD.python_requirements_relpath:
                 continue
             namespace, name = CD.namespace_name()
-            ret['python'].append(os.path.join(namespace, name, CD.python_requirements_relpath))
+            ret.append(os.path.join(namespace, name, CD.python_requirements_relpath))
         return ret
 
 
@@ -239,15 +238,27 @@ class Containerfile:
             "FROM {}".format(self.base_image),
             ""
         ]
-        self.steps.extend(
-            GalaxySteps(containerfile=self)
-        )
+        requirements_path = self.definition.galaxy_requirements_file
+        if requirements_path:
+            # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
+            shutil.copy(requirements_path, self.build_context)
+            self.steps.extend(
+                galaxy_steps(
+                    os.path.basename(requirements_path)  # probably "requirements.yml"
+                )
+            )
 
         # There probably needs to be an intermidiate step here
         # where we introspect the results of running the "galaxy steps"
         # inside of the base image.
+        python_req_path = self.definition.python_requirements_file
+        if python_req_path:
+            shutil.copy(python_req_path, self.build_context)
         self.steps.extend(
-            PipSteps(containerfile=self)
+            pip_steps(
+                python_req_path,
+                self.definition.collection_dependencies()
+            )
         )
 
         return self.steps
