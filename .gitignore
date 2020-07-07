@@ -7,3 +7,7 @@ setup-to-compare.py
 
 /.pytest_cache/
 /context/
+
+# testing and examples
+/examples/bc/
+artifacts/

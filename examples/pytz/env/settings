@@ -1,0 +1,4 @@
+---
+containerized: true
+container_runtime: docker
+container_image: ansible-execution-env

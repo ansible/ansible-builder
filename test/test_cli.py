@@ -1,11 +1,11 @@
 from ansible_builder.cli import prepare
 
 
-def test_custom_image(exec_env_definition_file):
+def test_custom_image(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
 
-    aee = prepare(['create', '-f', path, '-b', 'my-custom-image'])
+    aee = prepare(['create', '-f', path, '-b', 'my-custom-image', '-c', str(tmpdir)])
 
     assert aee.containerfile.base_image == 'my-custom-image'
 

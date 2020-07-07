@@ -7,3 +7,5 @@ runtime_files={
     'docker': 'Dockerfile'
 }
 default_container_runtime = 'podman'
+base_roles_path = '/usr/share/ansible/roles'
+base_collections_path = '/usr/share/ansible/collections'
