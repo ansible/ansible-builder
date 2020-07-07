@@ -3,8 +3,8 @@ import pytest
 import os
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder, CollectionManager, UserDefinition
-from ansible_builder.steps import pip_steps
+from ansible_builder.main import AnsibleBuilder, UserDefinition
+from ansible_builder.collections import CollectionManager
 
 
 def test_version():
@@ -109,14 +109,3 @@ def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
     ]
 
 
-def test_steps_for_collection_dependencies():
-    assert pip_steps(None, [
-        'test/metadata/my-requirements.txt',
-        'test/reqfile/requirements.txt'
-    ]) == [
-        '\n'.join([
-            'RUN pip3 install \\',
-            '    -r /usr/share/ansible/collections/ansible_collections/test/metadata/my-requirements.txt \\',
-            '    -r /usr/share/ansible/collections/ansible_collections/test/reqfile/requirements.txt'
-        ])
-    ]
