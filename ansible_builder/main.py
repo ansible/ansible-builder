@@ -193,6 +193,9 @@ class UserDefinition(BaseDefinition):
 
     def collection_dependencies(self, dep_type='python'):
         """Returns a list of files for the dependency type
+        These are the dependency files declared by collections which
+        the user definition listed in its Galaxy requirement file
+        in other words, this returns indirect dependencies of given type
         """
         ret = []
         for path in self.manager.path_list():
