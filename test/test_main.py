@@ -101,7 +101,7 @@ def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
     aee.definition = UserDefinition(path)
     aee.containerfile.definition = aee.definition
 
-    aee.definition.manager = CollectionManager(None, custom_path=data_dir)
+    aee.definition.manager = CollectionManager.from_directory(data_dir)
 
     assert aee.definition.collection_dependencies() == [
         'test/metadata/my-requirements.txt',

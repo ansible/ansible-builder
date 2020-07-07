@@ -7,26 +7,25 @@ from .utils import run_command
 
 
 class CollectionManager:
-    def __init__(self, requirements_file, custom_path=None, installed=True):
+    def __init__(self, dir, requirements_file=None, installed=True):
+        self.dir = dir
         self.requirements_file = requirements_file
-        if custom_path:
-            self._dir = custom_path
-            self.installed = installed
-        else:
-            self._dir = None
-            self.installed = False
+        self.installed = installed
 
-    @property
-    def dir(self):
-        if self._dir is None:
-            self._dir = tempfile.mkdtemp(prefix='ansible_builder_')
-            print('Using temporary directory to obtain collection information:')
-            print('  {}'.format(self._dir))
-            atexit.register(shutil.rmtree, self._dir)
-        return self._dir
+    @classmethod
+    def from_directory(cls, custom_path):
+        return cls(custom_path, installed=True)
+
+    @classmethod
+    def from_requirements(cls, requirements_file):
+        dir = tempfile.mkdtemp(prefix='ansible_builder_')
+        print('Using temporary directory to obtain collection information:')
+        print('  {}'.format(dir))
+        atexit.register(shutil.rmtree, dir)
+        return cls(dir, requirements_file=requirements_file, installed=False)
 
     def ensure_installed(self):
-        if self.installed or self.requirements_file is None:
+        if self.installed:
             return
         run_command([
             'ansible-galaxy', 'collection', 'install',

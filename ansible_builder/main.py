@@ -4,7 +4,7 @@ import sys
 import shutil
 
 from . import constants
-from .steps import galaxy_steps, pip_steps
+from .steps import GalaxySteps, PipSteps
 from .collections import CollectionManager
 from .utils import run_command
 
@@ -96,6 +96,9 @@ class CollectionDefinition(BaseDefinition):
         return tuple(path_parts[-2:])
 
     def get_dependency(self, entry):
+        """A collection is only allowed to reference a file by a relative path
+        which is relative to the collection root
+        """
         req_file = self.raw.get('dependencies', {}).get(entry)
         if req_file is None:
             return None
@@ -125,9 +128,13 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
 
-        self.manager = CollectionManager(self.get_dependency('galaxy'))
+        self.manager = CollectionManager.from_requirements(self.get_dependency('galaxy'))
 
     def get_dependency(self, entry):
+        """Unique to the user EE definition, files can be referenced by either
+        an absolute path or a path relative to the EE definition folder
+        This method will return the absolute path.
+        """
         req_file = self.raw.get('dependencies', {}).get(entry)
 
         if not req_file:
@@ -179,7 +186,7 @@ class Containerfile:
             # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
             shutil.copy(requirements_path, self.build_context)
             self.steps.extend(
-                galaxy_steps(
+                GalaxySteps(
                     os.path.basename(requirements_path)  # probably "requirements.yml"
                 )
             )
@@ -191,7 +198,7 @@ class Containerfile:
         if python_req_path:
             shutil.copy(python_req_path, self.build_context)
         self.steps.extend(
-            pip_steps(
+            PipSteps(
                 python_req_path,
                 self.definition.collection_dependencies()
             )
