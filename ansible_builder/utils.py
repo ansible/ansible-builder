@@ -1,7 +1,6 @@
 import subprocess
 import sys
 import os
-import yaml
 
 from . import constants
 
@@ -27,9 +26,9 @@ def run_command(command, capture_output=False):
     return (rc, output)
 
 
-def introspect():
+def introspect(data_dir=constants.base_collections_path):
     paths = []
-    path_root = os.path.join(constants.base_collections_path, 'ansible_collections')
+    path_root = os.path.join(data_dir, 'ansible_collections')
     if not os.path.exists(path_root):
         # add debug statements at points like this
         sys.exit(1)
@@ -54,5 +53,4 @@ def introspect():
             continue
         namespace, name = CD.namespace_name()
         ret.append(os.path.join(namespace, name, dep_file))
-    print(yaml.dump(ret, default_flow_style=False))
-    return True
+    return ret

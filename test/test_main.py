@@ -3,7 +3,9 @@ import pytest
 import os
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder, UserDefinition
+from ansible_builder.main import AnsibleBuilder
+
+from ansible_builder.utils import introspect
 
 
 def test_version():
@@ -93,17 +95,11 @@ def data_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
-@pytest.mark.skip
-def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
-    path = exec_env_definition_file(content={})
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+def test_collection_metadata(data_dir):
 
-    aee.definition = UserDefinition(path)
-    aee.containerfile.definition = aee.definition
+    files = introspect(data_dir)
 
-    aee.definition.manager = CollectionManager.from_directory(data_dir)
-
-    assert aee.definition.collection_dependencies() == [
+    assert files == [
         'test/metadata/my-requirements.txt',
         'test/reqfile/requirements.txt'
     ]

@@ -3,6 +3,7 @@ import yaml
 import sys
 import shutil
 import filecmp
+import textwrap
 
 from . import constants
 from .steps import GalaxySteps, PipSteps
@@ -191,11 +192,15 @@ class Containerfile:
 
 
         command = [
-            self.container_runtime, "run", "--rm", self.tag,
-            "python", "-c", "from ansible_builder.utils import introspect; introspect()"
+            self.container_runtime, "run", "--rm", self.tag, "python", "-c",
+            textwrap.dedent("""
+                import yaml
+                from ansible_builder.utils import introspect
+                print(yaml.dump(introspect(), default_flow_style=False))
+            """)
         ]
         rc, output = run_command(command, capture_output=True)
-        if rc is not 0:
+        if rc != 0:
             print('No collections requirements file found, skipping ansible-galaxy install...')
             return
         requirements_files = yaml.load("\n".join(output)) or []
