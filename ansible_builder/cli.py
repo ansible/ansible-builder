@@ -5,7 +5,6 @@ from . import __version__
 
 from .main import AnsibleBuilder
 from . import constants
-from .utils import introspect
 
 
 def prepare(args=sys.argv[1:]):
@@ -15,15 +14,11 @@ def prepare(args=sys.argv[1:]):
 
 def run():
     args = parse_args()
-    if args.action in ['build', 'create']:
+    if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         if action():
-            print("Complete! Build context is at: {}".format(ab.build_context))
-            sys.exit(0)
-
-    if args.action == 'introspect':
-        if introspect():
+            print("Complete! The build context can be found at: {}".format(ab.build_context))
             sys.exit(0)
 
     print("An error has occured.")
@@ -42,24 +37,14 @@ def parse_args(args=sys.argv[1:]):
         '--version', action='version', version=__version__,
         help='Print ansible-builder version and exit.'
     )
-    # TODO: Need to have a paragraph come up when running `ansible-builder -h` that explains what Builder is/does
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
     subparsers.required = True # This can be a kwarg in python 3.7+
-
-    create_command_parser = subparsers.add_parser(
-        'create',
-        help='Creates a build context, which can be used by podman to build an image.',
-        description=(
-            'Creates a build context (including a Containerfile) from an execution environment spec. '
-            'This build context is populated with dependencies including requirements files.'
-        )
-    )
 
     build_command_parser = subparsers.add_parser(
         'build',
         help='Builds a container image.',
         description=(
-            'This does everything that the "create" command does, and then builds the image. '
+            'Creates a build context (including a Containerfile) from an execution environment spec. '
             'The build context will be populated from the execution environment spec. '
             'After that, the specified container runtime podman/docker will be invoked to '
             'build an image from that definition. '
@@ -67,14 +52,11 @@ def parse_args(args=sys.argv[1:]):
         )
     )
 
-    subparsers.add_parser('introspect')
-    # TODO: Need to update the docstrings for the create and build commands to be more specific/helpful
-
     build_command_parser.add_argument('-t', '--tag',
                                       default=constants.default_tag,
                                       help='The name for the container being built.')
 
-    for p in [create_command_parser, build_command_parser]:
+    for p in [build_command_parser]:
 
         p.add_argument('-f', '--file',
                        default=constants.default_file,

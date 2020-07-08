@@ -192,10 +192,12 @@ class Containerfile:
 
         command = [
             self.container_runtime, "run", "--rm", self.tag,
-            "ansible-builder", "introspect"
+            "python", "-c", "from ansible_builder.utils import introspect; introspect()"
         ]
         rc, output = run_command(command, capture_output=True)
-
+        if rc is not 0:
+            print('No collections requirements file found, skipping ansible-galaxy install...')
+            return
         requirements_files = yaml.load("\n".join(output)) or []
 
         self.steps.extend(

@@ -5,6 +5,8 @@ import yaml
 
 from . import constants
 
+__all__ = ['introspect']
+
 
 def run_command(command, capture_output=False):
     print('Running command:')
@@ -30,7 +32,8 @@ def introspect():
     path_root = os.path.join(constants.base_collections_path, 'ansible_collections')
     if not os.path.exists(path_root):
         # add debug statements at points like this
-        return paths
+        sys.exit(1)
+
     for namespace in sorted(os.listdir(path_root)):
         if not os.path.isdir(os.path.join(path_root, namespace)):
             continue
