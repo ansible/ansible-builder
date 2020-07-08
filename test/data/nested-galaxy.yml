@@ -1,0 +1,3 @@
+version: 1
+dependencies:
+  galaxy: foo/requirements.yml
