@@ -174,17 +174,15 @@ class Containerfile:
         ]
         galaxy_requirements_path = self.definition.get_dependency('galaxy')
         if galaxy_requirements_path:
+            # name is most likely "requirements.yml"
+            galaxy_requirements_name = os.path.basename(galaxy_requirements_path)
             # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
-            dest = os.path.join(self.build_context, galaxy_requirements_path)
+            dest = os.path.join(self.build_context, galaxy_requirements_name)
             exists = os.path.exists(dest)
             if not exists or not filecmp.cmp(galaxy_requirements_path, dest, shallow=False):
                 shutil.copy(galaxy_requirements_path, dest)
 
-            self.steps.extend(
-                GalaxySteps(
-                    os.path.basename(galaxy_requirements_path)  # probably "requirements.yml"
-                )
-            )
+            self.steps.extend(GalaxySteps(galaxy_requirements_name))
 
     def prepare_pip_steps(self):
         python_req_path = self.definition.get_dependency('python')

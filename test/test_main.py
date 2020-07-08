@@ -112,4 +112,14 @@ def test_collection_metadata(tmpdir, data_dir, exec_env_definition_file):
 def test_nested_galaxy_file(data_dir, tmpdir):
     if not os.path.exists('test/data/nested-galaxy.yml'):
         pytest.skip('Test is only valid when ran from ansible-builder root')
-    AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=str(tmpdir)).build()
+
+    bc_folder = str(tmpdir)
+    AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=bc_folder).build()
+
+    req_in_bc = os.path.join(bc_folder, 'requirements.yml')
+    assert os.path.exists(req_in_bc)
+
+    req_original = 'test/data/foo/requirements.yml'
+    with open(req_in_bc, 'r') as f_in_bc:
+        with open(req_original, 'r') as f_in_def:
+            assert f_in_bc.read() == f_in_def.read()
