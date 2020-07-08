@@ -27,6 +27,9 @@ class CollectionManager:
     def ensure_installed(self):
         if self.installed:
             return
+        if not self.requirements_file:
+            print('No collections requirements file found, skipping ansible-galaxy install...')
+            return
         run_command([
             'ansible-galaxy', 'collection', 'install',
             '-r', self.requirements_file,
