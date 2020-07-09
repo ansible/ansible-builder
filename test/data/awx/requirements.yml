@@ -1,0 +1,17 @@
+---
+# from https://github.com/ansible/awx/blob/devel/
+# requirements/collections_requirements.yml
+collections:
+  - name: https://github.com/AlanCoding/awx.git#awx_collection,ee_req
+    type: git
+  - name: https://github.com/AlanCoding/azure.git
+    version: ee_req  # requirements file is requirements-azure.txt, so need spec
+    type: git
+  - name: amazon.aws
+  - name: theforeman.foreman
+  - name: google.cloud  # has requirements.txt
+  - name: openstack.cloud
+  - name: community.vmware
+  - name: ovirt.ovirt
+  - name: community.kubernetes  # required for isolated management playbooks
+  - name: ansible.posix  # required for isolated management playbooks

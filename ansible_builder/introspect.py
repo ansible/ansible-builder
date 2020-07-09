@@ -64,6 +64,18 @@ def process(data_dir=base_collections_path):
     }
 
 
+def has_content(candidate_file):
+    """Beyond checking that the candidate exists, this also assures
+    that the file has something other than whitespace,
+    which can cause errors when given to pip.
+    """
+    if not os.path.exists(candidate_file):
+        return False
+    with open(candidate_file, 'r') as f:
+        content = f.read()
+    return bool(content.strip().strip('\n'))
+
+
 class CollectionDefinition:
     """This class represents the dependency metadata for a collection
     should be replaced by logic to hit the Galaxy API if made available
@@ -80,7 +92,7 @@ class CollectionDefinition:
             # Automatically infer requirements for collection
             for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
                 candidate_file = os.path.join(collection_path, filename)
-                if os.path.exists(candidate_file):
+                if has_content(candidate_file):
                     self.raw['dependencies'][entry] = filename
 
     def target_dir(self):
