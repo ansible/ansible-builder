@@ -168,13 +168,12 @@ class Containerfile:
         self.base_image = base_image
         self.container_runtime = container_runtime
         self.tag = tag
-        self.steps = []
-
-    def prepare_galaxy_steps(self):
         self.steps = [
             "FROM {}".format(self.base_image),
             ""
         ]
+
+    def prepare_galaxy_steps(self):
         galaxy_requirements_path = self.definition.get_dependency('galaxy')
         if galaxy_requirements_path:
             # name is most likely "requirements.yml"
