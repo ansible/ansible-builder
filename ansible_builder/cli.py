@@ -78,7 +78,6 @@ def parse_args(args=sys.argv[1:]):
                        help='Specifies which container runtime to use; use for both "build" and "create" commands. '
                        'Defaults to podman.')
 
-    #import pdb; pdb.set_trace()
     args = parser.parse_args(args)
 
     return args

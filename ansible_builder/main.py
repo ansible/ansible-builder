@@ -45,9 +45,11 @@ class AnsibleBuilder:
 
     def build(self):
         self.containerfile.prepare_galaxy_steps()
+        print('Writing partial Containerfile without collection requirements')
         self.containerfile.write()
         run_command(self.build_command)
         self.containerfile.prepare_pip_steps()
+        print('Rewriting Containerfile to capture collection requirements')
         self.containerfile.write()
         run_command(self.build_command)
         return True
@@ -202,8 +204,9 @@ class Containerfile:
         rc, output = run_command(command, capture_output=True)
         if rc != 0:
             print('No collections requirements file found, skipping ansible-galaxy install...')
-            return
-        requirements_files = yaml.load("\n".join(output)) or []
+            requirements_files = []
+        else:
+            requirements_files = yaml.load("\n".join(output)) or []
 
         self.steps.extend(
             PipSteps(

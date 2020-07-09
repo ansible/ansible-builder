@@ -37,7 +37,7 @@ class PipSteps:
             self.steps.append(
                 "ADD {} /build/".format(file_naming)
             )
-            sanitized_files.append(file_naming)
+            sanitized_files.append(os.path.join('/build/', file_naming))
 
         for entry in collection_files:
             # requirements file from collection, use absolute path
