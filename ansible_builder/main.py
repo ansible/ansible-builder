@@ -2,11 +2,12 @@ import os
 import yaml
 import sys
 import shutil
+import filecmp
 
 from . import constants
-from .steps import GalaxySteps, PipSteps
-from .collections import CollectionManager
+from .steps import GalaxySteps, PipSteps, IntrospectionSteps
 from .utils import run_command
+import ansible_builder.introspect
 
 
 class AnsibleBuilder:
@@ -25,16 +26,15 @@ class AnsibleBuilder:
             filename=constants.runtime_files[self.container_runtime],
             definition=self.definition,
             base_image=base_image,
-            build_context=self.build_context)
+            build_context=self.build_context,
+            container_runtime=self.container_runtime,
+            tag=self.tag)
 
     @property
     def version(self):
         return self.definition.version
 
-    def create(self):
-        self.containerfile.build_steps()
-        return self.containerfile.write()
-
+    @property
     def build_command(self):
         return [
             self.container_runtime, "build",
@@ -44,8 +44,16 @@ class AnsibleBuilder:
         ]
 
     def build(self):
-        self.create()
-        return run_command(self.build_command())
+        self.containerfile.prepare_introspection_steps()
+        self.containerfile.prepare_galaxy_steps()
+        print('Writing partial Containerfile without collection requirements')
+        self.containerfile.write()
+        run_command(self.build_command)
+        self.containerfile.prepare_pip_steps()
+        print('Rewriting Containerfile to capture collection requirements')
+        self.containerfile.write()
+        run_command(self.build_command)
+        return True
 
 
 class BaseDefinition:
@@ -64,55 +72,6 @@ class BaseDefinition:
         return str(version)
 
 
-class CollectionDefinition(BaseDefinition):
-    """This class represents the dependency metadata for a collection
-    should be replaced by logic to hit the Galaxy API if made available
-    """
-
-    def __init__(self, collection_path):
-        self.reference_path = collection_path
-        meta_file = os.path.join(collection_path, 'meta', constants.default_file)
-        if os.path.exists(meta_file):
-            with open(meta_file, 'r') as f:
-                self.raw = yaml.load(f)
-        else:
-            self.raw = {'version': 1, 'dependencies': {}}
-            # Automatically infer requirements for collection
-            for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
-                candidate_file = os.path.join(collection_path, filename)
-                if os.path.exists(candidate_file):
-                    self.raw['dependencies'][entry] = filename
-
-    def target_dir(self):
-        namespace, name = self.namespace_name()
-        return os.path.join(
-            constants.base_collections_path, 'ansible_collections',
-            namespace, name
-        )
-
-    def namespace_name(self):
-        "Returns 2-tuple of namespace and name"
-        path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
-        return tuple(path_parts[-2:])
-
-    def get_dependency(self, entry):
-        """A collection is only allowed to reference a file by a relative path
-        which is relative to the collection root
-        """
-        req_file = self.raw.get('dependencies', {}).get(entry)
-        if req_file is None:
-            return None
-        elif os.path.isabs(req_file):
-            raise RuntimeError(
-                'Collections must specify relative paths for requirements files. '
-                'The file {0} specified by {1} violates this.'.format(
-                    req_file, self.reference_path
-                )
-            )
-        else:
-            return req_file
-
-
 class UserDefinition(BaseDefinition):
     def __init__(self, filename):
         self.filename = filename
@@ -127,8 +86,6 @@ class UserDefinition(BaseDefinition):
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
             """.format(constants.default_file))
-
-        self.manager = CollectionManager.from_requirements(self.get_dependency('galaxy'))
 
     def get_dependency(self, entry):
         """Unique to the user EE definition, files can be referenced by either
@@ -145,22 +102,6 @@ class UserDefinition(BaseDefinition):
 
         return os.path.join(self.reference_path, req_file)
 
-    def collection_dependencies(self, dep_type='python'):
-        """Returns a list of files for the dependency type
-        These are the dependency files declared by collections which
-        the user definition listed in its Galaxy requirement file
-        in other words, this returns indirect dependencies of given type
-        """
-        ret = []
-        for path in self.manager.path_list():
-            CD = CollectionDefinition(path)
-            dep_file = CD.get_dependency(dep_type)
-            if not dep_file:
-                continue
-            namespace, name = CD.namespace_name()
-            ret.append(os.path.join(namespace, name, dep_file))
-        return ret
-
 
 class Containerfile:
     newline_char = '\n'
@@ -168,39 +109,62 @@ class Containerfile:
     def __init__(self, definition,
                  filename=constants.default_file,
                  build_context=constants.default_build_context,
-                 base_image=constants.default_base_image):
+                 base_image=constants.default_base_image,
+                 container_runtime=constants.default_container_runtime,
+                 tag=constants.default_tag):
 
         self.build_context = build_context
         os.makedirs(self.build_context, exist_ok=True)
         self.definition = definition
         self.path = os.path.join(self.build_context, filename)
         self.base_image = base_image
-
-    def build_steps(self):
+        self.container_runtime = container_runtime
+        self.tag = tag
         self.steps = [
             "FROM {}".format(self.base_image),
             ""
         ]
-        requirements_path = self.definition.get_dependency('galaxy')
-        if requirements_path:
-            # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
-            shutil.copy(requirements_path, self.build_context)
-            self.steps.extend(
-                GalaxySteps(
-                    os.path.basename(requirements_path)  # probably "requirements.yml"
-                )
-            )
 
-        # There probably needs to be an intermidiate step here
-        # where we introspect the results of running the "galaxy steps"
-        # inside of the base image.
+    def prepare_introspection_steps(self):
+        source = ansible_builder.introspect.__file__
+        dest = os.path.join(self.build_context, 'introspect.py')
+        exists = os.path.exists(dest)
+        if not exists or not filecmp.cmp(source, dest, shallow=False):
+            shutil.copy(source, dest)
+
+        self.steps.extend(IntrospectionSteps(os.path.basename(dest)))
+
+    def prepare_galaxy_steps(self):
+        galaxy_requirements_path = self.definition.get_dependency('galaxy')
+        if galaxy_requirements_path:
+            # name is most likely "requirements.yml"
+            galaxy_requirements_name = os.path.basename(galaxy_requirements_path)
+            # TODO: what if build context file exists? https://github.com/ansible/ansible-builder/issues/20
+            dest = os.path.join(self.build_context, galaxy_requirements_name)
+            exists = os.path.exists(dest)
+            if not exists or not filecmp.cmp(galaxy_requirements_path, dest, shallow=False):
+                shutil.copy(galaxy_requirements_path, dest)
+
+            self.steps.extend(GalaxySteps(galaxy_requirements_name))
+
+    def prepare_pip_steps(self):
         python_req_path = self.definition.get_dependency('python')
         if python_req_path:
             shutil.copy(python_req_path, self.build_context)
+
+
+        command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
+        rc, output = run_command(command, capture_output=True)
+        if rc != 0:
+            print('No collections requirements file found, skipping ansible-galaxy install...')
+            requirements_files = []
+        else:
+            requirements_files = yaml.load("\n".join(output)) or []
+
         self.steps.extend(
             PipSteps(
                 python_req_path,
-                self.definition.collection_dependencies()
+                requirements_files
             )
         )
 

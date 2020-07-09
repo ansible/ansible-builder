@@ -3,6 +3,18 @@ import os
 from . import constants
 
 
+class IntrospectionSteps:
+    def __init__(self, context_file):
+        self.steps = []
+        self.steps.extend([
+            "ADD {} /usr/local/bin/introspect".format(context_file),
+            "RUN chmod +x /usr/local/bin/introspect"
+        ])
+
+    def __iter__(self):
+        return iter(self.steps)
+
+
 class GalaxySteps:
     def __init__(self, requirements_naming):
         """Assumes given requirements file name has been placed in the build context
@@ -37,7 +49,7 @@ class PipSteps:
             self.steps.append(
                 "ADD {} /build/".format(file_naming)
             )
-            sanitized_files.append(file_naming)
+            sanitized_files.append(os.path.join('/build/', file_naming))
 
         for entry in collection_files:
             # requirements file from collection, use absolute path
