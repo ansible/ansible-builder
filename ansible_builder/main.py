@@ -3,11 +3,11 @@ import yaml
 import sys
 import shutil
 import filecmp
-import textwrap
 
 from . import constants
-from .steps import GalaxySteps, PipSteps
+from .steps import GalaxySteps, PipSteps, IntrospectionSteps
 from .utils import run_command
+import ansible_builder.introspect
 
 
 class AnsibleBuilder:
@@ -44,6 +44,7 @@ class AnsibleBuilder:
         ]
 
     def build(self):
+        self.containerfile.prepare_introspection_steps()
         self.containerfile.prepare_galaxy_steps()
         print('Writing partial Containerfile without collection requirements')
         self.containerfile.write()
@@ -69,55 +70,6 @@ class BaseDefinition:
             raise ValueError("Expected top-level 'version' key to be present.")
 
         return str(version)
-
-
-class CollectionDefinition(BaseDefinition):
-    """This class represents the dependency metadata for a collection
-    should be replaced by logic to hit the Galaxy API if made available
-    """
-
-    def __init__(self, collection_path):
-        self.reference_path = collection_path
-        meta_file = os.path.join(collection_path, 'meta', constants.default_file)
-        if os.path.exists(meta_file):
-            with open(meta_file, 'r') as f:
-                self.raw = yaml.load(f)
-        else:
-            self.raw = {'version': 1, 'dependencies': {}}
-            # Automatically infer requirements for collection
-            for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
-                candidate_file = os.path.join(collection_path, filename)
-                if os.path.exists(candidate_file):
-                    self.raw['dependencies'][entry] = filename
-
-    def target_dir(self):
-        namespace, name = self.namespace_name()
-        return os.path.join(
-            constants.base_collections_path, 'ansible_collections',
-            namespace, name
-        )
-
-    def namespace_name(self):
-        "Returns 2-tuple of namespace and name"
-        path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
-        return tuple(path_parts[-2:])
-
-    def get_dependency(self, entry):
-        """A collection is only allowed to reference a file by a relative path
-        which is relative to the collection root
-        """
-        req_file = self.raw.get('dependencies', {}).get(entry)
-        if req_file is None:
-            return None
-        elif os.path.isabs(req_file):
-            raise RuntimeError(
-                'Collections must specify relative paths for requirements files. '
-                'The file {0} specified by {1} violates this.'.format(
-                    req_file, self.reference_path
-                )
-            )
-
-        return req_file
 
 
 class UserDefinition(BaseDefinition):
@@ -173,6 +125,15 @@ class Containerfile:
             ""
         ]
 
+    def prepare_introspection_steps(self):
+        source = ansible_builder.introspect.__file__
+        dest = os.path.join(self.build_context, 'introspect.py')
+        exists = os.path.exists(dest)
+        if not exists or not filecmp.cmp(source, dest, shallow=False):
+            shutil.copy(source, dest)
+
+        self.steps.extend(IntrospectionSteps(os.path.basename(dest)))
+
     def prepare_galaxy_steps(self):
         galaxy_requirements_path = self.definition.get_dependency('galaxy')
         if galaxy_requirements_path:
@@ -192,14 +153,7 @@ class Containerfile:
             shutil.copy(python_req_path, self.build_context)
 
 
-        command = [
-            self.container_runtime, "run", "--rm", self.tag, "python", "-c",
-            textwrap.dedent("""
-                import yaml
-                from ansible_builder.utils import introspect
-                print(yaml.dump(introspect(), default_flow_style=False))
-            """)
-        ]
+        command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
         rc, output = run_command(command, capture_output=True)
         if rc != 0:
             print('No collections requirements file found, skipping ansible-galaxy install...')

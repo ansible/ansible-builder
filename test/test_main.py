@@ -4,8 +4,7 @@ import os
 
 from ansible_builder import __version__
 from ansible_builder.main import AnsibleBuilder
-
-from ansible_builder.utils import introspect
+from ansible_builder.introspect import process
 
 
 def test_version():
@@ -97,7 +96,7 @@ def data_dir():
 
 def test_collection_metadata(data_dir):
 
-    files = introspect(data_dir)
+    files = process(data_dir)
 
     assert files == [
         'test/metadata/my-requirements.txt',
