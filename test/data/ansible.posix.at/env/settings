@@ -1,4 +1,4 @@
 ---
-container_image: exec-env-at
+container_image: exec-env-ansible.posix.at
 process_isolation_executable: docker
 process_isolation: true
