@@ -1,4 +1,4 @@
 ---
-containerized: true
-container_runtime: docker
 container_image: ansible-execution-env
+process_isolation_executable: docker
+process_isolation: true
