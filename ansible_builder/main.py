@@ -17,7 +17,6 @@ class AnsibleBuilder:
                  base_image=constants.default_base_image,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
-                 get_additional_commands=None,
                  container_runtime=constants.default_container_runtime):
         self.action = action
         self.definition = UserDefinition(filename=filename)
@@ -30,8 +29,7 @@ class AnsibleBuilder:
             base_image=base_image,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
-            tag=self.tag,
-            get_additional_commands=get_additional_commands)
+            tag=self.tag)
 
     @property
     def version(self):
@@ -117,7 +115,7 @@ class UserDefinition(BaseDefinition):
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, definition, get_additional_commands=None,
+    def __init__(self, definition,
                  filename=constants.default_file,
                  build_context=constants.default_build_context,
                  base_image=constants.default_base_image,
@@ -131,7 +129,6 @@ class Containerfile:
         self.base_image = base_image
         self.container_runtime = container_runtime
         self.tag = tag
-        self.get_additional_commands = get_additional_commands
         self.steps = [
             "FROM {}".format(self.base_image),
             ""
