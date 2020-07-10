@@ -3,6 +3,7 @@ import sys
 
 from . import __version__
 
+from .colors import MessageColors
 from .main import AnsibleBuilder
 from . import constants
 
@@ -18,10 +19,10 @@ def run():
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         if action():
-            print("Complete! The build context can be found at: {}".format(ab.build_context))
+            print(MessageColors.OKGREEN + "Complete! The build context can be found at: {}".format(ab.build_context) + MessageColors.ENDC)
             sys.exit(0)
 
-    print("An error has occured.")
+    print(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
     sys.exit(1)
 
 
