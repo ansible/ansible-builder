@@ -3,6 +3,26 @@ import os
 from . import constants
 
 
+class AdditionalBuildSteps:
+    def __init__(self, additional_steps):
+        """Allows for additional prepended / appended build steps to be
+        in the Containerfile or Dockerfile.
+        """
+        self.steps = []
+        if isinstance(additional_steps, str):
+            lines = additional_steps.strip().splitlines()
+        elif isinstance(additional_steps, list):
+            lines = additional_steps
+        else:
+            lines = []
+            print("Unknown type found for additional_build_steps.  Ignoring...")
+
+        self.steps.extend(lines)
+
+    def __iter__(self):
+        return iter(self.steps)
+
+
 class IntrospectionSteps:
     def __init__(self, context_file):
         self.steps = []

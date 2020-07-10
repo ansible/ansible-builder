@@ -5,7 +5,7 @@ import shutil
 import filecmp
 
 from . import constants
-from .steps import GalaxySteps, PipSteps, IntrospectionSteps
+from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps
 from .utils import run_command
 import ansible_builder.introspect
 
@@ -16,6 +16,7 @@ class AnsibleBuilder:
                  base_image=constants.default_base_image,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
+                 get_additional_commands=None,
                  container_runtime=constants.default_container_runtime):
         self.action = action
         self.definition = UserDefinition(filename=filename)
@@ -28,7 +29,8 @@ class AnsibleBuilder:
             base_image=base_image,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
-            tag=self.tag)
+            tag=self.tag,
+            get_additional_commands=get_additional_commands)
 
     @property
     def version(self):
@@ -44,6 +46,7 @@ class AnsibleBuilder:
         ]
 
     def build(self):
+        self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_introspection_steps()
         self.containerfile.prepare_galaxy_steps()
         print('Writing partial Containerfile without collection requirements')
@@ -51,6 +54,7 @@ class AnsibleBuilder:
         run_command(self.build_command)
         self.containerfile.prepare_pip_steps()
         print('Rewriting Containerfile to capture collection requirements')
+        self.containerfile.prepare_appended_steps()
         self.containerfile.write()
         run_command(self.build_command)
         return True
@@ -87,6 +91,12 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
 
+    def get_additional_commands(self):
+        """Gets additional commands from the exec env file, if any are specified.
+        """
+        commands = self.raw.get('additional_build_steps')
+        return commands
+
     def get_dependency(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
@@ -106,7 +116,7 @@ class UserDefinition(BaseDefinition):
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, definition,
+    def __init__(self, definition, get_additional_commands=None,
                  filename=constants.default_file,
                  build_context=constants.default_build_context,
                  base_image=constants.default_base_image,
@@ -120,10 +130,29 @@ class Containerfile:
         self.base_image = base_image
         self.container_runtime = container_runtime
         self.tag = tag
+        self.get_additional_commands = get_additional_commands
         self.steps = [
             "FROM {}".format(self.base_image),
             ""
         ]
+
+    def prepare_prepended_steps(self):
+        additional_prepend_steps = self.definition.get_additional_commands()
+        if additional_prepend_steps:
+            prepended_steps = additional_prepend_steps.get('prepend')
+            if prepended_steps:
+                return self.steps.extend(AdditionalBuildSteps(prepended_steps))
+
+        return False
+
+    def prepare_appended_steps(self):
+        additional_append_steps = self.definition.get_additional_commands()
+        if additional_append_steps:
+            appended_steps = additional_append_steps.get('append')
+            if appended_steps:
+                return self.steps.extend(AdditionalBuildSteps(appended_steps))
+
+        return False
 
     def prepare_introspection_steps(self):
         source = ansible_builder.introspect.__file__
