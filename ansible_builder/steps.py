@@ -1,4 +1,5 @@
 import os
+import sys
 
 from . import constants
 from .colors import MessageColors
@@ -15,8 +16,9 @@ class AdditionalBuildSteps:
         elif isinstance(additional_steps, list):
             lines = additional_steps
         else:
-            lines = []
-            print(MessageColors.WARNING + "Unknown type found for additional_build_steps.  Ignoring..." + MessageColors.ENDC)
+            print(MessageColors.FAIL + "Error: unknown type found for additional_build_steps; "
+                  "must be list or multi-line string." + MessageColors.ENDC)
+            sys.exit(1)
         self.steps.extend(lines)
 
     def __iter__(self):
