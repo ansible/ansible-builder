@@ -1,10 +1,12 @@
 import argparse
 import sys
+import yaml
 
 from . import __version__
 
 from .main import AnsibleBuilder
 from . import constants
+from .introspect import add_introspect_options, process
 
 
 def prepare(args=sys.argv[1:]):
@@ -20,6 +22,13 @@ def run():
         if action():
             print("Complete! The build context can be found at: {}".format(ab.build_context))
             sys.exit(0)
+    elif args.action == 'introspect':
+        for folder in args.folders:
+            data = process(folder)
+            print()
+            print('Dependency data for {0}'.format(folder))
+            print(yaml.dump(data, default_flow_style=False))
+        sys.exit(0)
 
     print("An error has occured.")
     sys.exit(1)
@@ -77,6 +86,17 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use; use for both "build" and "create" commands. '
                        'Defaults to podman.')
+
+    introspect_parser = subparsers.add_parser(
+        'introspect',
+        help='Introspects collections in folder.',
+        description=(
+            'Loops over collections in folder and returns data about dependencies. '
+            'This is used internally and exposed here for verification. '
+            'This is targeted toward collection authors and maintainers.'
+        )
+    )
+    add_introspect_options(introspect_parser)
 
     args = parser.parse_args(args)
 

@@ -3,6 +3,7 @@
 import os
 import sys
 import yaml
+import argparse
 
 base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
@@ -12,16 +13,15 @@ def process(data_dir=base_collections_path):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
     if not os.path.exists(path_root):
-        # add debug statements at points like this
-        sys.exit(1)
+        return paths
 
     for namespace in sorted(os.listdir(path_root)):
         if not os.path.isdir(os.path.join(path_root, namespace)):
             continue
         for name in sorted(os.listdir(os.path.join(path_root, namespace))):
-            if not os.path.isdir(os.path.join(path_root, namespace, name)):
-                continue
             collection_dir = os.path.join(path_root, namespace, name)
+            if not os.path.isdir(collection_dir):
+                continue
             files_list = os.listdir(collection_dir)
             if 'galaxy.yml' in files_list or 'MANIFEST.json' in files_list:
                 paths.append(collection_dir)
@@ -87,6 +87,29 @@ class CollectionDefinition:
         return req_file
 
 
+def add_introspect_options(parser):
+    parser.add_argument(
+        'folders', default=[base_collections_path], nargs='*',
+        help=(
+            'Ansible collections path(s) to introspect. '
+            'This should have a folder named ansible_collections inside of it.'
+        )
+    )
+
+
 if __name__ == '__main__':
-    print(yaml.dump(process(), default_flow_style=False))
+    parser = argparse.ArgumentParser(
+        prog='ansible-builder-introspector',
+        description=(
+            'This is for programmatic use. '
+            'Use ansible-builder introspect instead.'
+        )
+    )
+    add_introspect_options(parser)
+    args = parser.parse_args()
+    # TODO: modify contract to handle multiple locations more gracefully
+    data = []
+    for folder in args.folders:
+        data.extend(process(folder))
+    print(yaml.dump(data, default_flow_style=False))
     sys.exit(0)
