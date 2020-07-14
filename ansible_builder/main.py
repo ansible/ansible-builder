@@ -3,6 +3,7 @@ import yaml
 import sys
 import shutil
 import filecmp
+import textwrap
 
 from . import constants
 from .colors import MessageColors
@@ -89,6 +90,11 @@ class UserDefinition(BaseDefinition):
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
             """.format(constants.default_file) + MessageColors.ENDC)
+        except yaml.parser.ParserError as e:
+            sys.exit(MessageColors.FAIL + textwrap.dedent("""
+            An error occured while parsing the definition file:
+            {0}
+            """).format(str(e)) + MessageColors.ENDC)
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.

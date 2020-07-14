@@ -16,7 +16,7 @@ class AdditionalBuildSteps:
         elif isinstance(additional_steps, list):
             lines = additional_steps
         else:
-            print(MessageColors.FAIL + "Error: unknown type found for additional_build_steps; "
+            print(MessageColors.FAIL + "Error: Unknown type found for additional_build_steps; "
                   "must be list or multi-line string." + MessageColors.ENDC)
             sys.exit(1)
         self.steps.extend(lines)
