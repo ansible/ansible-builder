@@ -5,27 +5,28 @@ collections:
   - name: https://github.com/AlanCoding/awx.git#awx_collection,ee_req
     type: git
   - name: https://github.com/AlanCoding/azure.git
-    version: ee_req  # requirements file is requirements-azure.txt, so need spec
+    version: ee_req  # spec must point to requirements-azure.txt
     type: git
   - name: https://github.com/alancoding/amazon.aws.git
     version: ee_req  # had no requirements file before
     type: git
   - name: theforeman.foreman  # has requirements.txt (which -r to another file)
   - name: google.cloud  # has requirements.txt, mainly for google-auth
-  - name: https://github.com/AlanCoding/ansible-collections-openstack.git  # forked from opendev.org
+  # forked from opendev.org
+  - name: https://github.com/AlanCoding/ansible-collections-openstack.git
     version: ee_req
     type: git
-  - name: community.vmware  # has requirements.txt, but may add pyvcloud in future
+  - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/alancoding/ovirt-ansible-collection.git
     version: ee_req  # had no requirements file, only needs single sdk lib
     type: git
   - name: https://github.com/AlanCoding/community.kubernetes.git
     version: ee_req
     type: git
-    # needs kubectl for yum / dnf / apt-get
-    # needs to install snap, then use snap to install helm
+  # needs kubectl for yum / dnf / apt-get
+  # needs to install snap, then use snap to install helm
   - name: ansible.posix  # has empty requirements.txt file
-    # needs:
-    # - "at" system dep
-    # - libselinux-python
-    # - libsemanage-python
+  # needs:
+  # - "at" system dep
+  # - libselinux-python
+  # - libsemanage-python
