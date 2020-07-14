@@ -1,10 +1,12 @@
 import subprocess
 import sys
 
+from .colors import MessageColors
+
 
 def run_command(command, capture_output=False):
-    print('Running command:')
-    print('  {0}'.format(' '.join(command)))
+    print(MessageColors.HEADER + 'Running command:' + MessageColors.ENDC)
+    print(MessageColors.HEADER + '  {0}'.format(' '.join(command)) + MessageColors.ENDC)
 
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE,

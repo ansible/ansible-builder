@@ -1,6 +1,28 @@
 import os
+import sys
 
 from . import constants
+from .colors import MessageColors
+
+
+class AdditionalBuildSteps:
+    def __init__(self, additional_steps):
+        """Allows for additional prepended / appended build steps to be
+        in the Containerfile or Dockerfile.
+        """
+        self.steps = []
+        if isinstance(additional_steps, str):
+            lines = additional_steps.strip().splitlines()
+        elif isinstance(additional_steps, list):
+            lines = additional_steps
+        else:
+            print(MessageColors.FAIL + "Error: Unknown type found for additional_build_steps; "
+                  "must be list or multi-line string." + MessageColors.ENDC)
+            sys.exit(1)
+        self.steps.extend(lines)
+
+    def __iter__(self):
+        return iter(self.steps)
 
 
 class IntrospectionSteps:

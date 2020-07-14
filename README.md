@@ -34,11 +34,21 @@ version: 1
 dependencies:
   galaxy: requirements.yml
   python: requirements.txt
+
+additional_build_steps:
+  prepend: |
+    RUN whoami
+    RUN cat /etc/os-release
+  append:
+    - RUN echo This is a post-install command!
+    - RUN ls -la /etc
 ```
 
-The entries such as `requirements.yml` and `requirements.txt` may be a relative
-path from the directory of the execution environment definition's folder,
-or an absolute path.
+The entries such as `requirements.yml` and `requirements.txt` may be a relative path from the directory of the execution environment definition's folder, or an absolute path.
+
+Additional commands may be specified in the `additional_build_steps` section, either for before the main build steps (`prepend`) or after (`append`).  The syntax needs to be either a:
+  - multi-line string (example shown in the `prepend` section above)
+  - dictionary (as shown via `append`)
 
 ## Collection Execution Environment Dependencies
 

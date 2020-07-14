@@ -34,7 +34,7 @@ def good_exec_env_definition_path(tmpdir):
     with open(path, 'w') as outfile:
         yaml.dump(good_content, outfile)
 
-    return path
+    return str(path)
 
 
 @pytest.fixture

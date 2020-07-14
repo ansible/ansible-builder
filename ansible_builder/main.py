@@ -3,9 +3,11 @@ import yaml
 import sys
 import shutil
 import filecmp
+import textwrap
 
 from . import constants
-from .steps import GalaxySteps, PipSteps, IntrospectionSteps
+from .colors import MessageColors
+from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps
 from .utils import run_command
 import ansible_builder.introspect
 
@@ -44,13 +46,15 @@ class AnsibleBuilder:
         ]
 
     def build(self):
+        self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_introspection_steps()
         self.containerfile.prepare_galaxy_steps()
-        print('Writing partial Containerfile without collection requirements')
+        print(MessageColors.OK + 'Writing partial Containerfile without collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
         run_command(self.build_command)
         self.containerfile.prepare_pip_steps()
-        print('Rewriting Containerfile to capture collection requirements')
+        print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
+        self.containerfile.prepare_appended_steps()
         self.containerfile.write()
         run_command(self.build_command)
         return True
@@ -82,10 +86,21 @@ class UserDefinition(BaseDefinition):
                 y = yaml.load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
-            sys.exit("""
+            sys.exit(MessageColors.FAIL + """
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
-            """.format(constants.default_file))
+            """.format(constants.default_file) + MessageColors.ENDC)
+        except yaml.parser.ParserError as e:
+            sys.exit(MessageColors.FAIL + textwrap.dedent("""
+            An error occured while parsing the definition file:
+            {0}
+            """).format(str(e)) + MessageColors.ENDC)
+
+    def get_additional_commands(self):
+        """Gets additional commands from the exec env file, if any are specified.
+        """
+        commands = self.raw.get('additional_build_steps')
+        return commands
 
     def get_dependency(self, entry):
         """Unique to the user EE definition, files can be referenced by either
@@ -125,6 +140,24 @@ class Containerfile:
             ""
         ]
 
+    def prepare_prepended_steps(self):
+        additional_prepend_steps = self.definition.get_additional_commands()
+        if additional_prepend_steps:
+            prepended_steps = additional_prepend_steps.get('prepend')
+            if prepended_steps:
+                return self.steps.extend(AdditionalBuildSteps(prepended_steps))
+
+        return False
+
+    def prepare_appended_steps(self):
+        additional_append_steps = self.definition.get_additional_commands()
+        if additional_append_steps:
+            appended_steps = additional_append_steps.get('append')
+            if appended_steps:
+                return self.steps.extend(AdditionalBuildSteps(appended_steps))
+
+        return False
+
     def prepare_introspection_steps(self):
         source = ansible_builder.introspect.__file__
         dest = os.path.join(self.build_context, 'introspect.py')
@@ -156,7 +189,7 @@ class Containerfile:
         command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
         rc, output = run_command(command, capture_output=True)
         if rc != 0:
-            print('No collections requirements file found, skipping ansible-galaxy install...')
+            print(MessageColors.WARNING + 'No collections requirements file found, skipping ansible-galaxy install...' + MessageColors.ENDC)
             requirements_files = []
         else:
             requirements_files = yaml.load("\n".join(output)) or []

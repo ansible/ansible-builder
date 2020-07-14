@@ -1,0 +1,4 @@
+---
+ignore: |
+  .tox
+  test/data/definition_files/bad.yml

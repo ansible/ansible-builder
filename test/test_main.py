@@ -1,6 +1,5 @@
-import pytest
-
 import os
+import pytest
 
 from ansible_builder import __version__
 from ansible_builder.main import AnsibleBuilder
@@ -118,3 +117,12 @@ def test_nested_galaxy_file(data_dir, tmpdir):
     with open(req_in_bc, 'r') as f_in_bc:
         with open(req_original, 'r') as f_in_def:
             assert f_in_bc.read() == f_in_def.read()
+
+
+def test_definition_syntax_error(data_dir, tmpdir):
+    path = os.path.join(data_dir, 'definition_files/bad.yml')
+
+    with pytest.raises(SystemExit) as error:
+        AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+
+    assert 'An error occured while parsing the definition file:' in str(error.value)
