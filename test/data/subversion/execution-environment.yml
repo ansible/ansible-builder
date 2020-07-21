@@ -2,3 +2,6 @@
 version: 1
 dependencies:
   system: bindep.txt
+additional_build_steps:
+  append:  # TODO: remove when bindep starts working
+    - RUN yum install -y subversion
