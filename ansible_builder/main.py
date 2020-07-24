@@ -6,7 +6,7 @@ import textwrap
 
 from . import constants
 from .colors import MessageColors
-from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps
+from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
 from .utils import run_command
 import ansible_builder.introspect
 
@@ -243,6 +243,12 @@ class Containerfile:
                 requirements_files
             )
         )
+
+        system_req_path = self.definition.get_dependency('system')
+        if system_req_path:
+            shutil.copy(system_req_path, self.build_context)
+
+        self.steps.extend(BindepSteps(system_req_path))
 
         return self.steps
 
