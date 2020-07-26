@@ -10,11 +10,6 @@ from . import constants
 from .introspect import add_introspect_options, process
 
 
-def prepare(args=sys.argv[1:]):
-    args = parse_args(args)
-    return AnsibleBuilder(**vars(args))
-
-
 def run():
     args = parse_args()
     if args.action in ['build']:
@@ -35,7 +30,10 @@ def run():
     sys.exit(1)
 
 
-def parse_args(args=sys.argv[1:]):
+def parse_args(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
     parser = argparse.ArgumentParser(
         prog='ansible-builder',
         description=(
