@@ -1,7 +1,7 @@
 import pytest
 import textwrap
 
-from ansible_builder.steps import AdditionalBuildSteps, PipSteps
+from ansible_builder.steps import AdditionalBuildSteps, PipSteps, BindepSteps
 
 
 def test_steps_for_collection_dependencies():
@@ -29,3 +29,12 @@ def test_additional_build_steps(verb):
     steps = AdditionalBuildSteps(additional_build_steps[verb])
 
     assert len(list(steps)) == 2
+
+def test_system_steps():
+    assert list(BindepSteps(
+        'bindep.txt'
+    )) == [
+        'ADD bindep.txt /build/',
+        'RUN pip3 install bindep',
+        'RUN yum -y install $(bindep -q -f /build/bindep.txt)'
+    ]
