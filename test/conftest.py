@@ -13,11 +13,17 @@ def do_not_run_commands():
 @pytest.fixture
 def exec_env_definition_file(tmpdir):
 
-    def _write_file(content={}):
+    def _write_file(content=None):
         path = tmpdir.mkdir('aee').join('execution-env.yml')
 
+        write_str = {}
+        if isinstance(content, dict):
+            write_str = yaml.dump(content)
+        elif isinstance(content, str):
+            write_str = content
+
         with open(path, 'w') as outfile:
-            yaml.dump(content, outfile)
+            outfile.write(write_str)
 
         return path
 
