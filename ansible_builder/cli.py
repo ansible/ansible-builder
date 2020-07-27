@@ -10,11 +10,6 @@ from . import constants
 from .introspect import add_introspect_options, process
 
 
-def prepare(args=sys.argv[1:]):
-    args = parse_args(args)
-    return AnsibleBuilder(**vars(args))
-
-
 def run():
     args = parse_args()
     if args.action in ['build']:
