@@ -52,7 +52,7 @@ class AnsibleBuilder:
         ]
 
     def build(self):
-        self.containerfile.initialize_folder()
+        self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_introspection_steps()
         self.containerfile.prepare_galaxy_steps()
@@ -171,7 +171,7 @@ class Containerfile:
             ""
         ]
 
-    def initialize_folder(self):
+    def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
         moves files from the definition into the folder
         """
