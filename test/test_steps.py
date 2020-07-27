@@ -30,6 +30,7 @@ def test_additional_build_steps(verb):
 
     assert len(list(steps)) == 2
 
+
 def test_system_steps():
     assert list(BindepSteps(
         'bindep.txt'
