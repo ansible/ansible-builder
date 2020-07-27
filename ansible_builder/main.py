@@ -61,6 +61,7 @@ class AnsibleBuilder:
         run_command(self.build_command)
         self.containerfile.prepare_pip_steps()
         print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
+        self.containerfile.prepare_system_steps()
         self.containerfile.prepare_appended_steps()
         self.containerfile.write()
         run_command(self.build_command)
@@ -225,6 +226,7 @@ class Containerfile:
         galaxy_file = self.definition.get_dep('galaxy')
         if galaxy_file:
             self.steps.extend(GalaxySteps(galaxy_file))
+        return self.steps
 
     def prepare_pip_steps(self):
         python_req_file = self.definition.get_dep('python')
@@ -243,13 +245,12 @@ class Containerfile:
                 requirements_files
             )
         )
+        return self.steps
 
-        system_req_path = self.definition.get_dependency('system')
-        if system_req_path:
-            shutil.copy(system_req_path, self.build_context)
-
-        self.steps.extend(BindepSteps(system_req_path))
-
+    def prepare_system_steps(self):
+        system_req_file = self.definition.get_dep('system')
+        if system_req_file:
+            self.steps.extend(BindepSteps(system_req_file))
         return self.steps
 
     def write(self):
