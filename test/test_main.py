@@ -2,7 +2,7 @@ import os
 import pytest
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder
+from ansible_builder.main import AnsibleBuilder, UserDefinition, DefinitionError
 from ansible_builder.introspect import process
 
 
@@ -10,15 +10,15 @@ def test_version():
     assert __version__ == '0.1.0'
 
 
-def test_definition_version(exec_env_definition_file, tmpdir):
+def test_definition_version(exec_env_definition_file):
     path = exec_env_definition_file(content={'version': 1})
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=path)
     assert aee.version == '1'
 
 
-def test_definition_version_missing(exec_env_definition_file, tmpdir):
+def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=path)
 
     with pytest.raises(ValueError):
         aee.version
@@ -72,20 +72,19 @@ def test_base_image(exec_env_definition_file, tmpdir):
     assert 'my-custom-image' in content
 
 
-def test_build_command(exec_env_definition_file, tmpdir):
+def test_build_command(exec_env_definition_file):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
-    aee = AnsibleBuilder(filename=path, tag='my-custom-image', build_context=tmpdir.mkdir('bc2'))
+    aee = AnsibleBuilder(filename=path, tag='my-custom-image')
     command = aee.build_command
     assert 'build' and 'my-custom-image' in command
 
-    context_path = str(tmpdir.mkdir('exec_env'))
-    aee = AnsibleBuilder(filename=path, build_context=context_path, container_runtime='docker')
+    aee = AnsibleBuilder(filename=path, build_context='foo/bar/path', container_runtime='docker')
 
     command = aee.build_command
-    assert context_path in command
-    assert 'exec_env/Dockerfile' in " ".join(command)
+    assert 'foo/bar/path' in command
+    assert 'foo/bar/path/Dockerfile' in " ".join(command)
 
 
 @pytest.fixture
@@ -119,10 +118,31 @@ def test_nested_galaxy_file(data_dir, tmpdir):
             assert f_in_bc.read() == f_in_def.read()
 
 
-def test_definition_syntax_error(data_dir, tmpdir):
-    path = os.path.join(data_dir, 'definition_files/bad.yml')
+class TestDefinitionErrors:
 
-    with pytest.raises(SystemExit) as error:
-        AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    def test_definition_syntax_error(self, data_dir):
+        path = os.path.join(data_dir, 'definition_files/bad.yml')
 
-    assert 'An error occured while parsing the definition file:' in str(error.value)
+        with pytest.raises(DefinitionError) as error:
+            AnsibleBuilder(filename=path)
+
+        assert 'An error occured while parsing the definition file:' in str(error.value.args[0])
+
+    @pytest.mark.parametrize('yaml_text,expect', [
+        ('1', 'Definition must be a dictionary, not int'),  # integer
+        (
+            "{'version': 1, 'dependencies': {'python': 'Dockerfile'}}",
+            'Duplicated filename Dockerfile in definition.'
+        ),  # bad python file
+        (
+            "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
+            'not-exists.yml does not exist'
+        ),  # missing file
+    ])
+    def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
+        path = exec_env_definition_file(yaml_text)
+        with pytest.raises(DefinitionError) as exc:
+            definition = UserDefinition(path)
+            definition.validate()
+        if expect:
+            assert expect in exc.value.args[0]
