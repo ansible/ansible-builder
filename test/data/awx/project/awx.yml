@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+  - name: Do a pip freeze
+    command: pip3 freeze

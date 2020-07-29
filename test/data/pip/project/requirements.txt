@@ -1,1 +1,1 @@
-bottle
+bottle>=3.0
