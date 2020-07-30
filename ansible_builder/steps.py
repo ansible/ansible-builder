@@ -75,7 +75,7 @@ class BindepSteps(Steps):
 
         for file in sanitized_files:
             self.steps.append(
-                "RUN dnf -y install $(bindep -q -f {})".format(file)
+                "RUN dnf -y install $(bindep -b -f {})".format(file)
             )
 
 

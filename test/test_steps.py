@@ -31,5 +31,5 @@ def test_system_steps():
     )) == [
         'ADD bindep.txt /build/',
         'RUN pip3 install bindep',
-        'RUN dnf -y install $(bindep -q -f /build/bindep.txt)'
+        'RUN dnf -y install $(bindep -b -f /build/bindep.txt)'
     ]
