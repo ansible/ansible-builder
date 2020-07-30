@@ -5,7 +5,12 @@ from . import constants
 from .colors import MessageColors
 
 
-class AdditionalBuildSteps:
+class Steps:
+    def __iter__(self):
+        return iter(self.steps)
+
+
+class AdditionalBuildSteps(Steps):
     def __init__(self, additional_steps):
         """Allows for additional prepended / appended build steps to be
         in the Containerfile or Dockerfile.
@@ -25,7 +30,7 @@ class AdditionalBuildSteps:
         return iter(self.steps)
 
 
-class IntrospectionSteps:
+class IntrospectionSteps(Steps):
     def __init__(self, context_file):
         self.steps = []
         self.steps.extend([
@@ -33,11 +38,8 @@ class IntrospectionSteps:
             "RUN chmod +x /usr/local/bin/introspect"
         ])
 
-    def __iter__(self):
-        return iter(self.steps)
 
-
-class GalaxySteps:
+class GalaxySteps(Steps):
     def __init__(self, requirements_naming):
         """Assumes given requirements file name has been placed in the build context
         """
@@ -53,11 +55,31 @@ class GalaxySteps:
                 requirements_naming, constants.base_collections_path)
         ])
 
-    def __iter__(self):
-        return iter(self.steps)
+
+class BindepSteps(Steps):
+    def __init__(self, context_file):
+        self.steps = []
+        sanitized_files = []
+        if context_file:
+            # requirements file added to build context
+            file_naming = os.path.basename(context_file)
+            self.steps.append(
+                "ADD {} /build/".format(file_naming)
+            )
+            sanitized_files.append(os.path.join('/build/', file_naming))
+
+        if sanitized_files:
+            self.steps.append(
+                "RUN pip3 install bindep"
+            )
+
+        for file in sanitized_files:
+            self.steps.append(
+                "RUN dnf -y install $(bindep -q -f {})".format(file)
+            )
 
 
-class PipSteps:
+class PipSteps(Steps):
     def __init__(self, context_file, collection_files):
         """Allows for 1 python requirement file in the build context
         In collection files, expects a list of relative paths where python requirements files live
@@ -91,6 +113,3 @@ class PipSteps:
                     content=line_return.join(sanitized_files)
                 )
             ])
-
-    def __iter__(self):
-        return iter(self.steps)
