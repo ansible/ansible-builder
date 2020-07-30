@@ -78,6 +78,7 @@ class BindepSteps(Steps):
                 "RUN dnf -y install $(bindep -q -f {})".format(file)
             )
 
+
 class PipSteps(Steps):
     def __init__(self, context_file):
         """Allows for 1 python requirement file in the build context"""

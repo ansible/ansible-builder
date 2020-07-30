@@ -4,6 +4,7 @@ import pytest
 from ansible_builder import __version__
 from ansible_builder.main import AnsibleBuilder, UserDefinition, DefinitionError
 from ansible_builder.introspect import process
+from ansible_builder.requirements import sanitize_requirements
 
 
 def test_version():
@@ -95,11 +96,15 @@ def data_dir():
 def test_collection_metadata(data_dir):
 
     files = process(data_dir)
+    files['python'] = sanitize_requirements(files['python'])
 
-    assert files == [
-        'test/metadata/my-requirements.txt',
-        'test/reqfile/requirements.txt'
-    ]
+    assert files == {'python': [
+        'pyvcloud>=14,>=18.0.10',
+        'pytz',
+        'tacacs_plus'
+    ], 'system': [
+        'test/bindep/bindep.txt'
+    ]}
 
 
 def test_nested_galaxy_file(data_dir, tmpdir):
