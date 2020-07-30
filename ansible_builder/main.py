@@ -8,6 +8,7 @@ from . import constants
 from .colors import MessageColors
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
 from .utils import run_command
+from .requirements import sanitize_requirements
 import ansible_builder.introspect
 
 
@@ -185,6 +186,8 @@ class Containerfile:
             requirement_path = self.definition.get_dep_abs_path(item)
             if requirement_path is None:
                 continue
+            if item == 'python':
+                continue  # will be put into combined requirements.txt
             dest = os.path.join(self.build_context, os.path.basename(requirement_path))
             exists = os.path.exists(dest)
             do_copy = True
@@ -235,16 +238,18 @@ class Containerfile:
         rc, output = run_command(command, capture_output=True)
         if rc != 0:
             print(MessageColors.WARNING + 'No collections requirements file found, skipping ansible-galaxy install...' + MessageColors.ENDC)
-            requirements_files = []
         else:
-            requirements_files = yaml.load("\n".join(output)) or []
+            data = yaml.load("\n".join(output))
+            if python_req_file:
+                with open(self.definition.get_dep_abs_path('python'), 'r') as f:
+                    user_py_reqs = f.read().split('\n')
+                data['python'].extend(user_py_reqs)
+            data['python'] = sanitize_requirements(data['python'])
+            pip_file = os.path.join(self.build_context, 'requirements.txt')
+            with open(pip_file, 'w') as f:
+                f.write('\n'.join(data['python']))
 
-        self.steps.extend(
-            PipSteps(
-                python_req_file,
-                requirements_files
-            )
-        )
+            self.steps.extend(PipSteps('requirements.txt'))
         return self.steps
 
     def prepare_system_steps(self):

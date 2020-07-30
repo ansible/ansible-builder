@@ -5,15 +5,31 @@ import sys
 import yaml
 import argparse
 
+
 base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
+
+
+def pip_file_data(path):
+    req_list = []
+    with open(path, 'r') as f:
+        for line in f.read().split('\n'):
+            if not line:
+                continue
+            if line.startswith('-r') or line.startswith('--requirement'):
+                _, new_filename = line.split(None, 1)
+                new_path = os.path.join(os.path.dirname(path or '.'), new_filename)
+                req_list.extend(pip_file_data(new_path))
+            else:
+                req_list.append(line)
+    return req_list
 
 
 def process(data_dir=base_collections_path):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
     if not os.path.exists(path_root):
-        return paths
+        return {'python': [], 'system': []}
 
     for namespace in sorted(os.listdir(path_root)):
         if not os.path.isdir(os.path.join(path_root, namespace)):
@@ -26,16 +42,26 @@ def process(data_dir=base_collections_path):
             if 'galaxy.yml' in files_list or 'MANIFEST.json' in files_list:
                 paths.append(collection_dir)
 
-    ret = []
+    py_req = []
+    sys_req = []
     for path in paths:
         CD = CollectionDefinition(path)
-        dep_file = CD.get_dependency('python')
-        if not dep_file:
-            continue
         namespace, name = CD.namespace_name()
-        ret.append(os.path.join(namespace, name, dep_file))
 
-    return ret
+        py_file = CD.get_dependency('python')
+        if py_file:
+            py_req.extend(
+                pip_file_data(os.path.join(path, py_file))
+            )
+
+        sys_file = CD.get_dependency('system')
+        if sys_file:
+            sys_req.append(os.path.join(namespace, name, sys_file))
+
+    return {
+        'python': py_req,
+        'system': sys_req
+    }
 
 
 class CollectionDefinition:
@@ -108,8 +134,10 @@ if __name__ == '__main__':
     add_introspect_options(parser)
     args = parser.parse_args()
     # TODO: modify contract to handle multiple locations more gracefully
-    data = []
+    data = {'python': [], 'system': []}
     for folder in args.folders:
-        data.extend(process(folder))
+        this_data = process(folder)
+        data['python'].extend(this_data['python'])
+        data['system'].extend(this_data['system'])
     print(yaml.dump(data, default_flow_style=False))
     sys.exit(0)

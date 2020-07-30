@@ -8,6 +8,7 @@ from .colors import MessageColors
 from .main import AnsibleBuilder, DefinitionError
 from . import constants
 from .introspect import add_introspect_options, process
+from .requirements import sanitize_requirements
 
 
 def run():
@@ -25,9 +26,15 @@ def run():
     elif args.action == 'introspect':
         for folder in args.folders:
             data = process(folder)
-            print()
-            print('Dependency data for {0}'.format(folder))
-            print(yaml.dump(data, default_flow_style=False))
+            if args.sanitize:
+                data['python'] = sanitize_requirements(data['python'])
+                print()
+                print('Sanitized dependencies for {0}'.format(folder))
+                print(yaml.dump(data, default_flow_style=False))
+            else:
+                print()
+                print('Dependency data for {0}'.format(folder))
+                print(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
     print(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
@@ -97,6 +104,13 @@ def parse_args(args=sys.argv[1:]):
         )
     )
     add_introspect_options(introspect_parser)
+    introspect_parser.add_argument(
+        '--sanitize', help=(
+            'Sanitize and de-duplicate requirements. '
+            'This is normally done separately from the introspect script, but this '
+            'option is given to more accurately test collection content.'
+        ), action='store_true'
+    )
 
     args = parser.parse_args(args)
 
