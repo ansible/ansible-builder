@@ -8,6 +8,7 @@ authors = ["Matthew Jones <matburt@redhat.com>",
 [tool.poetry.dependencies]
 python = "^3.6"
 pyyaml = "^3.12"     # Do not bump this version, its the minimum for el7 and el8 packaging
+requirements-parser = "^0.2.0"
 
 [tool.poetry.scripts]
 ansible-builder = 'ansible_builder.cli:run'
