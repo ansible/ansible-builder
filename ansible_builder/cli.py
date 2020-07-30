@@ -106,7 +106,7 @@ def parse_args(args=sys.argv[1:]):
     add_introspect_options(introspect_parser)
     introspect_parser.add_argument(
         '--sanitize', help=(
-            'Sanite and de-duplicate requirements. '
+            'Sanitize and de-duplicate requirements. '
             'This is normally done separately from the introspect script, but this '
             'option is given to more accurately test collection content.'
         ), action='store_true'
