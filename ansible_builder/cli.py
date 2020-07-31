@@ -8,7 +8,7 @@ from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from . import constants
-from .introspect import add_introspect_options, process
+from .introspect import add_introspect_options, process, write_files, simple_combine
 from .requirements import sanitize_requirements
 
 
@@ -25,17 +25,17 @@ def run():
             print(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
-        for folder in args.folders:
-            data = process(folder)
-            if args.sanitize:
-                data['python'] = sanitize_requirements(data['python'])
-                print()
-                print('Sanitized dependencies for {0}'.format(folder))
-                print(yaml.dump(data, default_flow_style=False))
-            else:
-                print()
-                print('Dependency data for {0}'.format(folder))
-                print(yaml.dump(data, default_flow_style=False))
+        data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
+        if args.sanitize:
+            data['python'] = sanitize_requirements(data['python'])
+            data['system'] = simple_combine(data['system'])
+            print()
+            print('Sanitized dependencies for {0}'.format(args.folder))
+        else:
+            print()
+            print('Dependency data for {0}'.format(args.folder))
+        print(yaml.dump(data, default_flow_style=False))
+        write_files(data, write_pip=args.write_pip, write_bindep=args.write_bindep)
         sys.exit(0)
 
     print(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)

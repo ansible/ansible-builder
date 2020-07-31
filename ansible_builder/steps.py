@@ -34,12 +34,24 @@ class AdditionalBuildSteps(Steps):
 
 
 class IntrospectionSteps(Steps):
-    def __init__(self, context_file):
+    def __init__(self, context_file, user_pip, user_bindep, dest_bindep):
         self.steps = []
         self.steps.extend([
             "ADD {0} /usr/local/bin/introspect".format(context_file),
-            "RUN chmod +x /usr/local/bin/introspect"
+            "RUN chmod +x /usr/local/bin/introspect",
         ])
+
+        to_run = ['introspect']
+        if user_pip:
+            self.steps.append("ADD {0} /build/".format(user_pip))
+            to_run.extend(['--user-pip', '/build/{0}'.format(user_pip)])
+        if user_bindep:
+            self.steps.append("ADD {0} /build/".format(user_bindep))
+            to_run.extend(['--user-bindep', '/build/{0}'.format(user_bindep)])
+
+        to_run.extend(['--write-bindep', '/build/{0}'.format(dest_bindep)])
+
+        self.steps.append("RUN {0}".format(' '.join(to_run)))
 
 
 class GalaxySteps(Steps):
@@ -61,25 +73,17 @@ class GalaxySteps(Steps):
 
 class BindepSteps(Steps):
     def __init__(self, context_file):
+        """The context file here must be the output from bindep"""
         self.steps = []
-        sanitized_files = []
-        if context_file:
-            # requirements file added to build context
-            file_naming = os.path.basename(context_file)
-            self.steps.append(
-                "ADD {0} /build/".format(file_naming)
-            )
-            sanitized_files.append(os.path.join('/build/', file_naming))
+        if not context_file:
+            return
 
-        if sanitized_files:
-            self.steps.append(
-                "RUN pip3 install bindep"
-            )
-
-        for file in sanitized_files:
-            self.steps.append(
-                "RUN dnf -y install $(bindep -b -f {0})".format(file)
-            )
+        # requirements file added to build context
+        self.steps.append("ADD {0} /build/".format(context_file))
+        container_path = os.path.join('/build/', context_file)
+        self.steps.append(
+            "RUN dnf -y install $(cat {0})".format(container_path)
+        )
 
 
 class PipSteps(Steps):

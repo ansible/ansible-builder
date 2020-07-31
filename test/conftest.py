@@ -2,11 +2,16 @@ import yaml
 from unittest import mock
 import pytest
 import os
+from ansible_builder.introspect import begin_delimiter, end_delimiter
 
 
 @pytest.fixture(autouse=True)
 def do_not_run_commands():
-    cmd_mock = mock.MagicMock(return_value=[1, ['python:', '  - foo', 'system: []']])
+    cmd_mock = mock.MagicMock(return_value=[1, [
+        begin_delimiter,
+        'python:', '  foo: []', 'system: {}',
+        end_delimiter
+    ]])
     with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
         yield cmd_mock
 
