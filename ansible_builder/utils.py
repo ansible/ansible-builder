@@ -20,4 +20,8 @@ def run_command(command, capture_output=False):
         sys.stdout.write(line)
 
     rc = process.poll()
+    if rc != 0:
+        print(MessageColors.FAIL + "An error occured, see output line(s) above for details." + MessageColors.ENDC)
+        sys.exit(1)
+
     return (rc, output)
