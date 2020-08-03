@@ -204,8 +204,8 @@ class Containerfile:
         if additional_prepend_steps:
             if not isinstance(additional_prepend_steps, dict):
                 raise TypeError((
-                    "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
-                    f"found a {type(additional_prepend_steps)} instead"
+                    MessageColors.FAIL + "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
+                    f"found a {type(additional_prepend_steps)} instead" + MessageColors.ENDC
                 ))
             prepended_steps = additional_prepend_steps.get('prepend')
             if prepended_steps:
@@ -218,8 +218,8 @@ class Containerfile:
         if additional_append_steps:
             if not isinstance(additional_append_steps, dict):
                 raise TypeError((
-                    "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
-                    f"found a {type(additional_append_steps)} instead"
+                    MessageColors.FAIL + "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
+                    f"found a {type(additional_append_steps)} instead" + MessageColors.ENDC
                 ))
             appended_steps = additional_append_steps.get('append')
             if appended_steps:
