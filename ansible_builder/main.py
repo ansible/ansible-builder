@@ -126,6 +126,7 @@ class UserDefinition(BaseDefinition):
         if not req_file:
             return None
 
+        print(req_file)
         if os.path.isabs(req_file):
             return req_file
 
@@ -201,6 +202,11 @@ class Containerfile:
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
+            if not isinstance(additional_prepend_steps, dict):
+                raise TypeError((
+                    "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
+                    f"found a {type(additional_prepend_steps)} instead"
+                ))
             prepended_steps = additional_prepend_steps.get('prepend')
             if prepended_steps:
                 return self.steps.extend(AdditionalBuildSteps(prepended_steps))
@@ -210,6 +216,11 @@ class Containerfile:
     def prepare_appended_steps(self):
         additional_append_steps = self.definition.get_additional_commands()
         if additional_append_steps:
+            if not isinstance(additional_append_steps, dict):
+                raise TypeError((
+                    "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
+                    f"found a {type(additional_append_steps)} instead"
+                ))
             appended_steps = additional_append_steps.get('append')
             if appended_steps:
                 return self.steps.extend(AdditionalBuildSteps(appended_steps))
