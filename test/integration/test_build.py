@@ -19,9 +19,9 @@ def test_missing_galaxy_requirements_file():
     pytest.skip("Not implemented")
 
 
-def test_build_streams_output(cli, build_dir_and_ee_yml, ee_tag):
+def test_build_streams_output(cli, container_runtime, build_dir_and_ee_yml, ee_tag):
     """Test that 'ansible-builder build' streams build output."""
     tmpdir, eeyml = build_dir_and_ee_yml("")
-    result = cli(f"ansible-builder build -c {tmpdir} -f {eeyml} -t {ee_tag}")
-    assert f"podman build -f {tmpdir}/Containerfile" in result.stdout
+    result = cli(f"ansible-builder build -c {tmpdir} -f {eeyml} -t {ee_tag} --container-runtime {container_runtime}")
+    assert f"{container_runtime} build -f {tmpdir}" in result.stdout
     assert f"The build context can be found at: {tmpdir}" in result.stdout

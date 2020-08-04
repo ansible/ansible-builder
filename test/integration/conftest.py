@@ -58,3 +58,11 @@ def cli(request):
         return ret
 
     return run
+
+
+@pytest.fixture(params=['docker', 'podman'], ids=['docker', 'podman'])
+def container_runtime(request, cli):
+    if cli(f'{request.param} --version', check=False).returncode == 0:
+        return request.param
+    else:
+        pytest.skip(f'{request.param} runtime not available')
