@@ -236,20 +236,18 @@ class Containerfile:
 
         command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
         rc, output = run_command(command, capture_output=True)
-        if rc != 0:
-            print(MessageColors.WARNING + 'No collections requirements file found, skipping ansible-galaxy install...' + MessageColors.ENDC)
-        else:
-            data = yaml.load("\n".join(output))
-            if python_req_file:
-                with open(self.definition.get_dep_abs_path('python'), 'r') as f:
-                    user_py_reqs = f.read().split('\n')
-                data['python'].extend(user_py_reqs)
-            data['python'] = sanitize_requirements(data['python'])
-            pip_file = os.path.join(self.build_context, 'requirements.txt')
-            with open(pip_file, 'w') as f:
-                f.write('\n'.join(data['python']))
+        data = yaml.load("\n".join(output))
 
-            self.steps.extend(PipSteps('requirements.txt'))
+        if python_req_file:
+            with open(self.definition.get_dep_abs_path('python'), 'r') as f:
+                user_py_reqs = f.read().split('\n')
+            data['python'].extend(user_py_reqs)
+        data['python'] = sanitize_requirements(data['python'])
+        pip_file = os.path.join(self.build_context, 'requirements.txt')
+        with open(pip_file, 'w') as f:
+            f.write('\n'.join(data['python']))
+
+        self.steps.extend(PipSteps('requirements.txt'))
         return self.steps
 
     def prepare_system_steps(self):
