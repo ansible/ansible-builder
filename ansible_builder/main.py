@@ -1,8 +1,9 @@
-import os
-import yaml
-import shutil
 import filecmp
+import os
+import shutil
+import sys
 import textwrap
+import yaml
 
 from . import constants
 from .colors import MessageColors
@@ -100,15 +101,15 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
         except yaml.parser.ParserError as e:
-            raise DefinitionError(textwrap.dedent("""
+            raise DefinitionError(textwrap.dedent(MessageColors.FAIL + """
             An error occured while parsing the definition file:
             {0}
-            """).format(str(e)))
+            """).format(str(e)) + MessageColors.ENDC)
 
         if not isinstance(self.raw, dict):
-            raise DefinitionError('Definition must be a dictionary, not {}'.format(
-                type(self.raw).__name__
-            ))
+            raise DefinitionError(
+                MessageColors.FAIL + 'Definition must be a dictionary, not {}'.format(type(self.raw).__name__) + MessageColors.ENDC
+            )
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
@@ -126,7 +127,6 @@ class UserDefinition(BaseDefinition):
         if not req_file:
             return None
 
-        print(req_file)
         if os.path.isabs(req_file):
             return req_file
 
@@ -147,9 +147,13 @@ class UserDefinition(BaseDefinition):
             if requirement_path:
                 filename = os.path.basename(requirement_path)
                 if filename in bc_files:
-                    raise DefinitionError('Duplicated filename {} in definition.'.format(filename))
+                    raise DefinitionError(
+                        MessageColors.WARNING + 'Duplicated filename {} in definition.'.format(filename) + MessageColors.ENDC
+                    )
                 if not os.path.exists(requirement_path):
-                    raise DefinitionError('Dependency file {} does not exist.'.format(requirement_path))
+                    raise DefinitionError(
+                        MessageColors.WARNING + 'Dependency file {} does not exist.'.format(requirement_path) + MessageColors.ENDC
+                    )
                 bc_files.add(filename)
 
 
@@ -203,10 +207,14 @@ class Containerfile:
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
             if not isinstance(additional_prepend_steps, dict):
-                raise TypeError((
-                    MessageColors.FAIL + "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
-                    f"found a {type(additional_prepend_steps)} instead" + MessageColors.ENDC
-                ))
+                # The syntax error for additional_build_steps will _always_ get caught during the prepare_prepended_steps(),
+                # so this is the only place that checks for syntax issues
+                sys.tracebacklimit = 0
+                raise TypeError(MessageColors.FAIL + textwrap.dedent(f"""
+                    Expected 'additional_build_steps' in the provided definition file to be a dictionary
+                    with keys 'prepend' and/or 'append', found a {type(additional_prepend_steps)} instead.
+                    """ + MessageColors.ENDC))
+                sys.exit(1)
             prepended_steps = additional_prepend_steps.get('prepend')
             if prepended_steps:
                 return self.steps.extend(AdditionalBuildSteps(prepended_steps))
@@ -216,11 +224,6 @@ class Containerfile:
     def prepare_appended_steps(self):
         additional_append_steps = self.definition.get_additional_commands()
         if additional_append_steps:
-            if not isinstance(additional_append_steps, dict):
-                raise TypeError((
-                    MessageColors.FAIL + "Expected 'additional_build_steps' to be a dictionary with keys 'prepend' and/or 'append',\n"
-                    f"found a {type(additional_append_steps)} instead" + MessageColors.ENDC
-                ))
             appended_steps = additional_append_steps.get('append')
             if appended_steps:
                 return self.steps.extend(AdditionalBuildSteps(appended_steps))
