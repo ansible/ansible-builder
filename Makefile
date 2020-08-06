@@ -31,7 +31,7 @@ ifeq ($(RPM_ARCH),)
     RPM_ARCH = $(shell uname -m)
 endif
 
-.PHONY: clean dist sdist dev shell rpm srpm docs
+.PHONY: clean dist sdist dev shell rpm srpm docs test
 
 clean:
 	rm -rf dist
@@ -58,7 +58,7 @@ shell:
 	poetry shell
 
 test:
-	tox
+	@tox
 
 docs:
 	cd docs && make html
