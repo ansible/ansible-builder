@@ -244,10 +244,13 @@ class Containerfile:
             data['python'].extend(user_py_reqs)
         data['python'] = sanitize_requirements(data['python'])
         pip_file = os.path.join(self.build_context, 'requirements.txt')
-        with open(pip_file, 'w') as f:
-            f.write('\n'.join(data['python']))
 
-        self.steps.extend(PipSteps('requirements.txt'))
+        py_req_text = '\n'.join(data['python'])
+        if py_req_text.strip():
+            with open(pip_file, 'w') as f:
+                f.write(py_req_text)
+            self.steps.extend(PipSteps('requirements.txt'))
+
         return self.steps
 
     def prepare_system_steps(self):
