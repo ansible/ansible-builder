@@ -92,7 +92,7 @@ class UserDefinition(BaseDefinition):
 
         try:
             with open(filename, 'r') as f:
-                y = yaml.load(f)
+                y = yaml.safe_load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
             raise DefinitionError("""
