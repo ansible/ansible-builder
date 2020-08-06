@@ -143,6 +143,15 @@ class TestDefinitionErrors:
             "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
             'not-exists.yml does not exist'
         ),  # missing file
+        (
+            "{'version': 1, 'additional_build_steps': 'RUN me'}",
+            "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
+            "with keys 'prepend' and/or 'append', found a <class 'str'> instead."
+        ),  # not right format for additional_build_steps
+        (
+            "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
+            "Keys ('middle',) are not allowed in 'additional_build_steps'."
+        ),  # not right format for additional_build_steps
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

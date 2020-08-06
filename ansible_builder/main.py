@@ -1,7 +1,6 @@
 import filecmp
 import os
 import shutil
-import sys
 import textwrap
 import yaml
 
@@ -155,6 +154,18 @@ class UserDefinition(BaseDefinition):
                         MessageColors.WARNING + 'Dependency file {} does not exist.'.format(requirement_path) + MessageColors.ENDC
                     )
                 bc_files.add(filename)
+        additional_cmds = self.get_additional_commands()
+        if additional_cmds:
+            if not isinstance(additional_cmds, dict):
+                raise DefinitionError(
+                    "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
+                    f"with keys 'prepend' and/or 'append', found a {type(additional_cmds)} instead.")
+            expected_keys = frozenset(('append', 'prepend'))
+            unexpected_keys = set(additional_cmds.keys()) - expected_keys
+            if unexpected_keys:
+                raise DefinitionError(
+                    f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
+                )
 
 
 class Containerfile:
@@ -206,15 +217,6 @@ class Containerfile:
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
-            if not isinstance(additional_prepend_steps, dict):
-                # The syntax error for additional_build_steps will _always_ get caught during the prepare_prepended_steps(),
-                # so this is the only place that checks for syntax issues
-                sys.tracebacklimit = 0
-                raise TypeError(MessageColors.FAIL + textwrap.dedent(f"""
-                    Expected 'additional_build_steps' in the provided definition file to be a dictionary
-                    with keys 'prepend' and/or 'append', found a {type(additional_prepend_steps)} instead.
-                    """ + MessageColors.ENDC))
-                sys.exit(1)
             prepended_steps = additional_prepend_steps.get('prepend')
             if prepended_steps:
                 return self.steps.extend(AdditionalBuildSteps(prepended_steps))
