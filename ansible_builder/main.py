@@ -92,7 +92,7 @@ class UserDefinition(BaseDefinition):
 
         try:
             with open(filename, 'r') as f:
-                y = yaml.load(f)
+                y = yaml.safe_load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
             raise DefinitionError("""
@@ -236,7 +236,7 @@ class Containerfile:
 
         command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
         rc, output = run_command(command, capture_output=True)
-        data = yaml.load("\n".join(output))
+        data = yaml.safe_load("\n".join(output))
 
         if python_req_file:
             with open(self.definition.get_dep_abs_path('python'), 'r') as f:

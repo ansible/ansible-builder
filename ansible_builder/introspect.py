@@ -74,7 +74,7 @@ class CollectionDefinition:
         meta_file = os.path.join(collection_path, 'meta', default_file)
         if os.path.exists(meta_file):
             with open(meta_file, 'r') as f:
-                self.raw = yaml.load(f)
+                self.raw = yaml.safe_load(f)
         else:
             self.raw = {'version': 1, 'dependencies': {}}
             # Automatically infer requirements for collection
