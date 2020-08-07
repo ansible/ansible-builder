@@ -1,8 +1,8 @@
-import os
-import yaml
-import shutil
 import filecmp
+import os
+import shutil
 import textwrap
+import yaml
 
 from . import constants
 from .colors import MessageColors
@@ -100,15 +100,15 @@ class UserDefinition(BaseDefinition):
             Use -f to specify a different location.
             """.format(constants.default_file))
         except yaml.parser.ParserError as e:
-            raise DefinitionError(textwrap.dedent("""
+            raise DefinitionError(textwrap.dedent(MessageColors.FAIL + """
             An error occured while parsing the definition file:
             {0}
-            """).format(str(e)))
+            """).format(str(e)) + MessageColors.ENDC)
 
         if not isinstance(self.raw, dict):
-            raise DefinitionError('Definition must be a dictionary, not {}'.format(
-                type(self.raw).__name__
-            ))
+            raise DefinitionError(
+                MessageColors.FAIL + 'Definition must be a dictionary, not {}'.format(type(self.raw).__name__) + MessageColors.ENDC
+            )
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
@@ -146,10 +146,26 @@ class UserDefinition(BaseDefinition):
             if requirement_path:
                 filename = os.path.basename(requirement_path)
                 if filename in bc_files:
-                    raise DefinitionError('Duplicated filename {} in definition.'.format(filename))
+                    raise DefinitionError(
+                        MessageColors.WARNING + 'Duplicated filename {} in definition.'.format(filename) + MessageColors.ENDC
+                    )
                 if not os.path.exists(requirement_path):
-                    raise DefinitionError('Dependency file {} does not exist.'.format(requirement_path))
+                    raise DefinitionError(
+                        MessageColors.WARNING + 'Dependency file {} does not exist.'.format(requirement_path) + MessageColors.ENDC
+                    )
                 bc_files.add(filename)
+        additional_cmds = self.get_additional_commands()
+        if additional_cmds:
+            if not isinstance(additional_cmds, dict):
+                raise DefinitionError(
+                    "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
+                    f"with keys 'prepend' and/or 'append', found a {type(additional_cmds)} instead.")
+            expected_keys = frozenset(('append', 'prepend'))
+            unexpected_keys = set(additional_cmds.keys()) - expected_keys
+            if unexpected_keys:
+                raise DefinitionError(
+                    f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
+                )
 
 
 class Containerfile:
