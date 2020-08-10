@@ -88,11 +88,6 @@ def test_build_command(exec_env_definition_file):
     assert 'foo/bar/path/Dockerfile' in " ".join(command)
 
 
-@pytest.fixture
-def data_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
-
-
 def test_collection_metadata(data_dir):
 
     files = process(data_dir)
