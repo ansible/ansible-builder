@@ -5,7 +5,8 @@ import yaml
 from . import __version__
 
 from .colors import MessageColors
-from .main import AnsibleBuilder, DefinitionError
+from .exceptions import DefinitionError
+from .main import AnsibleBuilder
 from . import constants
 from .introspect import add_introspect_options, process
 from .requirements import sanitize_requirements

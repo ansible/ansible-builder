@@ -2,7 +2,8 @@ import os
 import pytest
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder, UserDefinition, DefinitionError
+from ansible_builder.exceptions import DefinitionError
+from ansible_builder.main import AnsibleBuilder, UserDefinition
 from ansible_builder.introspect import process
 from ansible_builder.requirements import sanitize_requirements
 

@@ -2,7 +2,7 @@ import os
 import sys
 
 from . import constants
-from .colors import MessageColors
+from .exceptions import DefinitionError
 
 
 class Steps:

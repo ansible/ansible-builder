@@ -1,12 +1,12 @@
 import filecmp
 import os
 import shutil
-import sys
 import textwrap
 import yaml
 
 from . import constants
 from .colors import MessageColors
+from .exceptions import DefinitionError
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
 from .utils import run_command
 from .requirements import sanitize_requirements
@@ -15,14 +15,6 @@ import ansible_builder.introspect
 
 # Files that need to be moved into the build context
 CONTEXT_FILES = ['galaxy', 'python', 'system']
-
-
-class DefinitionError(RuntimeError):
-    sys.tracebacklimit = 0
-
-    def __init__(self, msg):
-        super(DefinitionError, self).__init__(MessageColors.FAIL + ("%s" % msg) + MessageColors.ENDC)
-        self.msg = msg
 
 
 class AnsibleBuilder:
