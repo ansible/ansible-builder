@@ -1,6 +1,7 @@
 import filecmp
 import os
 import shutil
+import sys
 import textwrap
 import yaml
 
@@ -17,6 +18,7 @@ CONTEXT_FILES = ['galaxy', 'python', 'system']
 
 
 class DefinitionError(RuntimeError):
+    sys.tracebacklimit = 0
     pass
 
 
@@ -95,10 +97,10 @@ class UserDefinition(BaseDefinition):
                 y = yaml.safe_load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
-            raise DefinitionError("""
+            raise DefinitionError(MessageColors.FAIL + """
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
-            """.format(constants.default_file))
+            """.format(constants.default_file) + MessageColors.ENDC)
         except yaml.parser.ParserError as e:
             raise DefinitionError(textwrap.dedent(MessageColors.FAIL + """
             An error occured while parsing the definition file:
@@ -107,8 +109,9 @@ class UserDefinition(BaseDefinition):
 
         if not isinstance(self.raw, dict):
             raise DefinitionError(
-                MessageColors.FAIL + 'Definition must be a dictionary, not {}'.format(type(self.raw).__name__) + MessageColors.ENDC
-            )
+                MessageColors.FAIL + """
+                Definition must be a dictionary, not {}
+                """.format(type(self.raw).__name__) + MessageColors.ENDC)
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
