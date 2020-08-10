@@ -92,10 +92,10 @@ class UserDefinition(BaseDefinition):
                 y = yaml.safe_load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
-            raise DefinitionError("""
+            raise DefinitionError(textwrap.dedent("""
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
-            """.format(filename))
+            """).format(filename))
         except yaml.parser.ParserError as e:
             raise DefinitionError(textwrap.dedent("""
             An error occured while parsing the definition file:

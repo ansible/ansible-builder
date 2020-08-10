@@ -161,3 +161,11 @@ class TestDefinitionErrors:
             definition.validate()
         if expect:
             assert expect in exc.value.args[0]
+
+    def test_file_not_found_error(good_exec_env_definition_path, tmpdir):
+        path = "exec_env.txt"
+
+        with pytest.raises(DefinitionError) as error:
+            AnsibleBuilder(filename=path)
+
+        assert "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location." in str(error.value.args[0])
