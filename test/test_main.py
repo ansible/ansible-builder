@@ -145,8 +145,8 @@ class TestDefinitionErrors:
         ),  # missing file
         (
             "{'version': 1, 'additional_build_steps': 'RUN me'}",
-            "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
-            "with keys 'prepend' and/or 'append', found a <class 'str'> instead."
+            "Expected 'additional_build_steps' in the provided definition file to be a dictionary\n"
+            "with keys 'prepend' and/or 'append'; found a str instead."
         ),  # not right format for additional_build_steps
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
