@@ -1,6 +1,7 @@
 import yaml
 from unittest import mock
 import pytest
+import os
 
 
 @pytest.fixture(autouse=True)
@@ -8,6 +9,11 @@ def do_not_run_commands():
     cmd_mock = mock.MagicMock(return_value=[1, ['python:', '  - foo', 'system: []']])
     with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
         yield cmd_mock
+
+
+@pytest.fixture
+def data_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
 @pytest.fixture
