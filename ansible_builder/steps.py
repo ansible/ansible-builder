@@ -2,7 +2,7 @@ import os
 import sys
 
 from . import constants
-from .colors import MessageColors
+from .exceptions import DefinitionError
 
 
 class Steps:
@@ -21,8 +21,11 @@ class AdditionalBuildSteps(Steps):
         elif isinstance(additional_steps, list):
             lines = additional_steps
         else:
-            print(MessageColors.FAIL + "Error: Unknown type found for additional_build_steps; "
-                  "must be list or multi-line string." + MessageColors.ENDC)
+            raise DefinitionError(
+                """
+                Error: Unknown type found for additional_build_steps; must be list or multi-line string.
+                """
+            )
             sys.exit(1)
         self.steps.extend(lines)
 
@@ -34,7 +37,7 @@ class IntrospectionSteps(Steps):
     def __init__(self, context_file):
         self.steps = []
         self.steps.extend([
-            "ADD {} /usr/local/bin/introspect".format(context_file),
+            "ADD {0} /usr/local/bin/introspect".format(context_file),
             "RUN chmod +x /usr/local/bin/introspect"
         ])
 
@@ -45,7 +48,7 @@ class GalaxySteps(Steps):
         """
         self.steps = []
         self.steps.append(
-            "ADD {} /build/".format(requirements_naming)
+            "ADD {0} /build/".format(requirements_naming)
         )
         self.steps.extend([
             "",
@@ -64,7 +67,7 @@ class BindepSteps(Steps):
             # requirements file added to build context
             file_naming = os.path.basename(context_file)
             self.steps.append(
-                "ADD {} /build/".format(file_naming)
+                "ADD {0} /build/".format(file_naming)
             )
             sanitized_files.append(os.path.join('/build/', file_naming))
 
@@ -75,7 +78,7 @@ class BindepSteps(Steps):
 
         for file in sanitized_files:
             self.steps.append(
-                "RUN dnf -y install $(bindep -b -f {})".format(file)
+                "RUN dnf -y install $(bindep -b -f {0})".format(file)
             )
 
 
@@ -87,7 +90,7 @@ class PipSteps(Steps):
             return
 
         # requirements file added to build context
-        self.steps.append("ADD {} /build/".format(context_file))
+        self.steps.append("ADD {0} /build/".format(context_file))
         container_path = os.path.join('/build/', context_file)
         self.steps.append(
             "RUN pip3 install --upgrade -r {content}".format(content=container_path)

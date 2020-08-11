@@ -5,7 +5,8 @@ import yaml
 from . import __version__
 
 from .colors import MessageColors
-from .main import AnsibleBuilder, DefinitionError
+from .exceptions import DefinitionError
+from .main import AnsibleBuilder
 from . import constants
 from .introspect import add_introspect_options, process
 from .requirements import sanitize_requirements
@@ -18,10 +19,10 @@ def run():
         action = getattr(ab, ab.action)
         try:
             if action():
-                print(MessageColors.OKGREEN + "Complete! The build context can be found at: {}".format(ab.build_context) + MessageColors.ENDC)
+                print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
                 sys.exit(0)
         except DefinitionError as e:
-            print(MessageColors.FAIL + e.args[0] + MessageColors.ENDC)
+            print(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
         for folder in args.folders:

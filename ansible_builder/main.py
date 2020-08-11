@@ -6,6 +6,7 @@ import yaml
 
 from . import constants
 from .colors import MessageColors
+from .exceptions import DefinitionError
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
 from .utils import run_command
 from .requirements import sanitize_requirements
@@ -14,10 +15,6 @@ import ansible_builder.introspect
 
 # Files that need to be moved into the build context
 CONTEXT_FILES = ['galaxy', 'python', 'system']
-
-
-class DefinitionError(RuntimeError):
-    pass
 
 
 class AnsibleBuilder:
@@ -95,20 +92,18 @@ class UserDefinition(BaseDefinition):
                 y = yaml.safe_load(f)
                 self.raw = y if y else {}
         except FileNotFoundError:
-            raise DefinitionError("""
+            raise DefinitionError(textwrap.dedent("""
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
-            """.format(constants.default_file))
+            """).format(filename))
         except yaml.parser.ParserError as e:
-            raise DefinitionError(textwrap.dedent(MessageColors.FAIL + """
+            raise DefinitionError(textwrap.dedent("""
             An error occured while parsing the definition file:
             {0}
-            """).format(str(e)) + MessageColors.ENDC)
+            """).format(str(e)))
 
         if not isinstance(self.raw, dict):
-            raise DefinitionError(
-                MessageColors.FAIL + 'Definition must be a dictionary, not {}'.format(type(self.raw).__name__) + MessageColors.ENDC
-            )
+            raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
@@ -146,20 +141,18 @@ class UserDefinition(BaseDefinition):
             if requirement_path:
                 filename = os.path.basename(requirement_path)
                 if filename in bc_files:
-                    raise DefinitionError(
-                        MessageColors.WARNING + 'Duplicated filename {} in definition.'.format(filename) + MessageColors.ENDC
-                    )
+                    raise DefinitionError("Duplicated filename {0} in definition.".format(filename))
                 if not os.path.exists(requirement_path):
-                    raise DefinitionError(
-                        MessageColors.WARNING + 'Dependency file {} does not exist.'.format(requirement_path) + MessageColors.ENDC
-                    )
+                    raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
                 bc_files.add(filename)
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
             if not isinstance(additional_cmds, dict):
-                raise DefinitionError(
-                    "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
-                    f"with keys 'prepend' and/or 'append', found a {type(additional_cmds)} instead.")
+                raise DefinitionError(textwrap.dedent("""
+                    Expected 'additional_build_steps' in the provided definition file to be a dictionary
+                    with keys 'prepend' and/or 'append'; found a {0} instead.
+                    """).format(type(additional_cmds).__name__))
+
             expected_keys = frozenset(('append', 'prepend'))
             unexpected_keys = set(additional_cmds.keys()) - expected_keys
             if unexpected_keys:
@@ -185,7 +178,7 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "FROM {}".format(self.base_image),
+            "FROM {0}".format(self.base_image),
             ""
         ]
 

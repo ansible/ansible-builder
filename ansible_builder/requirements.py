@@ -42,9 +42,9 @@ def sanitize_requirements(py_reqs):
             # A source control requirement like git+, return as-is
             sanitized.append(req.line)
         elif req.name:
-            specs = ['{}{}'.format(cmp, ver) for cmp, ver in req.specs]
+            specs = ['{0}{1}'.format(cmp, ver) for cmp, ver in req.specs]
             sanitized.append(req.name + ','.join(specs))
         else:
-            raise RuntimeError('Could not process {}'.format(req.line))
+            raise RuntimeError('Could not process {0}'.format(req.line))
 
     return sanitized

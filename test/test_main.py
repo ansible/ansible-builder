@@ -2,7 +2,8 @@ import os
 import pytest
 
 from ansible_builder import __version__
-from ansible_builder.main import AnsibleBuilder, UserDefinition, DefinitionError
+from ansible_builder.exceptions import DefinitionError
+from ansible_builder.main import AnsibleBuilder, UserDefinition
 from ansible_builder.introspect import process
 from ansible_builder.requirements import sanitize_requirements
 
@@ -145,8 +146,8 @@ class TestDefinitionErrors:
         ),  # missing file
         (
             "{'version': 1, 'additional_build_steps': 'RUN me'}",
-            "Expected 'additional_build_steps' in the provided definition file to be a dictionary "
-            "with keys 'prepend' and/or 'append', found a <class 'str'> instead."
+            "Expected 'additional_build_steps' in the provided definition file to be a dictionary\n"
+            "with keys 'prepend' and/or 'append'; found a str instead."
         ),  # not right format for additional_build_steps
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
@@ -160,3 +161,11 @@ class TestDefinitionErrors:
             definition.validate()
         if expect:
             assert expect in exc.value.args[0]
+
+    def test_file_not_found_error(good_exec_env_definition_path, tmpdir):
+        path = "exec_env.txt"
+
+        with pytest.raises(DefinitionError) as error:
+            AnsibleBuilder(filename=path)
+
+        assert "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location." in str(error.value.args[0])

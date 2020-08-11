@@ -27,8 +27,9 @@ The `ansible-builder build` command takes an execution environment definition as
 It outputs the build context necessary for building an execution environment image,
 and it builds that image.
 The image can be re-built with the build context elsewhere, and give the same result.
+The execution environment definition file needs to be in YAML format with the `.yml` file extension.
 
-The schema of the execution environment definition looks like:
+An example execution environment definition schema is as follows:
 
 ```yaml
 ---
