@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 
 from .colors import MessageColors
 
@@ -20,8 +21,19 @@ def run_command(command, capture_output=False):
         sys.stdout.write(line)
 
     rc = process.poll()
-    if rc != 0:
-        print(MessageColors.FAIL + "An error occured, see output line(s) above for details." + MessageColors.ENDC)
+    if rc is not None and rc != 0:
+        print(MessageColors.FAIL + f"An error occured (rc={rc}), see output line(s) above for details." + MessageColors.ENDC)
         sys.exit(1)
 
     return (rc, output)
+
+
+def write_file(filename: str, lines: list):
+    new_text = '\n'.join(lines)
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            if f.read() != new_text:
+                print(MessageColors.OK + "File {0} is already up-to-date.".format(filename) + MessageColors.ENDC)
+                return
+    with open(filename, 'w') as f:
+        f.write(new_text)

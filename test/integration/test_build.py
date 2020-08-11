@@ -39,3 +39,16 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     )
     assert 'Subversion is a tool for version control' in result.stdout
 
+
+def test_build_layer_reuse(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
+    r = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    assert 'Collecting pytz (from -r /build/requirements.txt' in r.stdout, r.stdout
+    r = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    assert 'Collecting pytz (from -r /build/requirements.txt' not in r.stdout, r.stdout
+    assert 'ADD requirements.txt /build/\n ---> Using cache' in r.stdout, r.stdout
