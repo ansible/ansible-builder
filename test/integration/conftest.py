@@ -25,7 +25,7 @@ def ee_tag(request, cli, container_runtime):
     image_name = 'builder-test-' + str(uuid.uuid4())[:10]
 
     def delete_image():
-        cli(f'{container_runtime} rmi {image_name}')
+        cli(f'{container_runtime} rmi -f {image_name}')
 
     request.addfinalizer(delete_image)
     return image_name
