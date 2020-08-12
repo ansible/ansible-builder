@@ -11,7 +11,7 @@ def do_not_run_commands():
         yield cmd_mock
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def data_dir():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
