@@ -39,3 +39,31 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     )
     assert 'Subversion is a tool for version control' in result.stdout
 
+
+class TestPytz:
+
+    @pytest.fixture(scope='class')
+    def pytz(self, cli_class, container_runtime, ee_tag, data_dir, tmpdir_factory):
+        bc_folder = str(tmpdir_factory.mktemp('bc'))
+        ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
+        r = cli_class(
+            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+        )
+        assert 'Collecting pytz (from -r /build/requirements.txt' in r.stdout, r.stdout
+        return (ee_tag, bc_folder)
+
+    def test_has_pytz(self, cli, container_runtime, pytz):
+        ee_tag, bc_folder = pytz
+        r = cli(f'{container_runtime} run --rm {ee_tag} pip3 show pytz')
+        assert 'World timezone definitions, modern and historical' in r.stdout
+
+    def test_build_layer_reuse(self, cli, container_runtime, data_dir, pytz):
+        ee_tag, bc_folder = pytz
+        ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
+        if container_runtime == 'podman':
+            pytest.skip('Active issue, see https://github.com/ansible/ansible-builder/issues/69')
+        r = cli(
+            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+        )
+        assert 'Collecting pytz (from -r /build/requirements.txt' not in r.stdout, r.stdout
+        assert 'ADD requirements.txt /build/\n ---> Using cache' in r.stdout, r.stdout

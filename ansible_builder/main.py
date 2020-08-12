@@ -8,7 +8,7 @@ from . import constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
-from .utils import run_command
+from .utils import run_command, write_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
 
@@ -254,10 +254,9 @@ class Containerfile:
         data['python'] = sanitize_requirements(data['python'])
         pip_file = os.path.join(self.build_context, 'requirements.txt')
 
-        py_req_text = '\n'.join(data['python'])
-        if py_req_text.strip():
-            with open(pip_file, 'w') as f:
-                f.write(py_req_text)
+        if ''.join(data['python']).strip():  # only use file if it is non-blank
+            pip_file = os.path.join(self.build_context, 'requirements.txt')
+            write_file(pip_file, data['python'])
             self.steps.extend(PipSteps('requirements.txt'))
 
         return self.steps

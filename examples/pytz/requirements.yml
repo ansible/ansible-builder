@@ -1,4 +1,0 @@
----
-collections:
-  - name: https://github.com/AlanCoding/awx.git#awx_collection,ee_req
-    type: git

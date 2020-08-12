@@ -104,15 +104,21 @@ may be consolidated in the combined file.
 
 ### Example
 
-The example in `examples/pytz` requires the `awx.awx` collection in the
-execution environment definition.
+The example in `test/data/pytz` requires the `awx.awx` collection in the execution environment definition.
+The lookup plugin `awx.awx.tower_schedule_rrule` requires the PyPI `pytz` and another library to work.
+If `test/data/pytz/execution-environment.yml` file is given to the `ansible-builder build` command,
+then it will install the collection inside the image, read `requirements.txt` inside of the collection,
+and then install `pytz` into the image.
 
-In the ansible-runner project folder at `examples/pytz/project`, there is a
-playbook that makes use of the lookup plugin `awx.awx.tower_schedule_rrule`.
-This plugin requires the PyPI `pytz` and another library to work.
+The image produced can be used inside of an `ansible-runner` project by placing these variables
+inside the `env/settings` file, inside of the private data directory.
 
-Running this example shows how the collection dependencies are resolved,
-installed into the container image, and made use of inside a playbook task.
+```yaml
+---
+container_image: image-name
+process_isolation_executable: podman
+process_isolation: true
+```
 
 ## Get Involved:
 
