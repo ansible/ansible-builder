@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+  - name: Checkout subversion repository to specified folder
+    subversion:
+      repo: https://github.com/ansible/test-playbooks.git
+      dest: /tmp/svn_checkout

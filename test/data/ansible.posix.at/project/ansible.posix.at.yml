@@ -1,0 +1,21 @@
+---
+- hosts: localhost
+  gather_facts: false
+  connection: local
+  tasks:
+  # examples from module documentation
+  - name: Schedule a command to execute in 20 minutes as root
+    ansible.posix.at:
+      command: ls -d / >/dev/null
+      count: 20
+      units: minutes
+  - name: Match a command to an existing job and delete the job
+    ansible.posix.at:
+      command: ls -d / >/dev/null
+      state: absent
+  - name: Schedule a command to execute in 20 minutes...
+    ansible.posix.at:
+      command: ls -d / >/dev/null
+      count: 20
+      units: minutes
+      unique: true
