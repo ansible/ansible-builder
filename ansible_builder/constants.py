@@ -1,5 +1,5 @@
 default_file = 'execution-environment.yml'
-default_base_image = 'shanemcd/ansible-runner'
+default_base_image = 'docker.io/ansible/ansible-runner:devel'
 default_tag = 'ansible-execution-env:latest'
 default_build_context = 'context'
 runtime_files={
