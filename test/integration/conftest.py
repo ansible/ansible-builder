@@ -20,7 +20,7 @@ def build_dir_and_ee_yml():
     return tmp_dir_and_file
 
 
-def run(args, *a, **kw):
+def run(args, *a, allow_error=False, **kw):
     kw["encoding"] = "utf-8"
     if "check" not in kw:
         # By default we want to fail if a command fails to run. Tests that
@@ -36,9 +36,12 @@ def run(args, *a, **kw):
     try:
         ret = CompletedProcessProxy(subprocess.run(args, shell=True, *a, **kw))
     except subprocess.CalledProcessError as err:
-        pytest.fail(
-            f"Running {err.cmd} resulted in a non-zero return code: {err.returncode} - stdout: {err.stdout}, stderr: {err.stderr}"
-        )
+        if not allow_error:
+            pytest.fail(
+                f"Running {err.cmd} resulted in a non-zero return code: {err.returncode} - stdout: {err.stdout}, stderr: {err.stderr}"
+            )
+        err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
+        return err
 
     return ret
 
@@ -48,7 +51,7 @@ def ee_tag(request, container_runtime):
     image_name = 'builder-test-' + str(uuid.uuid4())[:10]
 
     def delete_image():
-        run(f'{container_runtime} rmi -f {image_name}')
+        run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
 
     request.addfinalizer(delete_image)
     return image_name

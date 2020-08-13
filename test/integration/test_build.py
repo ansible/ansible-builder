@@ -2,12 +2,20 @@ import pytest
 import os
 
 
-def test_build_fail_exitcode():
+def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
     """Test that when a build fails, the ansible-builder exits with non-zero exit code.
 
     Example: https://github.com/ansible/ansible-builder/issues/51
     """
-    pytest.skip("Not implemented")
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'build_fail', 'execution-environment.yml')
+    r = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}',
+        allow_error=True
+    )
+    assert r.rc != 0
+    assert 'RUN thisisnotacommand' in (r.stdout + r.stderr)
+    assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr)
 
 
 def test_missing_python_requirements_file():
