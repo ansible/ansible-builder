@@ -14,7 +14,7 @@ collections:
   - name: google.cloud  # has requirements.txt, mainly for google-auth
   # forked from opendev.org
   - name: https://github.com/AlanCoding/ansible-collections-openstack.git
-    version: ee_req
+    version: ee_req_install
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/alancoding/ovirt-ansible-collection.git
