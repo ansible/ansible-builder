@@ -1,0 +1,5 @@
+---
+version: 1
+additional_build_steps:
+  prepend:
+    - RUN thisisnotacommand
