@@ -48,6 +48,18 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     assert 'Subversion is a tool for version control' in result.stdout
 
 
+def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'pip', 'execution-environment.yml')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    result = cli(
+        f'{container_runtime} run --rm {ee_tag} pip3 show awxkit'
+    )
+    assert 'The official command line interface for Ansible AWX' in result.stdout
+
+
 class TestPytz:
 
     @pytest.fixture(scope='class')

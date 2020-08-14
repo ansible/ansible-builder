@@ -4,5 +4,5 @@
   connection: local
   tasks:
     - pip:
-        name: bottle
+        name: awxkit
         executable: pip3
