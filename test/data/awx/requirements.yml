@@ -14,7 +14,7 @@ collections:
   - name: google.cloud  # has requirements.txt, mainly for google-auth
   # forked from opendev.org
   - name: https://github.com/AlanCoding/ansible-collections-openstack.git
-    version: ee_req_install
+    version: ee_req
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/alancoding/ovirt-ansible-collection.git
@@ -25,7 +25,9 @@ collections:
     type: git
   # needs kubectl for yum / dnf / apt-get
   # needs to install snap, then use snap to install helm
-  - name: ansible.posix  # has empty requirements.txt file
+  - name: https://github.com/AlanCoding/ansible.posix.git
+    version: ee_req
+    type: git
   # needs:
   # - "at" system dep
   # - libselinux-python

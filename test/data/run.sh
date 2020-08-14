@@ -8,16 +8,16 @@ run_example () {
   rm -rf bc
   echo ""
   echo "Running:"
-  echo "ansible-builder build -f examples/$1/execution-environment.yml --container-runtime=docker -c examples/bc --tag $IMAGE_NAME"
+  echo "ansible-builder build -f $1/execution-environment.yml --container-runtime=docker -c bc --tag $IMAGE_NAME"
   ansible-builder build -f $1/execution-environment.yml --container-runtime=docker -c bc --tag $IMAGE_NAME
   echo ""
   echo "Running:"
-  echo "ansible-runner --playbook $1.yml run examples/$1 -v"
-  ansible-runner --playbook $1.yml run $1 -v
+  echo "ansible-runner run --playbook $1.yml $1 -v"
+  ansible-runner run --playbook $1.yml $1 -v
   return 0
 }
 
-cd examples
+cd test/data
 
 if [ ! $1 ]
 then
