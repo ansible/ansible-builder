@@ -1,0 +1,5 @@
+gcc
+python3-devel
+libcurl-devel
+openssl-devel
+libxml2-devel
