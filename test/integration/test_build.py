@@ -36,6 +36,17 @@ def test_build_streams_output(cli, container_runtime, build_dir_and_ee_yml, ee_t
     assert f"The build context can be found at: {tmpdir}" in result.stdout
 
 
+def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    """Just makes sure that the buld process does not require any particular input"""
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'blank', 'execution-environment.yml')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    result = cli(f'{container_runtime} run --rm {ee_tag} echo "This is a simple test"')
+    assert 'This is a simple test' in result.stdout
+
+
 def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
     bc = str(tmpdir)
     ee_def = os.path.join(data_dir, 'subversion', 'execution-environment.yml')
@@ -46,6 +57,18 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
         f'{container_runtime} run --rm {ee_tag} svn --help'
     )
     assert 'Subversion is a tool for version control' in result.stdout
+
+
+def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'pip', 'execution-environment.yml')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    result = cli(
+        f'{container_runtime} run --rm {ee_tag} pip3 show awxkit'
+    )
+    assert 'The official command line interface for Ansible AWX' in result.stdout
 
 
 class TestPytz:
