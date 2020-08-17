@@ -2,17 +2,15 @@
 # from https://github.com/ansible/awx/blob/devel/
 # requirements/collections_requirements.yml
 collections:
-  - name: https://github.com/AlanCoding/awx.git#awx_collection,ee_req
-    type: git
-  - name: https://github.com/AlanCoding/azure.git
-    version: ee_req  # spec must point to requirements-azure.txt
+  - name: awx.awx
+  - name: https://github.com/ansible-collections/azure.git  # spec points to requirements-azure.txt
     type: git
   - name: amazon.aws  # PR 125 is in 1.1.0
   - name: theforeman.foreman  # has requirements.txt (which -r to another file)
   - name: google.cloud  # has requirements.txt, mainly for google-auth
   # forked from opendev.org
   - name: https://github.com/AlanCoding/ansible-collections-openstack.git
-    version: ee_req
+    version: ee_req_install
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/alancoding/ovirt-ansible-collection.git
