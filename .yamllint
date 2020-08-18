@@ -2,3 +2,4 @@
 ignore: |
   .tox
   test/data/definition_files/bad.yml
+  test/data/definition_files/invalid.yml
