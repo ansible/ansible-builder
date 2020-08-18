@@ -10,9 +10,6 @@ import argparse
 base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
 
-begin_delimiter = '----begin_introspect_output----'
-end_delimiter = '----end_introspect_output----'
-
 
 def line_is_empty(line):
     return bool((not line.strip()) or line.startswith('#'))
@@ -196,19 +193,6 @@ def write_files(data, write_pip=None, write_bindep=None):
             f.write('\n'.join(simple_combine(data.get('system')) + ['']))
 
 
-def parse_introspect_output(stdout):
-    p = re.compile(
-        '{0}(?P<yaml_text>.+){1}'.format(begin_delimiter, end_delimiter),
-        flags=re.MULTILINE | re.DOTALL
-    )
-    m = p.search(stdout)
-    if m is None:
-        return None
-    yaml_text = m.group('yaml_text').strip()
-    data = yaml.safe_load(yaml_text)
-    return data
-
-
 def add_introspect_options(parser):
     parser.add_argument(
         'folder', default=base_collections_path, nargs='?',
@@ -246,8 +230,6 @@ if __name__ == '__main__':
     add_introspect_options(parser)
     args = parser.parse_args()
     data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
-    print(begin_delimiter)
     print(yaml.dump(data, default_flow_style=False))
-    print(end_delimiter)
     write_files(data, write_pip=args.write_pip, write_bindep=args.write_bindep)
     sys.exit(0)

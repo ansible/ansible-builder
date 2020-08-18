@@ -41,18 +41,6 @@ class IntrospectionSteps(Steps):
             "RUN chmod +x /usr/local/bin/introspect",
         ])
 
-        to_run = ['introspect']
-        if user_pip:
-            self.steps.append("ADD {0} /build/".format(user_pip))
-            to_run.extend(['--user-pip', '/build/{0}'.format(user_pip)])
-        if user_bindep:
-            self.steps.append("ADD {0} /build/".format(user_bindep))
-            to_run.extend(['--user-bindep', '/build/{0}'.format(user_bindep)])
-
-        to_run.extend(['--write-bindep', '/build/{0}'.format(dest_bindep)])
-
-        self.steps.append("RUN {0}".format(' '.join(to_run)))
-
 
 class GalaxySteps(Steps):
     def __init__(self, requirements_naming):

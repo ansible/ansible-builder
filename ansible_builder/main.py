@@ -55,10 +55,14 @@ class AnsibleBuilder:
         ]
 
     def run_in_container(self, command, **kwargs):
-        wrapped_command = [
-            self.container_runtime, 'run',
-            '--rm', self.tag, '/bin/bash', '-c'
-        ] + [' '.join(command)]
+        wrapped_command = [self.container_runtime, 'run','--rm']
+
+        volumes = kwargs.pop('volumes', [])
+        for volume in volumes:
+            wrapped_command.extend(['-v', volume])
+
+        wrapped_command.extend([self.tag, '/bin/bash', '-c', ' '.join(command)])
+
         return run_command(wrapped_command, **kwargs)
 
     def build(self):
@@ -69,21 +73,18 @@ class AnsibleBuilder:
         print(MessageColors.OK + 'Writing partial Containerfile without collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
         rc, output = run_command(self.build_command, capture_output=True)
-        collection_data = ansible_builder.introspect.parse_introspect_output('\n'.join(output))
-        if collection_data is None:
-            # In case the build has already been ran once, a cached layer may be used for introspect
-            rc, output = self.run_in_container(['introspect'], capture_output=True)
-            collection_data = ansible_builder.introspect.parse_introspect_output('\n'.join(output))
+
+        rc, output = self.run_in_container(['introspect', '--write-bindep', '/context/bindep_combined.txt'],
+                                           volumes=[f"{os.path.abspath(self.build_context)}:/context:Z"],
+                                           capture_output=True)
+
+        collection_data = yaml.safe_load('\n'.join(output))
         if collection_data.get('system'):
-            rc, output = self.run_in_container(
-                [
-                    'pip3', 'install', 'bindep;',
-                    'echo', '----begin_bindep_output----;',
-                    'bindep', '-b', '-f', '/build/{0}'.format(BINDEP_COMBINED)],
-                allow_error=True, capture_output=True
-            )
-            bindep_output = ('\n'.join(output)).split('----begin_bindep_output----\n', 1)[1].split('\n')
-            self.containerfile.prepare_system_steps(bindep_output=bindep_output)
+            rc, output = self.run_in_container(['bindep', '-b', '-f', '/context/{0}'.format(BINDEP_COMBINED)],
+                                               volumes=[f"{os.path.abspath(self.build_context)}:/context:Z"],
+                                               allow_error=True, capture_output=True)
+            self.containerfile.prepare_system_steps(bindep_output=output)
+
         self.containerfile.prepare_pip_steps(collection_pip=collection_data['python'])
         self.containerfile.prepare_appended_steps()
         print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
