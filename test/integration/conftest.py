@@ -5,6 +5,13 @@ import tempfile
 import uuid
 
 import pytest
+import logging
+
+
+logger = logging.getLogger(__name__)
+
+
+TAG_PREFIX = 'builder-test'
 
 
 @pytest.fixture
@@ -46,15 +53,34 @@ def run(args, *a, allow_error=False, **kw):
     return ret
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='session', autouse=True)
+def cleanup_ee_tags(container_runtime, request):
+    def delete_images():
+        r = run(f'{container_runtime} images --format="{{{{.Repository}}}}"')
+        for image_name in r.stdout.split('\n'):
+            if image_name and image_name.startswith(TAG_PREFIX):
+                run(f'{container_runtime} rmi -f {image_name}')
+                logger.warning(f'Deleted image {image_name}')
+
+    request.addfinalizer(delete_images)
+
+
+@pytest.fixture()
 def ee_tag(request, container_runtime):
-    image_name = 'builder-test-' + str(uuid.uuid4())[:10]
+    return '_'.join([
+        TAG_PREFIX,
+        request.node.name.lower().replace('[', '_').replace(']', '_'),
+        str(uuid.uuid4())[:10]
+    ])
 
-    def delete_image():
-        run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
 
-    request.addfinalizer(delete_image)
-    return image_name
+@pytest.fixture(scope='class')
+def ee_tag_class(request, container_runtime):
+    return '_'.join([
+        TAG_PREFIX,
+        request.node.name.lower().replace('[', '_').replace(']', '_'),
+        str(uuid.uuid4())[:10]
+    ])
 
 
 class CompletedProcessProxy(object):

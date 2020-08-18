@@ -74,14 +74,14 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
 class TestPytz:
 
     @pytest.fixture(scope='class')
-    def pytz(self, cli_class, container_runtime, ee_tag, data_dir, tmpdir_factory):
+    def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmpdir_factory):
         bc_folder = str(tmpdir_factory.mktemp('bc'))
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
         r = cli_class(
-            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime}'
         )
         assert 'Collecting pytz (from -r /build/requirements.txt' in r.stdout, r.stdout
-        return (ee_tag, bc_folder)
+        return (ee_tag_class, bc_folder)
 
     def test_has_pytz(self, cli, container_runtime, pytz):
         ee_tag, bc_folder = pytz
