@@ -134,10 +134,6 @@ class TestDefinitionErrors:
     @pytest.mark.parametrize('yaml_text,expect', [
         ('1', 'Definition must be a dictionary, not int'),  # integer
         (
-            "{'version': 1, 'dependencies': {'python': 'Dockerfile'}}",
-            'Duplicated filename Dockerfile in definition.'
-        ),  # bad python file
-        (
             "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
             'not-exists.yml does not exist'
         ),  # missing file
@@ -149,7 +145,7 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),  # not right format for additional_build_steps
+        ),
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

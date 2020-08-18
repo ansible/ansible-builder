@@ -14,7 +14,7 @@ collections:
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/alancoding/ovirt-ansible-collection.git
-    version: ee_req  # had no requirements file, only needs single sdk lib
+    version: ee_req  # had no needs single sdk python lib and pycurl
     type: git
   - name: https://github.com/AlanCoding/community.kubernetes.git
     version: ee_req

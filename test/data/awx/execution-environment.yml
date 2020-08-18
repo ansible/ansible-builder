@@ -5,4 +5,3 @@ dependencies:
 additional_build_steps:
   prepend:
     - RUN pip3 install --upgrade pip setuptools
-    - ENV PYCURL_SSL_LIBRARY=openssl

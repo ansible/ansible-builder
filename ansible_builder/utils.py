@@ -44,9 +44,13 @@ def write_file(filename: str, lines: list) -> bool:
     return True
 
 
-def copy_file(source: str, dest: str):
+def copy_file(source: str, dest: str) -> bool:
     exists = os.path.exists(dest)
     if (not exists) or (not filecmp.cmp(source, dest, shallow=False)):
         if exists:
             print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
         shutil.copy(source, dest)
+        return True
+    else:
+        print(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
+        return False

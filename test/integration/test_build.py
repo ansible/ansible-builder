@@ -117,6 +117,6 @@ class TestPytz:
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
         )
         assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
-        assert 'requirements.txt is already up-to-date' in r.stdout
+        assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
-        assert 'ADD requirements.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout
+        assert 'ADD requirements_combined.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import re
 import sys
 import yaml
 import argparse
@@ -46,7 +45,7 @@ def bindep_file_data(path):
     return sys_lines
 
 
-def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
+def process(data_dir=base_collections_path):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
 
@@ -82,16 +81,6 @@ def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
             col_sys_lines = bindep_file_data(os.path.join(path, sys_file))
             if col_sys_lines:
                 sys_req[key] = col_sys_lines
-
-    # add on entries from user files, if they are given
-    if user_pip:
-        col_pip_lines = pip_file_data(user_pip)
-        if col_pip_lines:
-            py_req['user'] = col_pip_lines
-    if user_bindep:
-        col_sys_lines = bindep_file_data(user_bindep)
-        if col_sys_lines:
-            sys_req['user'] = col_sys_lines
 
     return {
         'python': py_req,
@@ -184,15 +173,6 @@ def simple_combine(reqs):
     return fancy_lines
 
 
-def write_files(data, write_pip=None, write_bindep=None):
-    if write_pip and data.get('python'):
-        with open(write_pip, 'w') as f:
-            f.write('\n'.join(simple_combine(data.get('python')) + ['']))
-    if write_bindep and data.get('system'):
-        with open(write_bindep, 'w') as f:
-            f.write('\n'.join(simple_combine(data.get('system')) + ['']))
-
-
 def add_introspect_options(parser):
     parser.add_argument(
         'folder', default=base_collections_path, nargs='?',
@@ -200,22 +180,6 @@ def add_introspect_options(parser):
             'Ansible collections path(s) to introspect. '
             'This should have a folder named ansible_collections inside of it.'
         )
-    )
-    parser.add_argument(
-        '--user-pip', dest='user_pip',
-        help='An additional file to combine with collection pip requirements.'
-    )
-    parser.add_argument(
-        '--user-bindep', dest='user_bindep',
-        help='An additional file to combine with collection bindep requirements.'
-    )
-    parser.add_argument(
-        '--write-pip', dest='write_pip',
-        help='Write the combined bindep file to this location.'
-    )
-    parser.add_argument(
-        '--write-bindep', dest='write_bindep',
-        help='Write the combined bindep file to this location.'
     )
 
 
@@ -229,7 +193,6 @@ if __name__ == '__main__':
     )
     add_introspect_options(parser)
     args = parser.parse_args()
-    data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
+    data = process(args.folder)
     print(yaml.dump(data, default_flow_style=False))
-    write_files(data, write_pip=args.write_pip, write_bindep=args.write_bindep)
     sys.exit(0)

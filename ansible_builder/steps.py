@@ -33,15 +33,6 @@ class AdditionalBuildSteps(Steps):
         return iter(self.steps)
 
 
-class IntrospectionSteps(Steps):
-    def __init__(self, context_file, user_pip, user_bindep, dest_bindep):
-        self.steps = []
-        self.steps.extend([
-            "ADD {0} /usr/local/bin/introspect".format(context_file),
-            "RUN chmod +x /usr/local/bin/introspect",
-        ])
-
-
 class GalaxySteps(Steps):
     def __init__(self, requirements_naming):
         """Assumes given requirements file name has been placed in the build context
