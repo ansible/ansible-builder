@@ -14,3 +14,4 @@ setup-to-compare.py
 # testing and examples
 /test/data/bc/
 artifacts/
+/docs/_build/
