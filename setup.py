@@ -26,5 +26,5 @@ setup(
     package_dir={"": "."},
     package_data={},
     install_requires=['pyyaml==3.*,>=3.12.0', 'requirements-parser==0.*,>=0.2.0'],
-    extras_require={"dev": ["black==19.*,>=19.10.0.b0", "dephell==0.*,>=0.8.3", "flake8==3.*,>=3.7.9", "ipdb==0.*,>=0.13.2", "pylint==2.*,>=2.4.4", "pyparsing==2.*,>=2.4.5", "pytest==5.*,>=5.2.0", "pytest-xdist==1.*,>=1.34.0", "sphinx==2.*,>=2.4.4", "tox==3.*,>=3.14.5", "yamllint==1.*,>=1.20.0"]},
+    extras_require={"dev": ["black==19.*,>=19.10.0.b0", "flake8==3.*,>=3.7.9", "pylint==2.*,>=2.4.4", "pytest==5.*,>=5.2.0", "pytest-xdist==1.*,>=1.34.0", "tox==3.*,>=3.14.5", "yamllint==1.*,>=1.20.0"]},
 )
