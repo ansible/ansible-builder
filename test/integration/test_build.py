@@ -2,6 +2,16 @@ import pytest
 import os
 
 
+def test_definition_syntax_error(cli, data_dir):
+    ee_def = os.path.join(data_dir, 'definition_files', 'invalid.yml')
+    r = cli(
+        f'ansible-builder build -f {ee_def} --container-runtime podman',
+        allow_error=True
+    )
+    assert r.rc != 0
+    assert 'An error occured while parsing the definition file' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+
+
 def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
     """Test that when a build fails, the ansible-builder exits with non-zero exit code.
 

@@ -96,7 +96,7 @@ class UserDefinition(BaseDefinition):
             Could not detect '{0}' file in this directory.
             Use -f to specify a different location.
             """).format(filename))
-        except yaml.parser.ParserError as e:
+        except (yaml.parser.ParserError, yaml.scanner.ScannerError) as e:
             raise DefinitionError(textwrap.dedent("""
             An error occured while parsing the definition file:
             {0}
