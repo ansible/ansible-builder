@@ -90,7 +90,7 @@ class TestPytz:
         r = cli_class(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime}'
         )
-        assert 'Collecting pytz (from -r /build/requirements.txt' in r.stdout, r.stdout
+        assert 'Collecting pytz (from -r /build/' in r.stdout, r.stdout
         return (ee_tag_class, bc_folder)
 
     def test_has_pytz(self, cli, container_runtime, pytz):
@@ -101,10 +101,10 @@ class TestPytz:
     def test_build_layer_reuse(self, cli, container_runtime, data_dir, pytz):
         ee_tag, bc_folder = pytz
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
-        if container_runtime == 'podman':
-            pytest.skip('Active issue, see https://github.com/ansible/ansible-builder/issues/69')
         r = cli(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
         )
-        assert 'Collecting pytz (from -r /build/requirements.txt' not in r.stdout, r.stdout
-        assert 'ADD requirements.txt /build/\n ---> Using cache' in r.stdout, r.stdout
+        assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
+        assert 'requirements.txt is already up-to-date' in r.stdout
+        stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
+        assert 'ADD requirements.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout

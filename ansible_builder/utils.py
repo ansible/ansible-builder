@@ -28,12 +28,15 @@ def run_command(command, capture_output=False):
     return (rc, output)
 
 
-def write_file(filename: str, lines: list):
+def write_file(filename: str, lines: list) -> bool:
     new_text = '\n'.join(lines)
     if os.path.exists(filename):
         with open(filename, 'r') as f:
-            if f.read() != new_text:
+            if f.read() == new_text:
                 print(MessageColors.OK + "File {0} is already up-to-date.".format(filename) + MessageColors.ENDC)
-                return
+                return False
+            else:
+                print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(filename) + MessageColors.ENDC)
     with open(filename, 'w') as f:
         f.write(new_text)
+    return True
