@@ -1,43 +1,60 @@
-## AWX collection and pytz example
+## Test Inputs and Examples
 
+This folder contains execution environment definitions for purposes of integration testing and demonstration.
+These instructions will use the `pytz` case, but similar commands will work for other examples.
 This example demonstrates the use of a collection's python dependency.
-You can execute the example by invoking the `run.sh` script.
+
+### Build Manually
+
+Run the example:
 
 ```
-source examples/run.sh pytz
+ansible-builder build \
+  -f test/data/pytz/execution-environment.yml \
+  -c my_new_bc \
+  -t my_new_tag
 ```
 
-This will start out by deleting the existing build context and image.
-
-Then it runs `ansible-builder build` to re-create these things.
-
-After that, it invokes a playbook from that image which uses the
-example playbook.
-The example playbook invokes a lookup plugin which requires the
-`pytz` and `python-dateutil` libraries, and will fail if those
-are not present in the image.
-
-### Build Context
-
-This example produces the Dockerfile:
+After it successfully completes, you should see that `my_new_tag` is listed in `podman images`.
+If you want to use docker as opposed to podman, the runtime must be specified:
 
 ```
-FROM shanemcd/ansible-runner
-
-ADD requirements.yml /build/
-
-RUN ansible-galaxy role install -r /build/requirements.yml --roles-path /usr/share/ansible/roles
-RUN ansible-galaxy collection install -r /build/requirements.yml --collections-path /usr/share/ansible/collections
-RUN pip3 install -r /usr/share/ansible/collections/ansible_collections/awx/awx/requirements.txt
+ansible-builder build \
+  -f test/data/pytz/execution-environment.yml \
+  -c my_new_bc \
+  -t my_new_tag \
+  --container-runtime docker
 ```
 
+### Helper Script with ansible-runner
 
-### Run Outside of Runner
-
-You can invoke a playbook manually.
-This command is intended to be relatively robust to changes in the base image.
+You can build and use the image inside of `ansible-runner` by invoking the `run.sh` script.
 
 ```
-docker run --rm --tty --interactive --mount "type=bind,src=$(pwd)/examples/pytz,dst=/alan" --env ANSIBLE_STDOUT_CALLBACK=default -e ANSIBLE_CALLBACK_PLUGINS="" awx-awx ansible-playbook -i localhost, /alan/rrule_test.yml
+source test/data/run.sh pytz
 ```
 
+This produces an image called `exec-env-pytz`. The steps it follows are:
+
+ - deletes the existing build context and image.
+ - creates a new build context and image with `ansible-builder build`.
+ - runs an example playbook via `ansible-runner`, using the container image for isolation.
+
+The `pytz` example playbook uses a lookup plugin which requires python libraries `pytz` and `python-dateutil`.
+A successful run proves that those dependencies are present in the execution environment.
+
+#### Running Outside of ansible-runner
+
+You can invoke the same example playbook manually.
+
+```
+docker run --rm --tty --interactive --mount "type=bind,src=$(pwd)/test/data/pytz,dst=/pytz" exec-env-pytz ansible-playbook -i localhost, /pytz/project/pytz.yml
+```
+
+### Integration Testing
+
+These definitions are used in integration tests, for the `pytz` example:
+
+```
+py.test test/integration/test_build.py -k TestPytz
+```
