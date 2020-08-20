@@ -18,6 +18,17 @@ def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
     assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
 
+def test_build_bad_bindep_file(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'build_fail', 'bindep-fail1.yml')
+    r = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}',
+        allow_error=True
+    )
+    assert r.rc != 0
+    assert 'Error processing combined bindep file at' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+
+
 def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):
     """Just makes sure that the buld process does not require any particular input"""
     bc = str(tmpdir)
