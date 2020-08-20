@@ -85,7 +85,7 @@ class AnsibleBuilder:
                 allow_error=True, capture_output=True
             )
             if rc not in (0, 127):
-                raise DefinitionError(f'Error processing combined bindep file at {bindep_bc}.')
+                raise DefinitionError(f'Error processing combined bindep file at {bindep_bc} (rc={rc}).')
 
         return (bindep_output, python_lines)
 
