@@ -24,8 +24,8 @@ def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
         allow_error=True
     )
     assert r.rc != 0
-    assert 'RUN thisisnotacommand' in (r.stdout + r.stderr)
-    assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr)
+    assert 'RUN thisisnotacommand' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+    assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
 
 def test_missing_python_requirements_file():
@@ -54,7 +54,7 @@ def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, dat
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     )
     result = cli(f'{container_runtime} run --rm {ee_tag} echo "This is a simple test"')
-    assert 'This is a simple test' in result.stdout
+    assert 'This is a simple test' in result.stdout, result.stdout
 
 
 def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
@@ -66,7 +66,19 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     result = cli(
         f'{container_runtime} run --rm {ee_tag} svn --help'
     )
-    assert 'Subversion is a tool for version control' in result.stdout
+    assert 'Subversion is a tool for version control' in result.stdout, result.stdout
+
+
+def test_collection_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'ansible.posix.at', 'execution-environment.yml')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+    result = cli(
+        f'{container_runtime} run --rm {ee_tag} at -V'
+    )
+    assert 'at version' in result.stderr, result.stderr
 
 
 def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
@@ -78,7 +90,7 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     result = cli(
         f'{container_runtime} run --rm {ee_tag} pip3 show awxkit'
     )
-    assert 'The official command line interface for Ansible AWX' in result.stdout
+    assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
 
 
 class TestPytz:
@@ -96,7 +108,7 @@ class TestPytz:
     def test_has_pytz(self, cli, container_runtime, pytz):
         ee_tag, bc_folder = pytz
         r = cli(f'{container_runtime} run --rm {ee_tag} pip3 show pytz')
-        assert 'World timezone definitions, modern and historical' in r.stdout
+        assert 'World timezone definitions, modern and historical' in r.stdout, r.stdout
 
     def test_build_layer_reuse(self, cli, container_runtime, data_dir, pytz):
         ee_tag, bc_folder = pytz
@@ -105,6 +117,6 @@ class TestPytz:
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
         )
         assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
-        assert 'requirements.txt is already up-to-date' in r.stdout
+        assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
-        assert 'ADD requirements.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout
+        assert 'ADD requirements_combined.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout

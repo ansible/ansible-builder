@@ -10,53 +10,77 @@ base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
 
 
+def line_is_empty(line):
+    return bool((not line.strip()) or line.startswith('#'))
+
+
 def pip_file_data(path):
-    req_list = []
     with open(path, 'r') as f:
-        for line in f.read().split('\n'):
-            if not line:
-                continue
-            if line.startswith('-r') or line.startswith('--requirement'):
-                _, new_filename = line.split(None, 1)
-                new_path = os.path.join(os.path.dirname(path or '.'), new_filename)
-                req_list.extend(pip_file_data(new_path))
-            else:
-                req_list.append(line)
-    return req_list
+        pip_content = f.read()
+
+    pip_lines = []
+    for line in pip_content.split('\n'):
+        if line_is_empty(line):
+            continue
+        if line.startswith('-r') or line.startswith('--requirement'):
+            _, new_filename = line.split(None, 1)
+            new_path = os.path.join(os.path.dirname(path or '.'), new_filename)
+            pip_lines.extend(pip_file_data(new_path))
+        else:
+            pip_lines.append(line)
+
+    return pip_lines
+
+
+def bindep_file_data(path):
+    with open(path, 'r') as f:
+        sys_content = f.read()
+
+    sys_lines = []
+    for line in sys_content.split('\n'):
+        if line_is_empty(line):
+            continue
+        sys_lines.append(line)
+
+    return sys_lines
 
 
 def process(data_dir=base_collections_path):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
-    if not os.path.exists(path_root):
-        return {'python': [], 'system': []}
 
-    for namespace in sorted(os.listdir(path_root)):
-        if not os.path.isdir(os.path.join(path_root, namespace)):
-            continue
-        for name in sorted(os.listdir(os.path.join(path_root, namespace))):
-            collection_dir = os.path.join(path_root, namespace, name)
-            if not os.path.isdir(collection_dir):
+    # build a list of all the valid collection paths
+    if os.path.exists(path_root):
+        for namespace in sorted(os.listdir(path_root)):
+            if not os.path.isdir(os.path.join(path_root, namespace)):
                 continue
-            files_list = os.listdir(collection_dir)
-            if 'galaxy.yml' in files_list or 'MANIFEST.json' in files_list:
-                paths.append(collection_dir)
+            for name in sorted(os.listdir(os.path.join(path_root, namespace))):
+                collection_dir = os.path.join(path_root, namespace, name)
+                if not os.path.isdir(collection_dir):
+                    continue
+                files_list = os.listdir(collection_dir)
+                if 'galaxy.yml' in files_list or 'MANIFEST.json' in files_list:
+                    paths.append(collection_dir)
 
-    py_req = []
-    sys_req = []
+    # populate the requirements content
+    py_req = {}
+    sys_req = {}
     for path in paths:
         CD = CollectionDefinition(path)
         namespace, name = CD.namespace_name()
+        key = '{}.{}'.format(namespace, name)
 
         py_file = CD.get_dependency('python')
         if py_file:
-            py_req.extend(
-                pip_file_data(os.path.join(path, py_file))
-            )
+            col_pip_lines = pip_file_data(os.path.join(path, py_file))
+            if col_pip_lines:
+                py_req[key] = col_pip_lines
 
         sys_file = CD.get_dependency('system')
         if sys_file:
-            sys_req.append(os.path.join(namespace, name, sys_file))
+            col_sys_lines = bindep_file_data(os.path.join(path, sys_file))
+            if col_sys_lines:
+                sys_req[key] = col_sys_lines
 
     return {
         'python': py_req,
@@ -125,9 +149,33 @@ class CollectionDefinition:
         return req_file
 
 
+def simple_combine(reqs):
+    """Given a dictionary of requirement lines keyed off collections,
+    return a list with the most basic of de-duplication logic,
+    and comments indicating the sources based off the collection keys
+    """
+    consolidated = []
+    fancy_lines = []
+    for collection, lines in reqs.items():
+        for line in lines:
+            if line_is_empty(line):
+                continue
+
+            base_line = line.split('#')[0].strip()
+            if base_line in consolidated:
+                i = consolidated.index(base_line)
+                fancy_lines[i] += ', {}'.format(collection)
+            else:
+                fancy_line = base_line + '  # from collection {}'.format(collection)
+                consolidated.append(base_line)
+                fancy_lines.append(fancy_line)
+
+    return fancy_lines
+
+
 def add_introspect_options(parser):
     parser.add_argument(
-        'folders', default=[base_collections_path], nargs='*',
+        'folder', default=base_collections_path, nargs='?',
         help=(
             'Ansible collections path(s) to introspect. '
             'This should have a folder named ansible_collections inside of it.'
@@ -145,11 +193,6 @@ if __name__ == '__main__':
     )
     add_introspect_options(parser)
     args = parser.parse_args()
-    # TODO: modify contract to handle multiple locations more gracefully
-    data = {'python': [], 'system': []}
-    for folder in args.folders:
-        this_data = process(folder)
-        data['python'].extend(this_data['python'])
-        data['system'].extend(this_data['system'])
+    data = process(args.folder)
     print(yaml.dump(data, default_flow_style=False))
     sys.exit(0)

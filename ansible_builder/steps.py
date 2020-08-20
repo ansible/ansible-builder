@@ -33,15 +33,6 @@ class AdditionalBuildSteps(Steps):
         return iter(self.steps)
 
 
-class IntrospectionSteps(Steps):
-    def __init__(self, context_file):
-        self.steps = []
-        self.steps.extend([
-            "ADD {0} /usr/local/bin/introspect".format(context_file),
-            "RUN chmod +x /usr/local/bin/introspect"
-        ])
-
-
 class GalaxySteps(Steps):
     def __init__(self, requirements_naming):
         """Assumes given requirements file name has been placed in the build context
@@ -61,25 +52,17 @@ class GalaxySteps(Steps):
 
 class BindepSteps(Steps):
     def __init__(self, context_file):
+        """The context file here must be the output from bindep"""
         self.steps = []
-        sanitized_files = []
-        if context_file:
-            # requirements file added to build context
-            file_naming = os.path.basename(context_file)
-            self.steps.append(
-                "ADD {0} /build/".format(file_naming)
-            )
-            sanitized_files.append(os.path.join('/build/', file_naming))
+        if not context_file:
+            return
 
-        if sanitized_files:
-            self.steps.append(
-                "RUN pip3 install bindep"
-            )
-
-        for file in sanitized_files:
-            self.steps.append(
-                "RUN dnf -y install $(bindep -b -f {0})".format(file)
-            )
+        # requirements file added to build context
+        self.steps.append("ADD {0} /build/".format(context_file))
+        container_path = os.path.join('/build/', context_file)
+        self.steps.append(
+            "RUN dnf -y install $(cat {0})".format(container_path)
+        )
 
 
 class PipSteps(Steps):

@@ -1,11 +1,13 @@
 import subprocess
 import sys
 import os
+import filecmp
+import shutil
 
 from .colors import MessageColors
 
 
-def run_command(command, capture_output=False):
+def run_command(command, capture_output=False, allow_error=False):
     print(MessageColors.HEADER + 'Running command:' + MessageColors.ENDC)
     print(MessageColors.HEADER + '  {0}'.format(' '.join(command)) + MessageColors.ENDC)
 
@@ -21,7 +23,7 @@ def run_command(command, capture_output=False):
         sys.stdout.write(line)
 
     rc = process.poll()
-    if rc is not None and rc != 0:
+    if rc is not None and rc != 0 and (not allow_error):
         print(MessageColors.FAIL + f"An error occured (rc={rc}), see output line(s) above for details." + MessageColors.ENDC)
         sys.exit(1)
 
@@ -40,3 +42,15 @@ def write_file(filename: str, lines: list) -> bool:
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
+
+
+def copy_file(source: str, dest: str) -> bool:
+    exists = os.path.exists(dest)
+    if (not exists) or (not filecmp.cmp(source, dest, shallow=False)):
+        if exists:
+            print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
+        shutil.copy(source, dest)
+        return True
+    else:
+        print(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
+        return False

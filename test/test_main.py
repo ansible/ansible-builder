@@ -4,7 +4,7 @@ import pytest
 from ansible_builder import __version__
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder, UserDefinition
-from ansible_builder.introspect import process
+from ansible_builder.introspect import process, simple_combine
 from ansible_builder.requirements import sanitize_requirements
 
 
@@ -93,13 +93,15 @@ def test_collection_metadata(data_dir):
 
     files = process(data_dir)
     files['python'] = sanitize_requirements(files['python'])
+    files['system'] = simple_combine(files['system'])
 
     assert files == {'python': [
-        'pyvcloud>=14,>=18.0.10',
-        'pytz',
-        'tacacs_plus'
+        'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
+        'pytz  # from collection test.reqfile',
+        'tacacs_plus  # from collection test.reqfile'
     ], 'system': [
-        'test/bindep/bindep.txt'
+        'subversion [platform:rpm]  # from collection test.bindep',
+        'subversion [platform:dpkg]  # from collection test.bindep'
     ]}
 
 
@@ -132,10 +134,6 @@ class TestDefinitionErrors:
     @pytest.mark.parametrize('yaml_text,expect', [
         ('1', 'Definition must be a dictionary, not int'),  # integer
         (
-            "{'version': 1, 'dependencies': {'python': 'Dockerfile'}}",
-            'Duplicated filename Dockerfile in definition.'
-        ),  # bad python file
-        (
             "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
             'not-exists.yml does not exist'
         ),  # missing file
@@ -147,7 +145,7 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),  # not right format for additional_build_steps
+        ),
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

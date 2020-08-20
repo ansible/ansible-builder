@@ -1,20 +1,23 @@
-import filecmp
 import os
-import shutil
 import textwrap
 import yaml
 
 from . import constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
-from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, IntrospectionSteps, BindepSteps
-from .utils import run_command, write_file
+from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, BindepSteps
+from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
 
 
-# Files that need to be moved into the build context
-CONTEXT_FILES = ['galaxy', 'python', 'system']
+# Files that need to be moved into the build context, and their naming inside the context
+CONTEXT_FILES = {
+    'galaxy': 'requirements.yml'
+}
+BINDEP_COMBINED = 'bindep_combined.txt'
+BINDEP_OUTPUT = 'bindep_output.txt'
+PIP_COMBINED = 'requirements_combined.txt'
 
 
 class AnsibleBuilder:
@@ -49,18 +52,55 @@ class AnsibleBuilder:
             self.build_context
         ]
 
+    def run_in_container(self, command, **kwargs):
+        wrapped_command = [self.container_runtime, 'run','--rm']
+
+        wrapped_command.extend(['-v', f"{os.path.abspath(self.build_context)}:/context:Z"])
+
+        wrapped_command.extend([self.tag, '/bin/bash', '-c', ' '.join(command)])
+
+        return run_command(wrapped_command, **kwargs)
+
+    def run_intermission(self):
+        run_command(self.build_command, capture_output=True)
+
+        rc, introspect_output = self.run_in_container(
+            ['python3', '/context/introspect.py'], capture_output=True
+        )
+        collection_data = yaml.safe_load('\n'.join(introspect_output))
+
+        # Add data from user definition, go from dicts to list
+        collection_data['system']['user'] = self.definition.user_system
+        collection_data['python']['user'] = self.definition.user_python
+        system_lines = ansible_builder.introspect.simple_combine(collection_data['system'])
+        python_lines = sanitize_requirements(collection_data['python'])
+
+        bindep_output = []
+        if system_lines:
+            write_file(os.path.join(self.build_context, BINDEP_COMBINED), system_lines + [''])
+
+            rc, bindep_output = self.run_in_container(
+                ['bindep', '-b', '-f', '/context/{0}'.format(BINDEP_COMBINED)],
+                allow_error=True, capture_output=True
+            )
+
+        return (bindep_output, python_lines)
+
     def build(self):
+        # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_prepended_steps()
-        self.containerfile.prepare_introspection_steps()
         self.containerfile.prepare_galaxy_steps()
         print(MessageColors.OK + 'Writing partial Containerfile without collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
-        run_command(self.build_command)
-        print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
-        self.containerfile.prepare_system_steps()
-        self.containerfile.prepare_pip_steps()
+
+        system_lines, pip_lines = self.run_intermission()
+
+        # Phase 2 of Containerfile
+        self.containerfile.prepare_system_steps(bindep_output=system_lines)
+        self.containerfile.prepare_pip_steps(pip_lines=pip_lines)
         self.containerfile.prepare_appended_steps()
+        print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
         run_command(self.build_command)
         return True
@@ -105,6 +145,9 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
+        self.user_python = self.read_dependency('python')
+        self.user_system = self.read_dependency('system')
+
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
         """
@@ -126,25 +169,23 @@ class UserDefinition(BaseDefinition):
 
         return os.path.join(self.reference_path, req_file)
 
-    def get_dep(self, entry):
-        """Returns the filename of the file within the build context.
-        """
-        original_path = self.get_dep_abs_path(entry)
-        if original_path:
-            return os.path.basename(original_path)
-        return original_path
+    def read_dependency(self, entry):
+        requirement_path = self.get_dep_abs_path(entry)
+        if not requirement_path:
+            return []
+        try:
+            with open(requirement_path, 'r') as f:
+                return f.read().split('\n')
+        except FileNotFoundError:
+            raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
     def validate(self):
-        bc_files = set(['introspect.py', 'Dockerfile', 'Containerfile'])
         for item in CONTEXT_FILES:
             requirement_path = self.get_dep_abs_path(item)
             if requirement_path:
-                filename = os.path.basename(requirement_path)
-                if filename in bc_files:
-                    raise DefinitionError("Duplicated filename {0} in definition.".format(filename))
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
-                bc_files.add(filename)
+
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
             if not isinstance(additional_cmds, dict):
@@ -191,21 +232,18 @@ class Containerfile:
 
         os.makedirs(self.build_context, exist_ok=True)
 
-        for item in CONTEXT_FILES:
+        for item, new_name in CONTEXT_FILES.items():
             requirement_path = self.definition.get_dep_abs_path(item)
             if requirement_path is None:
                 continue
-            if item == 'python':
-                continue  # will be put into combined requirements.txt
-            dest = os.path.join(self.build_context, os.path.basename(requirement_path))
-            exists = os.path.exists(dest)
-            do_copy = True
-            if exists:
-                do_copy = not filecmp.cmp(requirement_path, dest, shallow=False)
-                if do_copy:
-                    print(MessageColors.WARNING + 'File {} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
-            if do_copy:
-                shutil.copy(requirement_path, self.build_context)
+            dest = os.path.join(self.build_context, new_name)
+            copy_file(requirement_path, dest)
+
+        # copy introspect.py file from source into build context
+        copy_file(
+            ansible_builder.introspect.__file__,
+            os.path.join(self.build_context, 'introspect.py')
+        )
 
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
@@ -225,46 +263,25 @@ class Containerfile:
 
         return False
 
-    def prepare_introspection_steps(self):
-        source = ansible_builder.introspect.__file__
-        dest = os.path.join(self.build_context, 'introspect.py')
-        exists = os.path.exists(dest)
-        if not exists or not filecmp.cmp(source, dest, shallow=False):
-            shutil.copy(source, dest)
-
-        self.steps.extend(IntrospectionSteps(os.path.basename(dest)))
-
     def prepare_galaxy_steps(self):
-        galaxy_file = self.definition.get_dep('galaxy')
-        if galaxy_file:
-            self.steps.extend(GalaxySteps(galaxy_file))
+        if self.definition.get_dep_abs_path('galaxy'):
+            self.steps.extend(GalaxySteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
-    def prepare_pip_steps(self):
-        python_req_file = self.definition.get_dep('python')
-
-        command = [self.container_runtime, "run", "--rm", self.tag, "introspect"]
-        rc, output = run_command(command, capture_output=True)
-        data = yaml.safe_load("\n".join(output))
-
-        if python_req_file:
-            with open(self.definition.get_dep_abs_path('python'), 'r') as f:
-                user_py_reqs = f.read().split('\n')
-            data['python'].extend(user_py_reqs)
-        data['python'] = sanitize_requirements(data['python'])
-        pip_file = os.path.join(self.build_context, 'requirements.txt')
-
-        if ''.join(data['python']).strip():  # only use file if it is non-blank
-            pip_file = os.path.join(self.build_context, 'requirements.txt')
-            write_file(pip_file, data['python'])
-            self.steps.extend(PipSteps('requirements.txt'))
+    def prepare_pip_steps(self, pip_lines):
+        if ''.join(pip_lines).strip():  # only use file if it is non-blank
+            pip_file = os.path.join(self.build_context, PIP_COMBINED)
+            write_file(pip_file, pip_lines)
+            self.steps.extend(PipSteps(PIP_COMBINED))
 
         return self.steps
 
-    def prepare_system_steps(self):
-        system_req_file = self.definition.get_dep('system')
-        if system_req_file:
-            self.steps.extend(BindepSteps(system_req_file))
+    def prepare_system_steps(self, bindep_output):
+        if ''.join(bindep_output).strip():
+            system_file = os.path.join(self.build_context, BINDEP_OUTPUT)
+            write_file(system_file, bindep_output)
+            self.steps.extend(BindepSteps(BINDEP_OUTPUT))
+
         return self.steps
 
     def write(self):

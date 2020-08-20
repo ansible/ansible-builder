@@ -6,7 +6,9 @@ import os
 
 @pytest.fixture(autouse=True)
 def do_not_run_commands():
-    cmd_mock = mock.MagicMock(return_value=[1, ['python:', '  - foo', 'system: []']])
+    cmd_mock = mock.MagicMock(return_value=[1, [
+        'python:', '  foo: []', 'system: {}',
+    ]])
     with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
         yield cmd_mock
 

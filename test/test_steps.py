@@ -26,10 +26,7 @@ def test_additional_build_steps(verb):
 
 
 def test_system_steps():
-    assert list(BindepSteps(
-        'bindep.txt'
-    )) == [
-        'ADD bindep.txt /build/',
-        'RUN pip3 install bindep',
-        'RUN dnf -y install $(bindep -b -f /build/bindep.txt)'
+    assert list(BindepSteps('bindep_output.txt')) == [
+        'ADD bindep_output.txt /build/',
+        'RUN dnf -y install $(cat /build/bindep_output.txt)'
     ]
