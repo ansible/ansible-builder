@@ -77,12 +77,15 @@ class AnsibleBuilder:
 
         bindep_output = []
         if system_lines:
-            write_file(os.path.join(self.build_context, BINDEP_COMBINED), system_lines + [''])
+            bindep_bc = os.path.join(self.build_context, BINDEP_COMBINED)
+            write_file(bindep_bc, system_lines + [''])
 
             rc, bindep_output = self.run_in_container(
                 ['bindep', '-b', '-f', '/context/{0}'.format(BINDEP_COMBINED)],
                 allow_error=True, capture_output=True
             )
+            if rc not in (0, 127):
+                raise DefinitionError(f'Error processing combined bindep file at {bindep_bc}.')
 
         return (bindep_output, python_lines)
 
