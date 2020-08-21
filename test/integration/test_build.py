@@ -1,6 +1,9 @@
 import pytest
 import os
 
+# TODO: wrap runner import in a try-except, or else add as formal test dependency
+import ansible_runner
+
 
 def test_definition_syntax_error(cli, data_dir):
     ee_def = os.path.join(data_dir, 'definition_files', 'invalid.yml')
@@ -120,3 +123,18 @@ class TestPytz:
         assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
         assert 'ADD requirements_combined.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout
+
+    def test_use_in_ansible_runner(self, cli, container_runtime, data_dir, pytz):
+        ee_tag, bc_folder = pytz
+
+        res = ansible_runner.interface.run(
+            private_data_dir=os.path.join(data_dir, 'pytz'),
+            playbook='pytz.yml',
+            inventory='localhost,',
+            settings=dict(
+                container_image=ee_tag,
+                process_isolation_executable=container_runtime,
+                process_isolation=True
+            )
+        )
+        assert res.rc == 0, res.stdout
