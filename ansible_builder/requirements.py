@@ -10,7 +10,7 @@ EXCLUDE_REQUIREMENTS = frozenset((
     # test requirements highly specific to Ansible testing
     'ansible-lint', 'molecule', 'galaxy-importer', 'voluptuous',
     # already present in image for py3 environments
-    'requests', 'yaml', 'pyyaml', 'json',
+    'yaml', 'pyyaml', 'json',
 ))
 
 
