@@ -102,7 +102,7 @@ class TestPytz:
         r = cli_class(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime}'
         )
-        assert 'Collecting pytz (from -r /build/' in r.stdout, r.stdout
+        assert 'Collecting pytz' in r.stdout, r.stdout
         return (ee_tag_class, bc_folder)
 
     def test_has_pytz(self, cli, container_runtime, pytz):
