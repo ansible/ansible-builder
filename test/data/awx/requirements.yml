@@ -4,7 +4,7 @@
 collections:
   - name: awx.awx
   - name: https://github.com/ansible-collections/azure.git  # spec points to requirements-azure.txt
-    type: git
+    type: git  # PR 220 merged
   - name: amazon.aws  # PR 125 is in 1.1.0
   - name: theforeman.foreman  # has requirements.txt (which -r to another file)
   - name: google.cloud  # has requirements.txt, mainly for google-auth
@@ -13,17 +13,17 @@ collections:
     version: ee_req_install
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
-  - name: https://github.com/alancoding/ovirt-ansible-collection.git
-    version: ee_req  # had no needs single sdk python lib and pycurl
-    type: git
+  - name: https://github.com/oVirt/ovirt-ansible-collection.git
+    type: git  # single sdk python lib and pycurl, PR 91 merged
   - name: https://github.com/AlanCoding/community.kubernetes.git
     version: ee_req
     type: git
+  # adds openshift python lib
   # needs kubectl for yum / dnf / apt-get
   # needs to install snap, then use snap to install helm
   - name: https://github.com/AlanCoding/ansible.posix.git
     version: ee_req
-    type: git
+    type: git  # PR 87
   # needs:
   # - "at" system dep
   # - libselinux-python
