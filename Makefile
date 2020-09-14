@@ -39,6 +39,7 @@ clean:
 	rm -rf ansible-builder.egg-info
 	rm -rf rpm-build
 	find . -type f -regex ".*\py[co]$$" -delete
+	rm -rf $(shell find test/ -type d -name "artifacts")
 
 dist:
 	poetry build
