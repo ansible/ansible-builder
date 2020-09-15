@@ -1,4 +1,0 @@
----
-container_image: alancoding/awx-awx
-process_isolation_executable: docker
-process_isolation: true
