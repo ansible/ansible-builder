@@ -47,7 +47,7 @@ def parse_args(args=sys.argv[1:]):
         prog='ansible-builder',
         description=(
             'Tooling to help build container images for running Ansible content. '
-            'Get started by looking at the help for one of the subcommands.'
+            'Get started by looking at the help text for one of the subcommands.'
         )
     )
     parser.add_argument(
@@ -71,14 +71,14 @@ def parse_args(args=sys.argv[1:]):
 
     build_command_parser.add_argument('-t', '--tag',
                                       default=constants.default_tag,
-                                      help='The name for the container being built.')
+                                      help='The name for the container image being built.')
 
     for p in [build_command_parser]:
 
         p.add_argument('-f', '--file',
                        default=constants.default_file,
                        dest='filename',
-                       help='The definiton of the execution environment.')
+                       help='The definition of the execution environment.')
 
         p.add_argument('-b', '--base-image',
                        default=constants.default_base_image,
@@ -92,8 +92,7 @@ def parse_args(args=sys.argv[1:]):
         p.add_argument('--container-runtime',
                        choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use; use for both "build" and "create" commands. '
-                       'Defaults to podman.')
+                       help='Specifies which container runtime to use. Defaults to podman.')
 
     introspect_parser = subparsers.add_parser(
         'introspect',
