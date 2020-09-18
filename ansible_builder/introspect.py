@@ -45,6 +45,28 @@ def bindep_file_data(path):
     return sys_lines
 
 
+def process_collection(path):
+    """Return a tuple of (python_dependencies, system_dependencies) for the
+    collection install path given.
+    Both items returned are a list of dependencies.
+
+    :param str path: root directory of collection (this would contain galaxy.yml file)
+    """
+    CD = CollectionDefinition(path)
+
+    py_file = CD.get_dependency('python')
+    pip_lines = []
+    if py_file:
+        pip_lines = pip_file_data(os.path.join(path, py_file))
+
+    sys_file = CD.get_dependency('system')
+    bindep_lines = []
+    if sys_file:
+        bindep_lines = bindep_file_data(os.path.join(path, sys_file))
+
+    return (pip_lines, bindep_lines)
+
+
 def process(data_dir=base_collections_path):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
@@ -66,21 +88,16 @@ def process(data_dir=base_collections_path):
     py_req = {}
     sys_req = {}
     for path in paths:
+        col_pip_lines, col_sys_lines = process_collection(path)
         CD = CollectionDefinition(path)
         namespace, name = CD.namespace_name()
         key = '{}.{}'.format(namespace, name)
 
-        py_file = CD.get_dependency('python')
-        if py_file:
-            col_pip_lines = pip_file_data(os.path.join(path, py_file))
-            if col_pip_lines:
-                py_req[key] = col_pip_lines
+        if col_pip_lines:
+            py_req[key] = col_pip_lines
 
-        sys_file = CD.get_dependency('system')
-        if sys_file:
-            col_sys_lines = bindep_file_data(os.path.join(path, sys_file))
-            if col_sys_lines:
-                sys_req[key] = col_sys_lines
+        if col_sys_lines:
+            sys_req[key] = col_sys_lines
 
     return {
         'python': py_req,

@@ -4,8 +4,6 @@ import pytest
 from ansible_builder import __version__
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder, UserDefinition
-from ansible_builder.introspect import process, simple_combine
-from ansible_builder.requirements import sanitize_requirements
 
 
 def test_version():
@@ -87,22 +85,6 @@ def test_build_command(exec_env_definition_file):
     command = aee.build_command
     assert 'foo/bar/path' in command
     assert 'foo/bar/path/Dockerfile' in " ".join(command)
-
-
-def test_collection_metadata(data_dir):
-
-    files = process(data_dir)
-    files['python'] = sanitize_requirements(files['python'])
-    files['system'] = simple_combine(files['system'])
-
-    assert files == {'python': [
-        'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
-        'pytz  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile'
-    ], 'system': [
-        'subversion [platform:rpm]  # from collection test.bindep',
-        'subversion [platform:dpkg]  # from collection test.bindep'
-    ]}
 
 
 def test_nested_galaxy_file(data_dir, tmpdir):
