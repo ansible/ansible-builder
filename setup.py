@@ -25,6 +25,6 @@ setup(
     packages=['ansible_builder'],
     package_dir={"": "."},
     package_data={},
-    install_requires=['pyyaml==3.*,>=3.12.0', 'requirements-parser==0.*,>=0.2.0'],
+    install_requires=['pyyaml>=3.12.0', 'requirements-parser==0.*,>=0.2.0'],
     extras_require={"dev": ["black==19.*,>=19.10.0.b0", "flake8==3.*,>=3.7.9", "pylint==2.*,>=2.4.4", "pytest==5.*,>=5.2.0", "pytest-xdist==1.*,>=1.34.0", "sphinx==3.*,>=3.2.1", "tox==3.*,>=3.14.5", "yamllint==1.*,>=1.20.0"]},
 )
