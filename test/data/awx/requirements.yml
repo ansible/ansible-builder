@@ -14,16 +14,9 @@ collections:
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
   - name: https://github.com/oVirt/ovirt-ansible-collection.git
     type: git  # single sdk python lib and pycurl, PR 91 merged
-  - name: https://github.com/AlanCoding/community.kubernetes.git
-    version: ee_req
+  - name: https://github.com/ansible-collections/community.kubernetes.git
     type: git
   # adds openshift python lib
   # needs kubectl for yum / dnf / apt-get
   # needs to install snap, then use snap to install helm
-  - name: https://github.com/AlanCoding/ansible.posix.git
-    version: ee_req
-    type: git  # PR 87
-  # needs:
-  # - "at" system dep
-  # - libselinux-python
-  # - libsemanage-python
+  - name: ansible.posix
