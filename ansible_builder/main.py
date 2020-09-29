@@ -57,7 +57,7 @@ class AnsibleBuilder:
 
         wrapped_command.extend(['-v', f"{os.path.abspath(self.build_context)}:/context:Z"])
 
-        wrapped_command.extend([self.tag, '/bin/bash', '-c', ' '.join(command)])
+        wrapped_command.extend([self.tag] + command)
 
         return run_command(wrapped_command, **kwargs)
 
