@@ -7,7 +7,7 @@ from ansible_builder.steps import AdditionalBuildSteps, PipSteps, BindepSteps
 def test_steps_for_collection_dependencies():
     assert list(PipSteps('requirements.txt')) == [
         'ADD requirements.txt /build/',
-        'RUN pip3 install --upgrade -r /build/requirements.txt'
+        'RUN pip3 install --no-cache-dir --upgrade -r /build/requirements.txt'
     ]
 
 
@@ -28,5 +28,5 @@ def test_additional_build_steps(verb):
 def test_system_steps():
     assert list(BindepSteps('bindep_output.txt')) == [
         'ADD bindep_output.txt /build/',
-        'RUN dnf -y install $(cat /build/bindep_output.txt)'
+        'RUN dnf -y install $(cat /build/bindep_output.txt) && dnf clean all && rm -rf /var/cache/yum'
     ]
