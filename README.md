@@ -9,25 +9,6 @@ See the readthedocs page for `ansible-builder` at:
 
 https://ansible-builder.readthedocs.io/en/latest/
 
-## Execution Environments
-
-Execution environments are container images intended to be used by Ansible
-executors.  Starting in version 2.0,
-[ansible-runner](https://github.com/ansible/ansible-runner) can make use of
-these images.
-
-An execution environment is expected to contain:
-
- - An install of Ansible (as `ansible-base` if 2.10 or higher)
- - An install of `ansible-runner`
- - Ansible collections
- - Python and/or system dependencies of
-   - modules/plugins in collections
-   - or content in `ansible-base`
-   - or custom user needs
-
-Execution environments contain everything needed to use Ansible modules and
-plugins, as local actions, inside of automation.
 
 ## Get Involved:
 
