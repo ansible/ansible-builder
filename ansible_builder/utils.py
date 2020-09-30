@@ -45,12 +45,21 @@ def write_file(filename: str, lines: list) -> bool:
 
 
 def copy_file(source: str, dest: str) -> bool:
-    exists = os.path.exists(dest)
-    if (not exists) or (not filecmp.cmp(source, dest, shallow=False)):
-        if exists:
-            print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
+    should_copy = False
+
+    if not os.path.exists(dest):
+        print(MessageColors.OK + "File {0} will be created.".format(dest) + MessageColors.ENDC)
+        should_copy = True
+    elif not filecmp.cmp(source, dest, shallow=False):
+        print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
+        should_copy = True
+    elif os.path.getmtime(source) > os.path.getmtime(dest):
+        print(MessageColors.WARNING + 'File {0} updated time increased and will be rewritten'.format(dest) + MessageColors.ENDC)
+        should_copy = True
+
+    if should_copy:
         shutil.copy(source, dest)
-        return True
     else:
         print(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
-        return False
+
+    return should_copy
