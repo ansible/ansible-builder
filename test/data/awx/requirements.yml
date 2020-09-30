@@ -12,8 +12,7 @@ collections:
     version: ee_req_install
     type: git
   - name: community.vmware  # has requirements.txt, but may add pyvcloud
-  - name: https://github.com/oVirt/ovirt-ansible-collection.git
-    type: git  # single sdk python lib and pycurl, PR 91 merged
+  - name: ovirt.ovirt
   - name: https://github.com/ansible-collections/community.kubernetes.git
     type: git
   # adds openshift python lib
