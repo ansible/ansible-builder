@@ -15,7 +15,7 @@ readme = ''
 setup(
     long_description=readme,
     name='ansible-builder',
-    version='0.2.0',
+    version='0.2.1',
     python_requires='==3.*,>=3.6.0',
     author='Matthew Jones',
     author_email='matburt@redhat.com',
