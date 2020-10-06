@@ -26,7 +26,8 @@ class AnsibleBuilder:
                  base_image=constants.default_base_image,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
-                 container_runtime=constants.default_container_runtime):
+                 container_runtime=constants.default_container_runtime,
+                 verbose=0):
         self.action = action
         self.definition = UserDefinition(filename=filename)
         self.tag = tag
@@ -38,6 +39,7 @@ class AnsibleBuilder:
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             tag=self.tag)
+        self.verbose = verbose
 
     @property
     def version(self):

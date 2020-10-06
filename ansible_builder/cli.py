@@ -94,6 +94,12 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use. Defaults to podman.')
 
+        p.add_argument('-v', '--verbose',
+                       dest='verbose',
+                       action='count',
+                       default=0,
+                       help='Increase the output verbosity.')
+
     introspect_parser = subparsers.add_parser(
         'introspect',
         help='Introspects collections in folder.',
