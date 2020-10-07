@@ -31,13 +31,14 @@ ifeq ($(RPM_ARCH),)
     RPM_ARCH = $(shell uname -m)
 endif
 
-.PHONY: clean dist sdist dev shell rpm srpm docs test
+.PHONY: clean dist sdist dev shell rpm srpm test
 
 clean:
 	rm -rf dist
 	rm -rf build
 	rm -rf ansible-builder.egg-info
 	rm -rf rpm-build
+	rm -rf docs/_build/
 	find . -type f -regex ".*\py[co]$$" -delete
 	rm -rf $(shell find test/ -type d -name "artifacts")
 
@@ -61,8 +62,10 @@ shell:
 test:
 	@tox
 
-docs:
+docs/_build:
 	cd docs && make html
+
+docs: docs/_build
 
 rpm:
 	MOCK_CONFIG=$(MOCK_CONFIG) docker-compose -f packaging/rpm/docker-compose.yml build

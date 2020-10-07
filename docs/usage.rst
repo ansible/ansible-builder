@@ -1,25 +1,23 @@
-Ansible Builder Usage
-=====================
+CLI Usage
+=========
 
-The first part of this document is concerned with how the end-user writes the
-execution environment definition.
+Once you have created a :ref:`definition<Definition:Execution Environment Definition>`, it's time to build
+your Execution Environment.
 
-Sections following that provide instructions for how a collection
-maintainer should specify dependencies.
 
-The final section gives an example.
-
-Execution Environment Definition
---------------------------------
+``ansible-builder build``
+------------------------
 
 The ``ansible-builder build`` command takes an execution environment
 definition as an input. It outputs the build context necessary for
 building an execution environment image, and it builds that image. The
 image can be re-built with the build context elsewhere, and give the
-same result. The execution environment definition file needs to be in
-YAML format with the ``.yml`` file extension.
+same result. By default, it looks for a file named ``execution-environment.yml``
+in the current directory.
 
-An example execution environment definition schema is as follows:
+For our purposes here, we will use the following ``execution-environment.yml``
+file as a starting point:
+
 
 .. code:: yaml
 
@@ -27,90 +25,75 @@ An example execution environment definition schema is as follows:
     version: 1
     dependencies:
       galaxy: requirements.yml
-      python: requirements.txt
-      system: bindep.txt
 
-    additional_build_steps:
-      prepend: |
-        RUN whoami
-        RUN cat /etc/os-release
-      append:
-        - RUN echo This is a post-install command!
-        - RUN ls -la /etc
 
-The entries such as ``requirements.yml`` and ``requirements.txt`` may be
-a relative path from the directory of the execution environment
-definition's folder, or an absolute path.
+The content of ``requirements.yml``:
 
-The ``galaxy`` entry points to a valid requirements file for the
-``ansible-galaxy collection install -r ...`` command. The ``python``
-entry points to a python requirements file for ``pip install -r ...``.
-The ``bindep`` entry points to a
-`bindep <https://docs.openstack.org/infra/bindep/readme.html>`__
-requirements file. This will be processed by ``bindep`` and then passed
-to ``dnf``, other platforms are not yet supported.
+.. code:: yaml
 
-Additional commands may be specified in the ``additional_build_steps``
-section, either for before the main build steps (``prepend``) or after
-(``append``). The syntax needs to be either a: - multi-line string
-(example shown in the ``prepend`` section above) - dictionary (as shown
-via ``append``)
+   ---
+   collections:
+     - name: awx.awx
 
-Collection Execution Environment Dependencies
----------------------------------------------
+To build an Execution Environment using the files above, run:
 
-Collections inside of the ``galaxy`` entry of an execution environment
-will contribute their python and system requirements to the image.
+.. code::
 
-Requirements from a collection can be recognized in these ways:
+   $ ansible-builder build
+   ...
+   STEP 7: COMMIT my-awx-ee
+   --> 09c930f5f6a
+   09c930f5f6ac329b7ddb321b144a029dbbfcc83bdfc77103968b7f6cdfc7bea2
+   Complete! The build context can be found at: context
 
--  A file ``meta/execution-environment.yml`` references the python
-   and/or bindep requirements files
--  A file named ``requirements.txt`` is in the root level of the
-   collection
--  A file named ``bindep.txt`` is in the root level of the collection
+In addition to producing a ready-to-use container image, the build context is
+preserved, which can be rebuilt at a different time and/or location with the
+tooling of your choice.
 
-If any of these files are in the ``build_ignore`` of the collection, it
-will not work correctly.
+``--tag``
+*********
 
-Collection maintainers can verify that ``ansible-builder`` recognizes
-the requirements they expect by using the introspect command. Example:
+To customize the tagged name applied to the built image:
 
-::
+.. code::
 
-    ansible-builder introspect --sanitize ~/.ansible/collections/
+   $ ansible-builder build --tag=my-custom-ee
 
-Collection Python Rules
-^^^^^^^^^^^^^^^^^^^^^^^
 
-Python requirements files are combined into a single file using the
-``requirements-parser`` library in order to support complex syntax like
-references to other files.
+``--file``
+**********
 
-Entries from separate collections that give the same *package name* will
-be combined into the same entry, with the constraints combined.
+To use a definition file named something other than
+``execution-environment.yml``:
 
-There are several package names which are specifically *ignored* by
-``ansible-builder``, meaning that if a collection lists these, they will
-not be included in the combined file. These include test packages and
-packages that provide Ansible itself. The full list can be found in
-``EXCLUDE_REQUIREMENTS`` in the ``ansible_builder.requirements`` module.
+.. code::
 
-Collection System Requirement (bindep) Rules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   $ ansible-builder build --file=my-ee.yml
 
-The ``bindep`` format provides a way of specifying cross-platform
-requirements. A minimum expectation is that collections specify
-necessary requirements for ``[platform:rpm]``.
 
-Entries from multiple collections will be combined into a single file.
-Only requirements with *no* profiles (runtime requirements) will be
-installed to the image. Entries from multiple collections which are
-outright duplicates of each other may be consolidated in the combined
-file.
+``--context``
+*************
 
-Example
-~~~~~~~
+By default, a directory named ``context`` will be created in the current working
+directory. To specify another location:
+
+.. code::
+
+   $ ansible-builder build --context=/path/to/dir
+
+
+``--container-runtime``
+***********************
+
+Podman is used by default to build images. To use Docker:
+
+.. code::
+
+   $ ansible-builder build --container-runtime=docker
+
+
+Examples
+--------
 
 The example in ``test/data/pytz`` requires the ``awx.awx`` collection in
 the execution environment definition. The lookup plugin
@@ -124,9 +107,10 @@ The image produced can be used inside of an ``ansible-runner`` project
 by placing these variables inside the ``env/settings`` file, inside of
 the private data directory.
 
+
 .. code:: yaml
 
     ---
     container_image: image-name
-    process_isolation_executable: podman
+    process_isolation_executable: podman # or docker
     process_isolation: true
