@@ -10,10 +10,12 @@ from .main import AnsibleBuilder
 from . import constants
 from .introspect import add_introspect_options, process, simple_combine
 from .requirements import sanitize_requirements
+from .utils import configure_logger
 
 
 def run():
     args = parse_args()
+    configure_logger(args.verbosity)
     if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
@@ -95,10 +97,11 @@ def parse_args(args=sys.argv[1:]):
                        help='Specifies which container runtime to use. Defaults to podman.')
 
         p.add_argument('-v', '--verbose',
-                       dest='verbose',
+                       dest='verbosity',
                        action='count',
                        default=0,
-                       help='Increase the output verbosity.')
+                       help='Increase the output verbosity, for up to three levels of verbosity '
+                            '(invoked via "-v", "-vv", or "-vvv").')
 
     introspect_parser = subparsers.add_parser(
         'introspect',
