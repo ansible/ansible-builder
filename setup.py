@@ -13,6 +13,7 @@ except ImportError:
 readme = ''
 
 setup(
+    description='A tool for building Ansible Execution Environments',
     long_description=readme,
     name='ansible-builder',
     version='0.2.2',
