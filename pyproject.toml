@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ansible-builder"
-version = "0.2.1"
-description = ""
+version = "0.2.2"
+description = "A tool for building Ansible Execution Environments"
 authors = ["Matthew Jones <matburt@redhat.com>",
 	   "Shane McDonald <shanemcd@redhat.com>"]
 
