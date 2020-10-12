@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 
 import pytest
@@ -49,6 +50,9 @@ def test_copy_file(dest_file, source_file):
 
 
 def test_copy_touched_file(dest_file, source_file):
+    # sleep for a miniscule amount of time, otherwise getmtime could be the same float value
+    time.sleep(0.002)
+
     # touch does not change contents but updates modification time
     Path(source_file).touch()
 
