@@ -7,7 +7,7 @@ from ansible_builder.main import AnsibleBuilder, UserDefinition
 
 
 def test_version():
-    assert __version__ == '0.2.1'
+    assert __version__ == '0.2.2'
 
 
 def test_definition_version(exec_env_definition_file):
