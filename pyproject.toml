@@ -46,5 +46,5 @@ exclude = '''
 '''
 
 [build-system]
-requires = ["poetry>=1.0.5"]
+requires = ["setuptools", "poetry>=1.0.5"]
 build-backend = "poetry.masonry.api"
