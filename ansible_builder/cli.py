@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 import yaml
 
@@ -13,9 +14,15 @@ from .requirements import sanitize_requirements
 from .utils import configure_logger
 
 
+logger = logging.getLogger(__name__)
+
+
 def run():
     args = parse_args()
     configure_logger(args.verbosity)
+    if args.verbosity > 0:
+        print(MessageColors.HEADER + f'Verbosity is on level {args.verbosity}.' + MessageColors.ENDC)
+    print(MessageColors.OKGREEN + f'Ansible Builder is building your execution environment image, "{args.tag}".' + MessageColors.ENDC)
     if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
@@ -31,11 +38,11 @@ def run():
         if args.sanitize:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
-            print()
-            print('# Sanitized dependencies for {0}'.format(args.folder))
+            logger.info()
+            logger.info(MessageColors.HEADER + '# Sanitized dependencies for {0}'.format(args.folder) + MessageColors.ENDC)
         else:
-            print()
-            print('# Dependency data for {0}'.format(args.folder))
+            logger.info()
+            logger.info('# Dependency data for {0}'.format(args.folder))
         print('---')
         print(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
@@ -96,9 +103,10 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use. Defaults to podman.')
 
-        p.add_argument('-v', '--verbose',
+        p.add_argument('-v', '--verbosity',
                        dest='verbosity',
                        action='count',
+                       # choices=list(0, 1, 2, 3, '-v', '-vv', '-vvv'),
                        default=0,
                        help='Increase the output verbosity, for up to three levels of verbosity '
                             '(invoked via "-v", "-vv", or "-vvv").')

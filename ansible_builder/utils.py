@@ -1,9 +1,9 @@
+import filecmp
+import logging
+import os
+import shutil
 import subprocess
 import sys
-import os
-import filecmp
-import shutil
-import logging
 
 from .colors import MessageColors
 
@@ -22,8 +22,8 @@ def configure_logger(verbosity):
 
 
 def run_command(command, capture_output=False, allow_error=False):
-    logger.debug(MessageColors.HEADER + 'Running command:' + MessageColors.ENDC)
-    logger.debug(MessageColors.HEADER + '  {0}'.format(' '.join(command)) + MessageColors.ENDC)
+    logger.info(MessageColors.HEADER + 'Running command:' + MessageColors.ENDC)
+    logger.info(MessageColors.HEADER + '  {0}'.format(' '.join(command)) + MessageColors.ENDC)
 
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE,
@@ -38,7 +38,7 @@ def run_command(command, capture_output=False, allow_error=False):
 
     rc = process.poll()
     if rc is not None and rc != 0 and (not allow_error):
-        logger.warning(MessageColors.FAIL + f"An error occured (rc={rc}), see output line(s) above for details." + MessageColors.ENDC)
+        logger.error(MessageColors.FAIL + f"An error occured (rc={rc}), see output line(s) above for details." + MessageColors.ENDC)
         sys.exit(1)
 
     return (rc, output)
