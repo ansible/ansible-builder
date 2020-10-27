@@ -21,7 +21,7 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
     if args.verbosity > 0:
-        print(MessageColors.HEADER + f'Verbosity is on level {args.verbosity}.' + MessageColors.ENDC)
+        logger.info(MessageColors.HEADER + f'Verbosity is on level {args.verbosity}.' + MessageColors.ENDC)
     print(MessageColors.OKGREEN + f'Ansible Builder is building your execution environment image, "{args.tag}".' + MessageColors.ENDC)
     if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
@@ -31,7 +31,7 @@ def run():
                 print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
                 sys.exit(0)
         except DefinitionError as e:
-            print(e.args[0])
+            logger.error(MessageColors.FAIL + e.args[0] + MessageColors.ENDC)
             sys.exit(1)
     elif args.action == 'introspect':
         data = process(args.folder)
@@ -42,12 +42,12 @@ def run():
             logger.info(MessageColors.HEADER + '# Sanitized dependencies for {0}'.format(args.folder) + MessageColors.ENDC)
         else:
             logger.info()
-            logger.info('# Dependency data for {0}'.format(args.folder))
-        print('---')
-        print(yaml.dump(data, default_flow_style=False))
+            logger.info(MessageColors.HEADER + '# Dependency data for {0}'.format(args.folder) + MessageColors.ENDC)
+        logger.info('---')
+        logger.info(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
-    print(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
+    logger.error(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
     sys.exit(1)
 
 

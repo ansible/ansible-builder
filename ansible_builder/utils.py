@@ -52,7 +52,7 @@ def write_file(filename: str, lines: list) -> bool:
                 logger.debug(MessageColors.OK + "File {0} is already up-to-date.".format(filename) + MessageColors.ENDC)
                 return False
             else:
-                logger.debug(print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(filename) + MessageColors.ENDC))
+                logger.warning(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(filename) + MessageColors.ENDC)
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
@@ -65,15 +65,15 @@ def copy_file(source: str, dest: str) -> bool:
         logger.debug(MessageColors.OK + "File {0} will be created.".format(dest) + MessageColors.ENDC)
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):
-        print(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
+        logger.warning(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
         should_copy = True
     elif os.path.getmtime(source) > os.path.getmtime(dest):
-        print(MessageColors.WARNING + 'File {0} updated time increased and will be rewritten'.format(dest) + MessageColors.ENDC)
+        logger.warning(MessageColors.WARNING + 'File {0} updated time increased and will be rewritten'.format(dest) + MessageColors.ENDC)
         should_copy = True
 
     if should_copy:
         shutil.copy(source, dest)
     else:
-        print(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
+        logger.debug(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
 
     return should_copy

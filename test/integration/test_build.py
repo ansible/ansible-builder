@@ -43,6 +43,7 @@ def test_build_streams_output(cli, container_runtime, build_dir_and_ee_yml, ee_t
     tmpdir, eeyml = build_dir_and_ee_yml("")
     result = cli(f"ansible-builder build -c {tmpdir} -f {eeyml} -t {ee_tag} --container-runtime {container_runtime}")
     assert f"{container_runtime} build -f {tmpdir}" in result.stdout
+    assert f"Ansible Builder is building your execution environment image, '{ee_tag}'." in result.stdout
     assert f"The build context can be found at: {tmpdir}" in result.stdout
 
 

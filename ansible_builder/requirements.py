@@ -1,5 +1,11 @@
+import logging
 import requirements
 
+from .colors import MessageColors
+from .utils import configure_logger
+
+
+logger = logging.getLogger(__name__)
 
 EXCLUDE_REQUIREMENTS = frozenset((
     # obviously already satisfied or unwanted
@@ -35,7 +41,7 @@ def sanitize_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            print('Warning: failed to parse requirments from {}, error: {}'.format(collection, e))
+            logger.warning(MessageColors.WARNING + 'Warning: failed to parse requirments from {}, error: {}'.format(collection, e) + MessageColors.ENDC)
 
     # removal of unwanted packages
     sanitized = []

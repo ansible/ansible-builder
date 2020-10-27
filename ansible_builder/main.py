@@ -1,3 +1,4 @@
+import logging
 import os
 import textwrap
 import yaml
@@ -6,10 +7,12 @@ from . import constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, BindepSteps
-from .utils import run_command, write_file, copy_file
+from .utils import run_command, write_file, copy_file, configure_logger
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
 
+
+logger = logging.getLogger(__name__)
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {
@@ -93,7 +96,7 @@ class AnsibleBuilder:
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_steps()
-        print(MessageColors.OK + 'Writing partial Containerfile without collection requirements' + MessageColors.ENDC)
+        logger.debug(MessageColors.OK + 'Writing partial Containerfile without collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
 
         system_lines, pip_lines = self.run_intermission()
@@ -102,7 +105,7 @@ class AnsibleBuilder:
         self.containerfile.prepare_system_steps(bindep_output=system_lines)
         self.containerfile.prepare_pip_steps(pip_lines=pip_lines)
         self.containerfile.prepare_appended_steps()
-        print(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
+        logger.debug(MessageColors.OK + 'Rewriting Containerfile to capture collection requirements' + MessageColors.ENDC)
         self.containerfile.write()
         run_command(self.build_command)
         return True
