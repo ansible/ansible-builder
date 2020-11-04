@@ -5,7 +5,6 @@ import yaml
 
 from . import __version__
 
-from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from . import constants
@@ -14,24 +13,26 @@ from .requirements import sanitize_requirements
 from .utils import configure_logger
 
 
-logger = logging.getLogger('builder')
+logger = logging.getLogger(__name__)
 
 
 def run():
     args = parse_args()
     configure_logger(args.verbosity)
-    if args.verbosity > 0:
-        logger.info(MessageColors.HEADER + f'Verbosity is on level {args.verbosity}.' + MessageColors.ENDC)
-    print(MessageColors.OKGREEN + f'Ansible Builder is building your execution environment image, "{args.tag}".' + MessageColors.ENDC)
+
+    logger.info(f'Verbosity is on level {args.verbosity}.')
+
+    logger.info(f'Ansible Builder is building your execution environment image, "{args.tag}".')
+
     if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
             if action():
-                print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
+                print("Complete! The build context can be found at: {0}".format(ab.build_context))
                 sys.exit(0)
         except DefinitionError as e:
-            logger.error(MessageColors.FAIL + e.args[0] + MessageColors.ENDC)
+            logger.error(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
         data = process(args.folder)
@@ -39,15 +40,15 @@ def run():
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
             logger.info()
-            logger.info(MessageColors.HEADER + '# Sanitized dependencies for {0}'.format(args.folder) + MessageColors.ENDC)
+            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
             logger.info()
-            logger.info(MessageColors.HEADER + '# Dependency data for {0}'.format(args.folder) + MessageColors.ENDC)
+            logger.info('# Dependency data for {0}'.format(args.folder))
         logger.info('---')
         logger.info(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
-    logger.error(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
+    logger.error("An error has occured.")
     sys.exit(1)
 
 

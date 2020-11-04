@@ -9,50 +9,58 @@ import sys
 from .colors import MessageColors
 
 
-logger = logging.getLogger('builder')
+logger = logging.getLogger(__name__)
 logging_levels = {
-    '0': logging.ERROR,
-    '1': logging.WARNING,
-    '2': logging.INFO,
-    '3': logging.DEBUG,
+    '0': 'ERROR',
+    '1': 'WARNING',
+    '2': 'INFO',
+    '3': 'DEBUG',
 }
 
 
-class MyFilter(logging.Filter):
+class ColorFilter(logging.Filter):
+    color_map = {
+        'ERROR': MessageColors.FAIL,
+        'WARNING': MessageColors.WARNING,
+        'INFO': MessageColors.HEADER,
+        'DEBUG': MessageColors.OK
+    }
+
     def filter(self, record):
-        record.msg = 'Hi mom!'
-        return 1
+        record.msg = self.color_map[record.levelname] + record.msg + MessageColors.ENDC
+        return record
 
 
 LOGGING = {
     'version': 1,
     'filters': {
         'myfilter': {
-            '()': MyFilter,
+            '()': ColorFilter
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'filters': ['myfilter']
         }
     },
-    'builder': {
-        'handlers': ['console']
-    },
+    'loggers': {
+        'ansible_builder': {
+            'handlers': ['console'],
+        }
+    }
 }
 
 
 def configure_logger(verbosity):
-    # logging.basicConfig(stream=sys.stdout, level=logging_levels[str(verbosity)], format='%(message)s')
-    # create console handler with a higher log level
-    LOGGING['builder']['level'] = logging_levels[str(verbosity)]
+    LOGGING['loggers']['ansible_builder']['level'] = logging_levels[str(verbosity)]
     logging.config.dictConfig(LOGGING)
 
 
 
 def run_command(command, capture_output=False, allow_error=False):
-    logger.info(MessageColors.HEADER + 'Running command:' + MessageColors.ENDC)
-    logger.info(MessageColors.HEADER + '  {0}'.format(' '.join(command)) + MessageColors.ENDC)
+    logger.info('Running command:')
+    logger.info('  {0}'.format(' '.join(command)))
 
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE,
@@ -67,7 +75,7 @@ def run_command(command, capture_output=False, allow_error=False):
 
     rc = process.poll()
     if rc is not None and rc != 0 and (not allow_error):
-        logger.error(MessageColors.FAIL + f"An error occured (rc={rc}), see output line(s) above for details." + MessageColors.ENDC)
+        logger.error(f"An error occured (rc={rc}), see output line(s) above for details.")
         sys.exit(1)
 
     return (rc, output)
@@ -78,10 +86,10 @@ def write_file(filename: str, lines: list) -> bool:
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             if f.read() == new_text:
-                logger.debug(MessageColors.OK + "File {0} is already up-to-date.".format(filename) + MessageColors.ENDC)
+                logger.debug("File {0} is already up-to-date.".format(filename))
                 return False
             else:
-                logger.warning(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(filename) + MessageColors.ENDC)
+                logger.warning('File {0} had modifications and will be rewritten'.format(filename))
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
@@ -91,18 +99,18 @@ def copy_file(source: str, dest: str) -> bool:
     should_copy = False
 
     if not os.path.exists(dest):
-        logger.debug(MessageColors.OK + "File {0} will be created.".format(dest) + MessageColors.ENDC)
+        logger.debug("File {0} will be created.".format(dest))
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):
-        logger.warning(MessageColors.WARNING + 'File {0} had modifications and will be rewritten'.format(dest) + MessageColors.ENDC)
+        logger.warning('File {0} had modifications and will be rewritten'.format(dest))
         should_copy = True
     elif os.path.getmtime(source) > os.path.getmtime(dest):
-        logger.warning(MessageColors.WARNING + 'File {0} updated time increased and will be rewritten'.format(dest) + MessageColors.ENDC)
+        logger.warning('File {0} updated time increased and will be rewritten'.format(dest))
         should_copy = True
 
     if should_copy:
         shutil.copy(source, dest)
     else:
-        logger.debug(MessageColors.OK + "File {0} is already up-to-date.".format(dest) + MessageColors.ENDC)
+        logger.debug("File {0} is already up-to-date.".format(dest))
 
     return should_copy
