@@ -34,14 +34,14 @@ class ColorFilter(logging.Filter):
 LOGGING = {
     'version': 1,
     'filters': {
-        'myfilter': {
+        'colorize': {
             '()': ColorFilter
         }
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'filters': ['myfilter']
+            'filters': ['colorize']
         }
     },
     'loggers': {
