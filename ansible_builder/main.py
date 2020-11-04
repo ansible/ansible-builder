@@ -7,12 +7,12 @@ from . import constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, BindepSteps
-from .utils import run_command, write_file, copy_file, configure_logger
+from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('builder')
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {

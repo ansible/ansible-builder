@@ -2,10 +2,9 @@ import logging
 import requirements
 
 from .colors import MessageColors
-from .utils import configure_logger
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('builder')
 
 EXCLUDE_REQUIREMENTS = frozenset((
     # obviously already satisfied or unwanted

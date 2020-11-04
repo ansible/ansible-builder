@@ -14,7 +14,7 @@ from .requirements import sanitize_requirements
 from .utils import configure_logger
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('builder')
 
 
 def run():

@@ -1,5 +1,6 @@
 import filecmp
 import logging
+import logging.config
 import os
 import shutil
 import subprocess
@@ -8,7 +9,7 @@ import sys
 from .colors import MessageColors
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('builder')
 logging_levels = {
     '0': logging.ERROR,
     '1': logging.WARNING,
@@ -17,8 +18,36 @@ logging_levels = {
 }
 
 
+class MyFilter(logging.Filter):
+    def filter(self, record):
+        record.msg = 'Hi mom!'
+        return 1
+
+
+LOGGING = {
+    'version': 1,
+    'filters': {
+        'myfilter': {
+            '()': MyFilter,
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'builder': {
+        'handlers': ['console']
+    },
+}
+
+
 def configure_logger(verbosity):
-    logging.basicConfig(stream=sys.stdout, level=logging_levels[str(verbosity)], format='%(message)s')
+    # logging.basicConfig(stream=sys.stdout, level=logging_levels[str(verbosity)], format='%(message)s')
+    # create console handler with a higher log level
+    LOGGING['builder']['level'] = logging_levels[str(verbosity)]
+    logging.config.dictConfig(LOGGING)
+
 
 
 def run_command(command, capture_output=False, allow_error=False):
