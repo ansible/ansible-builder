@@ -20,7 +20,7 @@ def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
     bc = str(tmpdir)
     ee_def = os.path.join(data_dir, 'build_fail', 'execution-environment.yml')
     r = cli(
-        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}',
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -vvv',
         allow_error=True
     )
     assert r.rc != 0
@@ -41,10 +41,10 @@ def test_missing_galaxy_requirements_file():
 def test_build_streams_output(cli, container_runtime, build_dir_and_ee_yml, ee_tag):
     """Test that 'ansible-builder build' streams build output."""
     tmpdir, eeyml = build_dir_and_ee_yml("")
-    result = cli(f"ansible-builder build -c {tmpdir} -f {eeyml} -t {ee_tag} --container-runtime {container_runtime}")
-    assert f"{container_runtime} build -f {tmpdir}" in result.stdout
-    assert f"Ansible Builder is building your execution environment image, '{ee_tag}'." in result.stdout
-    assert f"The build context can be found at: {tmpdir}" in result.stdout
+    result = cli(f"ansible-builder build -c {tmpdir} -f {eeyml} -t {ee_tag} --container-runtime {container_runtime} -vvv")
+    assert f'{container_runtime} build -f {tmpdir}' in result.stdout
+    assert f'Ansible Builder is building your execution environment image, "{ee_tag}".' in result.stdout
+    assert f'The build context can be found at: {tmpdir}' in result.stdout
 
 
 def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):

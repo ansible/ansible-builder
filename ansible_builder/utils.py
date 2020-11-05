@@ -53,6 +53,7 @@ LOGGING = {
 
 
 def configure_logger(verbosity):
+    logging.basicConfig(stream=sys.stdout)
     LOGGING['loggers']['ansible_builder']['level'] = logging_levels[str(verbosity)]
     logging.config.dictConfig(LOGGING)
 
@@ -75,6 +76,8 @@ def run_command(command, capture_output=False, allow_error=False):
 
     rc = process.poll()
     if rc is not None and rc != 0 and (not allow_error):
+        for line in output:
+            logger.error(line)
         logger.error(f"An error occured (rc={rc}), see output line(s) above for details.")
         sys.exit(1)
 

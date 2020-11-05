@@ -5,6 +5,10 @@ import tempfile
 import uuid
 
 import pytest
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 TAG_PREFIX = 'builder-test'
@@ -63,7 +67,7 @@ def cleanup_ee_tags(container_runtime, request):
                 from_test = True
             if from_test:
                 run(f'{container_runtime} rmi -f {image_name}')
-                print(f'Deleted image {image_name}')
+                logger.warning(f'Deleted image {image_name}')
 
     request.addfinalizer(delete_images)
 

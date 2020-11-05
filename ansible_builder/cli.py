@@ -5,6 +5,7 @@ import yaml
 
 from . import __version__
 
+from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from . import constants
@@ -20,16 +21,15 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
 
-    logger.info(f'Verbosity is on level {args.verbosity}.')
-
-    logger.info(f'Ansible Builder is building your execution environment image, "{args.tag}".')
+    logger.warning(f'Verbosity is on level {args.verbosity}.')
+    logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
 
     if args.action in ['build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
             if action():
-                print("Complete! The build context can be found at: {0}".format(ab.build_context))
+                print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
                 sys.exit(0)
         except DefinitionError as e:
             logger.error(e.args[0])
@@ -107,10 +107,10 @@ def parse_args(args=sys.argv[1:]):
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
                        action='count',
-                       # choices=list(0, 1, 2, 3, '-v', '-vv', '-vvv'),
                        default=0,
                        help='Increase the output verbosity, for up to three levels of verbosity '
-                            '(invoked via "-v", "-vv", or "-vvv").')
+                            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
+                            'or "-vvv").')
 
     introspect_parser = subparsers.add_parser(
         'introspect',
