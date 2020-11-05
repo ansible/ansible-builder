@@ -101,7 +101,7 @@ class TestPytz:
         bc_folder = str(tmpdir_factory.mktemp('bc'))
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
         r = cli_class(
-            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime}'
+            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime} -vvv'
         )
         assert 'Collecting pytz' in r.stdout, r.stdout
         return (ee_tag_class, bc_folder)
@@ -115,7 +115,7 @@ class TestPytz:
         ee_tag, bc_folder = pytz
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
         r = cli(
-            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -vvv'
         )
         assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
         assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout

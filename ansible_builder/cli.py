@@ -21,10 +21,8 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
 
-    logger.warning(f'Verbosity is on level {args.verbosity}.')
-    logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
-
     if args.action in ['build']:
+        logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
@@ -39,13 +37,11 @@ def run():
         if args.sanitize:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
-            logger.info()
             logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
-            logger.info()
-            logger.info('# Dependency data for {0}'.format(args.folder))
-        logger.info('---')
-        logger.info(yaml.dump(data, default_flow_style=False))
+            print('# Dependency data for {0}'.format(args.folder))
+        print('---')
+        print(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
     logger.error("An error has occured.")
@@ -127,8 +123,12 @@ def parse_args(args=sys.argv[1:]):
             'Sanitize and de-duplicate requirements. '
             'This is normally done separately from the introspect script, but this '
             'option is given to more accurately test collection content.'
-        ), action='store_true'
-    )
+        ), action='store_true')
+    introspect_parser.add_argument(
+        '-v', '--verbosity', dest='verbosity', action='count', default=0, help=(
+            'Increase the output verbosity, for up to three levels of verbosity '
+            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
+            'or "-vvv").'))
 
     args = parser.parse_args(args)
 

@@ -27,7 +27,8 @@ class ColorFilter(logging.Filter):
     }
 
     def filter(self, record):
-        record.msg = self.color_map[record.levelname] + record.msg + MessageColors.ENDC
+        if sys.stdout.isatty():
+            record.msg = self.color_map[record.levelname] + record.msg + MessageColors.ENDC
         return record
 
 
@@ -41,7 +42,8 @@ LOGGING = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'filters': ['colorize']
+            'filters': ['colorize'],
+            'stream': 'ext://sys.stdout'
         }
     },
     'loggers': {
@@ -53,7 +55,6 @@ LOGGING = {
 
 
 def configure_logger(verbosity):
-    logging.basicConfig(stream=sys.stdout)
     LOGGING['loggers']['ansible_builder']['level'] = logging_levels[str(verbosity)]
     logging.config.dictConfig(LOGGING)
 
