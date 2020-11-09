@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 import yaml
 
@@ -10,11 +11,18 @@ from .main import AnsibleBuilder
 from . import constants
 from .introspect import add_introspect_options, process, simple_combine
 from .requirements import sanitize_requirements
+from .utils import configure_logger
+
+
+logger = logging.getLogger(__name__)
 
 
 def run():
     args = parse_args()
+    configure_logger(args.verbosity)
+
     if args.action in ['build']:
+        logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
@@ -22,23 +30,21 @@ def run():
                 print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
                 sys.exit(0)
         except DefinitionError as e:
-            print(e.args[0])
+            logger.error(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
         data = process(args.folder)
         if args.sanitize:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
-            print()
-            print('# Sanitized dependencies for {0}'.format(args.folder))
+            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
-            print()
             print('# Dependency data for {0}'.format(args.folder))
         print('---')
         print(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
-    print(MessageColors.FAIL + "An error has occured." + MessageColors.ENDC)
+    logger.error("An error has occured.")
     sys.exit(1)
 
 
@@ -94,6 +100,14 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use. Defaults to podman.')
 
+        p.add_argument('-v', '--verbosity',
+                       dest='verbosity',
+                       action='count',
+                       default=0,
+                       help='Increase the output verbosity, for up to three levels of verbosity '
+                            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
+                            'or "-vvv").')
+
     introspect_parser = subparsers.add_parser(
         'introspect',
         help='Introspects collections in folder.',
@@ -109,8 +123,12 @@ def parse_args(args=sys.argv[1:]):
             'Sanitize and de-duplicate requirements. '
             'This is normally done separately from the introspect script, but this '
             'option is given to more accurately test collection content.'
-        ), action='store_true'
-    )
+        ), action='store_true')
+    introspect_parser.add_argument(
+        '-v', '--verbosity', dest='verbosity', action='count', default=0, help=(
+            'Increase the output verbosity, for up to three levels of verbosity '
+            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
+            'or "-vvv").'))
 
     args = parser.parse_args(args)
 
