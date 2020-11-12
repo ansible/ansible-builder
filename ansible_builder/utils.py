@@ -63,10 +63,13 @@ def configure_logger(verbosity):
 def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
     logger.info('  {0}'.format(' '.join(command)))
-
-    process = subprocess.Popen(command,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.STDOUT)
+    try:
+        process = subprocess.Popen(command,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+    except FileNotFoundError:
+        logger.error(f"You do not have {command[0]} installed, please specify a different container runtime for this command.")
+        sys.exit(1)
 
     output = []
     for line in iter(process.stdout.readline, b''):
