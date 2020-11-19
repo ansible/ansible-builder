@@ -52,7 +52,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     assert 'ADD requirements.yml' in content
 
 
-def test_base_image_via_command_line(exec_env_definition_file, tmpdir):
+def test_base_image(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
