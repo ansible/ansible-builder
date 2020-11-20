@@ -30,6 +30,9 @@ definition file in the ``base_image`` section as a string; this is an
 optional alternative to using the default option or specifying via command
 line with the ``--base-image`` flag.
 
+If a base image is specified in both the definition file as well as via the 
+command line, the CLI option will take precedence.
+
 Ansible Galaxy Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ``galaxy`` entry points to a valid requirements file for the

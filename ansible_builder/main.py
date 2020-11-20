@@ -32,7 +32,7 @@ class AnsibleBuilder:
                  verbosity=0):
         self.action = action
         self.definition = UserDefinition(filename=filename)
-        self.base_image = self.definition.raw.get('base_image') or base_image
+        self.base_image = base_image or self.definition.raw.get('base_image')
         self.tag = tag
         self.build_context = build_context
         self.container_runtime = container_runtime
@@ -192,7 +192,13 @@ class UserDefinition(BaseDefinition):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
         ee_base_image = self.raw.get('base_image')
-        if ee_base_image:
+        if ee_base_image is None:
+            raise DefinitionError(textwrap.dedent(
+                """
+                Error: Please specify a base image for the execution environment.
+                """)
+            )
+        elif ee_base_image:
             if not isinstance(ee_base_image, str):
                 raise DefinitionError(textwrap.dedent(
                     f"""
@@ -229,7 +235,7 @@ class Containerfile:
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
-        self.base_image = base_image
+        self.base_image = base_image or self.definition.raw.get('base_image')
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
