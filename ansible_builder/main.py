@@ -159,13 +159,6 @@ class UserDefinition(BaseDefinition):
         commands = self.raw.get('additional_build_steps')
         return commands
 
-    def get_base_image(self):
-        """
-        Gets the base image from the definition file, if it is specified there.
-        """
-        def_file_base_image = self.raw.get('base_image')
-        return def_file_base_image
-
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
@@ -198,7 +191,7 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
-        ee_base_image = self.get_base_image()
+        ee_base_image = self.raw.get('base_image')
         if ee_base_image:
             if not isinstance(ee_base_image, str):
                 raise DefinitionError(textwrap.dedent(
