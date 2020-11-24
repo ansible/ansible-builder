@@ -25,14 +25,23 @@ PIP_COMBINED = 'requirements_combined.txt'
 class AnsibleBuilder:
     def __init__(self, action=None,
                  filename=constants.default_file,
-                 base_image=constants.default_base_image,
+                 base_image=None,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
                  verbosity=0):
         self.action = action
         self.definition = UserDefinition(filename=filename)
-        self.base_image = base_image or self.definition.raw.get('base_image')
+
+        # Handle precedence of the base image
+        if base_image is not None:
+            self.base_image = base_image
+        if base_image is None:
+            if self.definition.raw.get('base_image'):
+                self.base_image = self.definition.raw.get('base_image')
+            else:
+                self.base_image = constants.default_base_image
+
         self.tag = tag
         self.build_context = build_context
         self.container_runtime = container_runtime
@@ -192,13 +201,7 @@ class UserDefinition(BaseDefinition):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
         ee_base_image = self.raw.get('base_image')
-        if ee_base_image is None:
-            raise DefinitionError(textwrap.dedent(
-                """
-                Error: Please specify a base image for the execution environment.
-                """)
-            )
-        elif ee_base_image:
+        if ee_base_image:
             if not isinstance(ee_base_image, str):
                 raise DefinitionError(textwrap.dedent(
                     f"""
