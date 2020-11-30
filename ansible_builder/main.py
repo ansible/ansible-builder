@@ -25,19 +25,29 @@ PIP_COMBINED = 'requirements_combined.txt'
 class AnsibleBuilder:
     def __init__(self, action=None,
                  filename=constants.default_file,
-                 base_image=constants.default_base_image,
+                 base_image=None,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
                  verbosity=0):
         self.action = action
         self.definition = UserDefinition(filename=filename)
+
+        # Handle precedence of the base image
+        if base_image is not None:
+            self.base_image = base_image
+        if base_image is None:
+            if self.definition.raw.get('base_image'):
+                self.base_image = self.definition.raw.get('base_image')
+            else:
+                self.base_image = constants.default_base_image
+
         self.tag = tag
         self.build_context = build_context
         self.container_runtime = container_runtime
         self.containerfile = Containerfile(
             definition=self.definition,
-            base_image=base_image,
+            base_image=self.base_image,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             tag=self.tag)
@@ -190,6 +200,15 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
+        ee_base_image = self.raw.get('base_image')
+        if ee_base_image:
+            if not isinstance(ee_base_image, str):
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown type {type(ee_base_image)} found for base_image; must be a string.
+                    """)
+                )
+
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
             if not isinstance(additional_cmds, dict):
@@ -219,7 +238,7 @@ class Containerfile:
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
-        self.base_image = base_image
+        self.base_image = base_image or self.definition.raw.get('base_image')
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [

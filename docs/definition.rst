@@ -7,6 +7,7 @@ An example execution environment definition schema is as follows:
 
     ---
     version: 1
+    base_image: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
     dependencies:
       galaxy: requirements.yml
       python: requirements.txt
@@ -20,6 +21,17 @@ An example execution environment definition schema is as follows:
         - RUN echo This is a post-install command!
         - RUN ls -la /etc
 
+
+Base Image
+^^^^^^^^^^
+
+The parent image for the execution environment can be specified in the
+definition file in the ``base_image`` section as a string; this is an
+optional alternative to using the default option or specifying via command
+line with the ``--base-image`` flag.
+
+If a base image is specified in both the definition file as well as via the 
+command line, the CLI option will take precedence.
 
 Ansible Galaxy Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
