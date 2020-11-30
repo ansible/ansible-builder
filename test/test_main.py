@@ -11,17 +11,14 @@ def test_version():
 
 
 def test_definition_version(exec_env_definition_file):
-    path = exec_env_definition_file(content={
-        'version': 1,
-        'base_image': 'my-custom-image'
-    })
+    path = exec_env_definition_file(content={'version': 1})
     aee = AnsibleBuilder(filename=path)
     assert aee.version == '1'
 
 
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
-    aee = AnsibleBuilder(filename=path, base_image='my-custom-image')
+    aee = AnsibleBuilder(filename=path)
 
     with pytest.raises(ValueError):
         aee.version
@@ -39,7 +36,6 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
 
     exec_env_content = {
         'version': 1,
-        'base_image': 'my-custom-image',
         'dependencies': {
             'galaxy': str(galaxy_requirements_path) if path_spec == 'absolute' else '../galaxy/requirements.yml'
         }
@@ -57,9 +53,17 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
 
 
 def test_base_image(exec_env_definition_file, tmpdir):
-    content = {'version': 1, 'base_image': 'my-custom-image'}
+    content = {'version': 1}
     path = exec_env_definition_file(content=content)
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc2'))
+    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee.build()
+
+    with open(aee.containerfile.path) as f:
+        content = f.read()
+
+    assert 'ansible-runner' in content
+
+    aee = AnsibleBuilder(filename=path, base_image='my-custom-image', build_context=tmpdir.mkdir('bc2'))
     aee.build()
 
     with open(aee.containerfile.path) as f:
@@ -69,7 +73,7 @@ def test_base_image(exec_env_definition_file, tmpdir):
 
 
 def test_build_command(exec_env_definition_file):
-    content = {'version': 1, 'base_image': 'my-custom-image'}
+    content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
     aee = AnsibleBuilder(filename=path, tag='my-custom-image')
@@ -105,28 +109,24 @@ class TestDefinitionErrors:
         path = os.path.join(data_dir, 'definition_files/bad.yml')
 
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path, base_image='my-custom-image')
+            AnsibleBuilder(filename=path)
 
         assert 'An error occured while parsing the definition file:' in str(error.value.args[0])
 
     @pytest.mark.parametrize('yaml_text,expect', [
         ('1', 'Definition must be a dictionary, not int'),  # integer
         (
-            "{'version': 1, 'base_image': 'my-custom-image', 'dependencies': {'python': 'foo/not-exists.yml'}}",
+            "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
             'not-exists.yml does not exist'
         ),  # missing file
         (
-            "{'version': 1, 'base_image': 'my-custom-image', 'additional_build_steps': 'RUN me'}",
+            "{'version': 1, 'additional_build_steps': 'RUN me'}",
             "Expected 'additional_build_steps' in the provided definition file to be a dictionary\n"
             "with keys 'prepend' and/or 'append'; found a str instead."
         ),  # not right format for additional_build_steps
         (
-            "{'version': 1, 'base_image': 'my-custom-image', 'additional_build_steps': {'middle': 'RUN me'}}",
+            "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),
-        (
-            "{'version': 1, 'base_image': ['my-custom-image']}",
-            "Error: Unknown type <class 'list'> found for base_image; must be a string."
         ),
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
@@ -141,6 +141,6 @@ class TestDefinitionErrors:
         path = "exec_env.txt"
 
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path, base_image='my-custom-image')
+            AnsibleBuilder(filename=path)
 
         assert "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location." in str(error.value.args[0])
