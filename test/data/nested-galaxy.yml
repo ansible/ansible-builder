@@ -1,6 +1,4 @@
 ---
 version: 1
-base_image: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
-
 dependencies:
   galaxy: foo/requirements.yml
