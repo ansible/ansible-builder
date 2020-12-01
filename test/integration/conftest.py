@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-TAG_PREFIX = 'builder-test'
+TAG_PREFIX = 'quay.io/example/builder-test'
 
 
 @pytest.fixture
