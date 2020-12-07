@@ -92,6 +92,16 @@ Podman is used by default to build images. To use Docker:
    $ ansible-builder build --container-runtime=docker
 
 
+ ``--verbosity``
+ ***************
+
+ To customize the level of verbosity:
+
+ .. code::
+
+    $ ansible-builder build --verbosity 2
+
+
 Examples
 --------
 
