@@ -11,6 +11,7 @@
     parent: ansible-tox-py38
     requires:
       - ansible-runner-container-image
+    nodeset: ubuntu-bionic-4vcpu
     vars:
       tox_envlist: integration
       tox_install_siblings: false
