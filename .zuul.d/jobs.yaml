@@ -1,0 +1,16 @@
+---
+- job:
+    name: ansible-builder-tox-integration
+    parent: ansible-buildset-registry-consumer
+    timeout: 3600
+    vars:
+      container_command: podman
+
+- job:
+    name: ansible-builder-tox-integration
+    parent: ansible-tox-py38
+    requires:
+      - ansible-runner-container-image
+    vars:
+      tox_envlist: integration
+      tox_install_siblings: false

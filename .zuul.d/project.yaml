@@ -1,0 +1,6 @@
+---
+- project:
+    check:
+      jobs:
+        - ansible-builder-tox-integration:
+            voting: false
