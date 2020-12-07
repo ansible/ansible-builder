@@ -2,5 +2,7 @@
 - project:
     check:
       jobs:
-        - ansible-builder-tox-integration:
-            voting: false
+        - ansible-builder-tox-integration
+    gate:
+      jobs:
+        - ansible-builder-tox-integration
