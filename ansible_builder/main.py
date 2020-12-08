@@ -5,7 +5,7 @@ import yaml
 
 from . import constants
 from .exceptions import DefinitionError
-from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, BindepSteps
+from .steps import AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, PipSteps, BindepSteps
 from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
@@ -104,10 +104,15 @@ class AnsibleBuilder:
         # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_prepended_steps()
-        self.containerfile.prepare_galaxy_steps()
+        self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
+        self.containerfile.prepare_final_stage_steps()
+        self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.write()
 
+        # TO DO: put in final build steps here?
+        # self.containerfile.prepare_ansible_config_file
+        # self.containerfile.delete_intermediate_image
         system_lines, pip_lines = self.run_intermission()
 
         # Phase 2 of Containerfile
@@ -118,6 +123,10 @@ class AnsibleBuilder:
         self.containerfile.write()
         run_command(self.build_command)
         return True
+
+    def delete_intermediate_image(self):
+        # TO DO
+        pass
 
 
 class BaseDefinition:
@@ -242,10 +251,11 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "FROM {0}".format(self.base_image),
+            "FROM {0} as builder".format(self.base_image),
             ""
         ]
 
+    # TO DO: Need something else to denote "Hey this is the final stage"
     def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
         moves files from the definition into the folder
@@ -268,6 +278,10 @@ class Containerfile:
             os.path.join(self.build_context, 'introspect.py')
         )
 
+    def prepare_ansible_config_file(self):
+        # TO DO
+        pass
+
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
@@ -286,9 +300,9 @@ class Containerfile:
 
         return False
 
-    def prepare_galaxy_steps(self):
+    def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxySteps(CONTEXT_FILES['galaxy']))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
     def prepare_pip_steps(self, pip_lines):
@@ -305,6 +319,15 @@ class Containerfile:
             write_file(system_file, bindep_output)
             self.steps.extend(BindepSteps(BINDEP_OUTPUT))
 
+        return self.steps
+
+    def prepare_final_stage_steps(self):
+        self.steps.append("FROM {0}".format(self.base_image))
+        return self.steps
+
+    def prepare_galaxy_copy_steps(self):
+        if self.definition.get_dep_abs_path('galaxy'):
+            self.steps.extend(GalaxyCopySteps())
         return self.steps
 
     def write(self):
