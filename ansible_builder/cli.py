@@ -102,11 +102,12 @@ def parse_args(args=sys.argv[1:]):
 
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
-                       action='count',
-                       default=0,
+                       type=int,
+                       choices=[0, 1, 2, 3],
+                       default=2,
                        help='Increase the output verbosity, for up to three levels of verbosity '
-                            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
-                            'or "-vvv").')
+                            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
+                            'in value from 0 to 3)')
 
     introspect_parser = subparsers.add_parser(
         'introspect',
@@ -127,8 +128,8 @@ def parse_args(args=sys.argv[1:]):
     introspect_parser.add_argument(
         '-v', '--verbosity', dest='verbosity', action='count', default=0, help=(
             'Increase the output verbosity, for up to three levels of verbosity '
-            '(invoked via "--verbosity" (this will set it to level 1), "-v", "-vv", '
-            'or "-vvv").'))
+            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
+            'in value from 0 to 3)'))
 
     args = parser.parse_args(args)
 
