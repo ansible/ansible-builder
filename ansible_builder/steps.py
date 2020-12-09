@@ -46,7 +46,9 @@ class GalaxyInstallSteps(Steps):
             "RUN ansible-galaxy role install -r /build/{0} --roles-path {1}".format(
                 requirements_naming, constants.base_roles_path),
             "RUN ansible-galaxy collection install -r /build/{0} --collections-path {1}".format(
-                requirements_naming, constants.base_collections_path)
+                requirements_naming, constants.base_collections_path),
+            "",
+            "RUN mkdir -p {0} {1}".format(constants.base_roles_path, constants.base_collections_path),
         ])
 
 
@@ -57,10 +59,8 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "RUN mkdir -p {0} {1}".format(constants.base_roles_path, constants.base_collections_path),
-            "",
             "COPY --from=builder {0} {0}".format(constants.base_roles_path),
-            "COPY --from=builder {0} {0}".format(constants.base_collections_path)
+            "COPY --from=builder {0} {0}".format(constants.base_collections_path),
         ])
 
 
