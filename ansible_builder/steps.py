@@ -61,6 +61,7 @@ class GalaxyCopySteps(Steps):
             "",
             "COPY --from=builder {0} {0}".format(constants.base_roles_path),
             "COPY --from=builder {0} {0}".format(constants.base_collections_path),
+            "",
         ])
 
 
@@ -92,3 +93,13 @@ class PipSteps(Steps):
         self.steps.append(
             "RUN pip3 install --upgrade -r {content}".format(content=container_path)
         )
+
+
+class AnsibleConfigSteps(Steps):
+    def __init__(self, ansible_config):
+        """Copies a user's ansible.cfg file for accessing Galaxy server"""
+        self.steps = []
+        self.steps.extend([
+            "ADD ansible.cfg ~/.ansible.cfg",
+            "",
+        ])

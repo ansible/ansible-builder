@@ -5,7 +5,10 @@ import yaml
 
 from . import constants
 from .exceptions import DefinitionError
-from .steps import AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, PipSteps, BindepSteps
+from .steps import (
+    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps,
+    PipSteps, BindepSteps, AnsibleConfigSteps
+)
 from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
@@ -58,6 +61,10 @@ class AnsibleBuilder:
         return self.definition.version
 
     @property
+    def ansible_config(self):
+        return self.definition.ansible_config
+
+    @property
     def build_command(self):
         return [
             self.container_runtime, "build",
@@ -103,6 +110,7 @@ class AnsibleBuilder:
     def build(self):
         # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
+        self.containerfile.prepare_ansible_config_file()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
@@ -111,7 +119,6 @@ class AnsibleBuilder:
         self.containerfile.write()
 
         # TO DO: put in final build steps here?
-        # self.containerfile.prepare_ansible_config_file
         # self.containerfile.delete_intermediate_image
         system_lines, pip_lines = self.run_intermission()
 
@@ -143,6 +150,15 @@ class BaseDefinition:
             raise ValueError("Expected top-level 'version' key to be present.")
 
         return str(version)
+
+    @property
+    def ansible_config(self):
+        ansible_config = self.raw.get('ansible_config')
+
+        if not ansible_config:
+            pass
+        else:
+            return str(ansible_config)
 
 
 class UserDefinition(BaseDefinition):
@@ -278,9 +294,16 @@ class Containerfile:
             os.path.join(self.build_context, 'introspect.py')
         )
 
+        if self.definition.ansible_config:
+            copy_file(
+                self.definition.ansible_config,
+                os.path.join(self.build_context, 'ansible.cfg')
+            )
+
     def prepare_ansible_config_file(self):
-        # TO DO
-        pass
+        ansible_config_file_path = self.definition.ansible_config
+        if ansible_config_file_path:
+            return self.steps.extend(AnsibleConfigSteps(ansible_config_file_path))
 
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
@@ -322,7 +345,10 @@ class Containerfile:
         return self.steps
 
     def prepare_final_stage_steps(self):
-        self.steps.append("FROM {0}".format(self.base_image))
+        self.steps.extend([
+            "",
+            "FROM {0}".format(self.base_image),
+        ])
         return self.steps
 
     def prepare_galaxy_copy_steps(self):
