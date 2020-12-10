@@ -5,7 +5,10 @@ import yaml
 
 from . import constants
 from .exceptions import DefinitionError
-from .steps import AdditionalBuildSteps, GalaxySteps, PipSteps, BindepSteps
+from .steps import (
+    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps,
+    PipSteps, BindepSteps, AnsibleConfigSteps
+)
 from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
 import ansible_builder.introspect
@@ -58,6 +61,10 @@ class AnsibleBuilder:
         return self.definition.version
 
     @property
+    def ansible_config(self):
+        return self.definition.ansible_config
+
+    @property
     def build_command(self):
         return [
             self.container_runtime, "build",
@@ -103,9 +110,12 @@ class AnsibleBuilder:
     def build(self):
         # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
+        self.containerfile.prepare_ansible_config_file()
         self.containerfile.prepare_prepended_steps()
-        self.containerfile.prepare_galaxy_steps()
+        self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
+        self.containerfile.prepare_final_stage_steps()
+        self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.write()
 
         system_lines, pip_lines = self.run_intermission()
@@ -134,6 +144,15 @@ class BaseDefinition:
             raise ValueError("Expected top-level 'version' key to be present.")
 
         return str(version)
+
+    @property
+    def ansible_config(self):
+        ansible_config = self.raw.get('ansible_config')
+
+        if not ansible_config:
+            pass
+        else:
+            return str(ansible_config)
 
 
 class UserDefinition(BaseDefinition):
@@ -224,6 +243,14 @@ class UserDefinition(BaseDefinition):
                     f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
                 )
 
+        ansible_config_path = self.raw.get('ansible_config')
+        if ansible_config_path:
+            if not isinstance(ansible_config_path, str):
+                raise DefinitionError(textwrap.dedent("""
+                    Expected 'ansible_config' in the provided definition file to
+                    be a string; found a {0} instead.
+                    """).format(type(ansible_config_path).__name__))
+
 
 class Containerfile:
     newline_char = '\n'
@@ -242,7 +269,7 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "FROM {0}".format(self.base_image),
+            "FROM {0} as builder".format(self.base_image),
             ""
         ]
 
@@ -268,6 +295,17 @@ class Containerfile:
             os.path.join(self.build_context, 'introspect.py')
         )
 
+        if self.definition.ansible_config:
+            copy_file(
+                self.definition.ansible_config,
+                os.path.join(self.build_context, 'ansible.cfg')
+            )
+
+    def prepare_ansible_config_file(self):
+        ansible_config_file_path = self.definition.ansible_config
+        if ansible_config_file_path:
+            return self.steps.extend(AnsibleConfigSteps(ansible_config_file_path))
+
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
@@ -286,9 +324,9 @@ class Containerfile:
 
         return False
 
-    def prepare_galaxy_steps(self):
+    def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxySteps(CONTEXT_FILES['galaxy']))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
     def prepare_pip_steps(self, pip_lines):
@@ -305,6 +343,18 @@ class Containerfile:
             write_file(system_file, bindep_output)
             self.steps.extend(BindepSteps(BINDEP_OUTPUT))
 
+        return self.steps
+
+    def prepare_final_stage_steps(self):
+        self.steps.extend([
+            "",
+            "FROM {0}".format(self.base_image),
+        ])
+        return self.steps
+
+    def prepare_galaxy_copy_steps(self):
+        if self.definition.get_dep_abs_path('galaxy'):
+            self.steps.extend(GalaxyCopySteps())
         return self.steps
 
     def write(self):

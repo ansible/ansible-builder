@@ -7,7 +7,11 @@ An example execution environment definition schema is as follows:
 
     ---
     version: 1
+
     base_image: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
+
+    ansible_config: 'ansible.cfg'
+
     dependencies:
       galaxy: requirements.yml
       python: requirements.txt
@@ -30,8 +34,16 @@ definition file in the ``base_image`` section as a string; this is an
 optional alternative to using the default option or specifying via command
 line with the ``--base-image`` flag.
 
-If a base image is specified in both the definition file as well as via the 
+If a base image is specified in both the definition file as well as via the
 command line, the CLI option will take precedence.
+
+Ansible Config File Path
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When using an ``ansible.cfg`` file to pass a token and other settings for a
+private account to an Automation Hub server, listing the config file path here
+(as a string) will enable it to be included as a build argument in the initial
+phase of the build.
 
 Ansible Galaxy Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
