@@ -91,7 +91,7 @@ class PipSteps(Steps):
         self.steps.append("ADD {0} /build/".format(context_file))
         container_path = os.path.join('/build/', context_file)
         self.steps.append(
-            "RUN pip3 install --upgrade -r {content}".format(content=container_path)
+            "RUN pip3 install --no-cache-dir --upgrade -r {content}".format(content=container_path)
         )
 
 
