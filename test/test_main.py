@@ -119,9 +119,13 @@ def test_nested_galaxy_file(data_dir, tmpdir):
 
 
 def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
+    if not os.path.exists('test/data/ansible-test.cfg'):
+        pytest.skip('Test is only valid when ran from ansible-builder root')
+
+    ansible_config_path = 'test/data/ansible-test.cfg'
     content = {
         'version': 1,
-        'ansible_config': 'ansible.cfg'
+        'ansible_config': ansible_config_path
     }
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
