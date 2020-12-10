@@ -98,7 +98,7 @@ def parse_args(args=sys.argv[1:]):
         p.add_argument('--container-runtime',
                        choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use. Defaults to podman.')
+                       help='Specifies which container runtime to use. Defaults to {0}.'.format(constants.default_container_runtime))
 
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
