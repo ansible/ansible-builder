@@ -118,8 +118,6 @@ class AnsibleBuilder:
         self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.write()
 
-        # TO DO: put in final build steps here?
-        # self.containerfile.delete_intermediate_image
         system_lines, pip_lines = self.run_intermission()
 
         # Phase 2 of Containerfile
@@ -130,10 +128,6 @@ class AnsibleBuilder:
         self.containerfile.write()
         run_command(self.build_command)
         return True
-
-    def delete_intermediate_image(self):
-        # TO DO
-        pass
 
 
 class BaseDefinition:
@@ -249,6 +243,14 @@ class UserDefinition(BaseDefinition):
                     f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
                 )
 
+        ansible_config_path = self.raw.get('ansible_config')
+        if ansible_config_path:
+            if not isinstance(ansible_config_path, str):
+                raise DefinitionError(textwrap.dedent("""
+                    Expected 'ansible_config' in the provided definition file to
+                    be a string; found a {0} instead.
+                    """).format(type(ansible_config_path).__name__))
+
 
 class Containerfile:
     newline_char = '\n'
@@ -271,7 +273,6 @@ class Containerfile:
             ""
         ]
 
-    # TO DO: Need something else to denote "Hey this is the final stage"
     def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
         moves files from the definition into the folder

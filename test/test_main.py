@@ -118,6 +118,21 @@ def test_nested_galaxy_file(data_dir, tmpdir):
             assert f_in_bc.read() == f_in_def.read()
 
 
+def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
+    content = {
+        'version': 1,
+        'ansible_config': 'ansible.cfg'
+    }
+    path = exec_env_definition_file(content=content)
+    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee.build()
+
+    with open(aee.containerfile.path) as f:
+        content = f.read()
+
+    assert 'ADD ansible.cfg ~/.ansible.cfg' in content
+
+
 class TestDefinitionErrors:
 
     def test_definition_syntax_error(self, data_dir):
@@ -146,6 +161,11 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'base_image': ['quay.io/ansible/ansible-runner:stable-2.10.devel']}",
             "Error: Unknown type <class 'list'> found for base_image; must be a string."
+        ),
+        (
+            "{'version': 1, 'ansible_config': ['ansible.cfg']}",
+            "Expected 'ansible_config' in the provided definition file to\n"
+            "be a string; found a list instead."
         ),
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
