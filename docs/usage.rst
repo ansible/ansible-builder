@@ -124,3 +124,7 @@ the private data directory.
     container_image: image-name
     process_isolation_executable: podman # or docker
     process_isolation: true
+
+The ``awx.awx`` collection is a subset of content included in the default
+AWX execution environment. More details can be found at the
+`awx-ee <https://github.com/ansible/awx-ee>`__ repository.
