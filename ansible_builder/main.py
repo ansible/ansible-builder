@@ -111,10 +111,10 @@ class AnsibleBuilder:
         # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
-        self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
         self.containerfile.prepare_final_stage_steps()
+        self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.write()
 
