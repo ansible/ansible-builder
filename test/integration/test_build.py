@@ -114,6 +114,24 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
 
 
+def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    """
+    Tests that prepended steps are in final stage
+    """
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'prepend_steps', 'execution-environment.yml')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    )
+
+    _file = 'Dockerfile' if container_runtime == 'docker' else 'Containerfile'
+    content = open(os.path.join(bc, _file), 'r').read()
+
+    stages_content = content.split('FROM')
+
+    assert 'RUN whoami' in stages_content[-1]
+
+
 class TestPytz:
 
     @pytest.fixture(scope='class')
