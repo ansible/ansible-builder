@@ -59,8 +59,8 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "COPY --from=builder {0} {0}".format(constants.base_roles_path),
-            "COPY --from=builder {0} {0}".format(constants.base_collections_path),
+            "COPY --from=galaxy {0} {0}".format(constants.base_roles_path),
+            "COPY --from=galaxy {0} {0}".format(constants.base_collections_path),
             "",
         ])
 
@@ -80,7 +80,7 @@ class BindepSteps(Steps):
         )
 
 
-class PipSteps(Steps):
+class PipDownloadSteps(Steps):
     def __init__(self, context_file):
         """Allows for 1 python requirement file in the build context"""
         self.steps = []
@@ -90,9 +90,26 @@ class PipSteps(Steps):
         # requirements file added to build context
         self.steps.append("ADD {0} /build/".format(context_file))
         container_path = os.path.join('/build/', context_file)
-        self.steps.append(
-            "RUN pip3 install --upgrade -r {content}".format(content=container_path)
-        )
+        self.steps.extend([
+            "RUN mkdir -p /output/wheels",
+            "RUN pip3 install --cache-dir=/output/wheels -r {content}".format(content=container_path)
+        ])
+
+
+class PipInstallSteps(Steps):
+    def __init__(self, context_file):
+        """Allows for 1 python requirement file in the build context"""
+        self.steps = []
+        if not context_file:
+            return
+
+        # requirements file added to build context
+        self.steps.append("ADD {0} /build/".format(context_file))
+        container_path = os.path.join('/build/', context_file)
+        self.steps.extend([
+            "COPY --from=builder /output/wheels /output/wheels",
+            "RUN pip3 install --cache-dir=/output/wheels -r {content}".format(content=container_path)
+        ])
 
 
 class AnsibleConfigSteps(Steps):

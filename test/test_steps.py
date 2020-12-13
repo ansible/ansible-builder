@@ -1,13 +1,14 @@
 import pytest
 import textwrap
 
-from ansible_builder.steps import AdditionalBuildSteps, PipSteps, BindepSteps
+from ansible_builder.steps import AdditionalBuildSteps, PipInstallSteps, BindepSteps
 
 
 def test_steps_for_collection_dependencies():
-    assert list(PipSteps('requirements.txt')) == [
+    assert list(PipInstallSteps('requirements.txt')) == [
         'ADD requirements.txt /build/',
-        'RUN pip3 install --upgrade -r /build/requirements.txt'
+        'COPY --from=builder /output/wheels /output/wheels',
+        'RUN pip3 install --cache-dir=/output/wheels -r /build/requirements.txt'
     ]
 
 
@@ -26,7 +27,7 @@ def test_additional_build_steps(verb):
 
 
 def test_system_steps():
-    assert list(BindepSteps('bindep_output.txt')) == [
-        'ADD bindep_output.txt /build/',
-        'RUN dnf -y install $(cat /build/bindep_output.txt)'
+    assert list(BindepSteps('bindep_runtime_output.txt')) == [
+        'ADD bindep_runtime_output.txt /build/',
+        'RUN dnf -y install $(cat /build/bindep_runtime_output.txt)'
     ]
