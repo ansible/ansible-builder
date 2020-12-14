@@ -256,16 +256,16 @@ class Containerfile:
     newline_char = '\n'
 
     def __init__(self, definition,
-                 build_context=constants.default_build_context,
-                 base_image=constants.default_base_image,
-                 container_runtime=constants.default_container_runtime,
-                 tag=constants.default_tag):
+                 build_context=None,
+                 base_image=None,
+                 container_runtime=None,
+                 tag=None):
 
         self.build_context = build_context
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
-        self.base_image = base_image or self.definition.raw.get('base_image')
+        self.base_image = base_image
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
