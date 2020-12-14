@@ -171,6 +171,10 @@ class TestDefinitionErrors:
             "Expected 'ansible_config' in the provided definition file to\n"
             "be a string; found a list instead."
         ),
+        (
+            "{'version': 1, 'foo': 'bar'}",
+            "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
+        ),
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
