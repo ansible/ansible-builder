@@ -81,9 +81,8 @@ def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, dat
 def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
     bc = str(tmpdir)
     ee_def = os.path.join(data_dir, 'subversion', 'execution-environment.yml')
-    cli(
-        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
-    )
+    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    cli(command)
     result = cli(
         f'{container_runtime} run --rm {ee_tag} svn --help'
     )
@@ -105,9 +104,8 @@ def test_collection_system_requirement(cli, container_runtime, ee_tag, tmpdir, d
 def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
     bc = str(tmpdir)
     ee_def = os.path.join(data_dir, 'pip', 'execution-environment.yml')
-    cli(
-        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
-    )
+    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    cli(command)
     result = cli(
         f'{container_runtime} run --rm {ee_tag} pip3 show awxkit'
     )
@@ -158,4 +156,4 @@ class TestPytz:
         assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
         assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
-        assert 'ADD requirements_combined.txt /build/ --> Using cache' in stdout_no_whitespace, r.stdout
+        assert 'RUN /output/install-from-bindep --> Using cache' in stdout_no_whitespace, r.stdout
