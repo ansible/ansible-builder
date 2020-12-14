@@ -24,6 +24,14 @@ BINDEP_COMBINED = 'bindep_combined.txt'
 BINDEP_OUTPUT = 'bindep_output.txt'
 PIP_COMBINED = 'requirements_combined.txt'
 
+ALLOWED_KEYS = [
+    'version',
+    'base_image',
+    'dependencies',
+    'ansible_config',
+    'additional_build_steps',
+]
+
 
 class AnsibleBuilder:
     def __init__(self, action=None,
@@ -213,6 +221,19 @@ class UserDefinition(BaseDefinition):
             raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
     def validate(self):
+        # Check that all specified keys in the definition file are valid.
+        def_file_dict = self.raw
+        yaml_keys = set(def_file_dict.keys())
+        invalid_keys = yaml_keys - set(ALLOWED_KEYS)
+        if invalid_keys:
+            raise DefinitionError(textwrap.dedent(
+                f"""
+                Error: Unknown yaml key(s), {invalid_keys}, found in the definition file.\n
+                Allowed options are:
+                {ALLOWED_KEYS}
+                """)
+            )
+
         for item in CONTEXT_FILES:
             requirement_path = self.get_dep_abs_path(item)
             if requirement_path:
