@@ -256,10 +256,10 @@ class Containerfile:
     newline_char = '\n'
 
     def __init__(self, definition,
-                 build_context=constants.default_build_context,
+                 build_context=None,
                  base_image=None,
-                 container_runtime=constants.default_container_runtime,
-                 tag=constants.default_tag):
+                 container_runtime=None,
+                 tag=None):
 
         self.build_context = build_context
         self.definition = definition
