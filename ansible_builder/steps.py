@@ -1,4 +1,3 @@
-import os
 import sys
 
 from . import constants
@@ -59,40 +58,10 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "COPY --from=builder {0} {0}".format(constants.base_roles_path),
-            "COPY --from=builder {0} {0}".format(constants.base_collections_path),
+            "COPY --from=galaxy {0} {0}".format(constants.base_roles_path),
+            "COPY --from=galaxy {0} {0}".format(constants.base_collections_path),
             "",
         ])
-
-
-class BindepSteps(Steps):
-    def __init__(self, context_file):
-        """The context file here must be the output from bindep"""
-        self.steps = []
-        if not context_file:
-            return
-
-        # requirements file added to build context
-        self.steps.append("ADD {0} /build/".format(context_file))
-        container_path = os.path.join('/build/', context_file)
-        self.steps.append(
-            "RUN dnf -y install $(cat {0})".format(container_path)
-        )
-
-
-class PipSteps(Steps):
-    def __init__(self, context_file):
-        """Allows for 1 python requirement file in the build context"""
-        self.steps = []
-        if not context_file:
-            return
-
-        # requirements file added to build context
-        self.steps.append("ADD {0} /build/".format(context_file))
-        container_path = os.path.join('/build/', context_file)
-        self.steps.append(
-            "RUN pip3 install --upgrade -r {content}".format(content=container_path)
-        )
 
 
 class AnsibleConfigSteps(Steps):

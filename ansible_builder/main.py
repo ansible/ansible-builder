@@ -6,8 +6,7 @@ import yaml
 from . import constants
 from .exceptions import DefinitionError
 from .steps import (
-    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps,
-    PipSteps, BindepSteps, AnsibleConfigSteps
+    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
 from .utils import run_command, write_file, copy_file
 from .requirements import sanitize_requirements
@@ -20,8 +19,8 @@ logger = logging.getLogger(__name__)
 CONTEXT_FILES = {
     'galaxy': 'requirements.yml'
 }
+
 BINDEP_COMBINED = 'bindep_combined.txt'
-BINDEP_OUTPUT = 'bindep_output.txt'
 PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
@@ -104,16 +103,15 @@ class AnsibleBuilder:
         system_lines = ansible_builder.introspect.simple_combine(collection_data['system'])
         python_lines = sanitize_requirements(collection_data['python'])
 
-        bindep_output = []
         if system_lines:
-            write_file(os.path.join(self.build_context, BINDEP_COMBINED), system_lines + [''])
+            bindep_file = os.path.join(self.build_context, BINDEP_COMBINED)
+            write_file(bindep_file, system_lines + [''])
 
-            rc, bindep_output = self.run_in_container(
-                ['bindep', '-b', '-f', '/context/{0}'.format(BINDEP_COMBINED)],
-                allow_error=True, capture_output=True
-            )
+        if python_lines:
+            pip_file = os.path.join(self.build_context, PIP_COMBINED)
+            write_file(pip_file, python_lines)
 
-        return (bindep_output, python_lines)
+        return (system_lines, python_lines)
 
     def build(self):
         # Phase 1 of Containerfile
@@ -121,16 +119,17 @@ class AnsibleBuilder:
         self.containerfile.prepare_ansible_config_file()
         self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
+        self.containerfile.write()
+        system_lines, python_lines = self.run_intermission()
+
+        # Phase 2 of Containerfile
+        self.containerfile.prepare_build_stage_steps()
+        self.containerfile.prepare_assemble_steps()
+
         self.containerfile.prepare_final_stage_steps()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_copy_steps()
-        self.containerfile.write()
-
-        system_lines, pip_lines = self.run_intermission()
-
-        # Phase 2 of Containerfile
-        self.containerfile.prepare_system_steps(bindep_output=system_lines)
-        self.containerfile.prepare_pip_steps(pip_lines=pip_lines)
+        self.containerfile.prepare_system_runtime_deps_steps()
         self.containerfile.prepare_appended_steps()
         logger.debug('Rewriting Containerfile to capture collection requirements')
         self.containerfile.write()
@@ -287,10 +286,11 @@ class Containerfile:
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
         self.base_image = base_image
+        self.builder_stage_image = 'quay.io/ansible/python-builder:latest'
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "FROM {0} as builder".format(self.base_image),
+            "FROM {0} as galaxy".format(self.base_image),
             ""
         ]
 
@@ -350,26 +350,45 @@ class Containerfile:
             self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
-    def prepare_pip_steps(self, pip_lines):
-        if ''.join(pip_lines).strip():  # only use file if it is non-blank
-            pip_file = os.path.join(self.build_context, PIP_COMBINED)
-            write_file(pip_file, pip_lines)
-            self.steps.extend(PipSteps(PIP_COMBINED))
+    def prepare_assemble_steps(self):
+        requirements_file_exists = os.path.exists(os.path.join(self.build_context, PIP_COMBINED))
+        if requirements_file_exists:
+            self.steps.append("ADD {0} /tmp/src/requirements.txt".format(PIP_COMBINED))
+
+        bindep_exists = os.path.exists(os.path.join(self.build_context, BINDEP_COMBINED))
+        if bindep_exists:
+            self.steps.append("ADD {0} /tmp/src/bindep.txt".format(BINDEP_COMBINED))
+
+        if requirements_file_exists or bindep_exists:
+            self.steps.append("RUN assemble")
 
         return self.steps
 
-    def prepare_system_steps(self, bindep_output):
-        if ''.join(bindep_output).strip():
-            system_file = os.path.join(self.build_context, BINDEP_OUTPUT)
-            write_file(system_file, bindep_output)
-            self.steps.extend(BindepSteps(BINDEP_OUTPUT))
+    def prepare_system_runtime_deps_steps(self):
+        requirements_file_exists = os.path.exists(os.path.join(self.build_context, PIP_COMBINED))
+        bindep_exists = os.path.exists(os.path.join(self.build_context, BINDEP_COMBINED))
 
+        if requirements_file_exists or bindep_exists:
+            self.steps.extend([
+                "COPY --from=builder /output/ /output/",
+                "RUN /output/install-from-bindep && rm -rf /output/wheels",
+            ])
+
+        return self.steps
+
+    def prepare_build_stage_steps(self):
+        self.steps.extend([
+            "",
+            "FROM {0} as builder".format(self.builder_stage_image),
+            "",
+        ])
         return self.steps
 
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
             "FROM {0}".format(self.base_image),
+            "",
         ])
         return self.steps
 
