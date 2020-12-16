@@ -20,6 +20,9 @@ CONTEXT_FILES = {
     'galaxy': 'requirements.yml'
 }
 
+# Subdirectory in the build context where files to ADD get copied
+CONTEXT_BUILD_OUTPUTS_DIR = '_build'
+
 BINDEP_COMBINED = 'bindep_combined.txt'
 PIP_COMBINED = 'requirements_combined.txt'
 
@@ -54,6 +57,7 @@ class AnsibleBuilder:
 
         self.tag = tag
         self.build_context = build_context
+        self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
         self.container_runtime = container_runtime
         self.containerfile = Containerfile(
             definition=self.definition,
@@ -81,7 +85,7 @@ class AnsibleBuilder:
         ]
 
     def run_in_container(self, command, **kwargs):
-        wrapped_command = [self.container_runtime, 'run','--rm']
+        wrapped_command = [self.container_runtime, 'run', '--rm']
 
         wrapped_command.extend(['-v', f"{os.path.abspath(self.build_context)}:/context:Z"])
 
@@ -92,8 +96,11 @@ class AnsibleBuilder:
     def run_intermission(self):
         run_command(self.build_command, capture_output=True)
 
+        in_container_introspect_path = os.path.join(
+            '/context', CONTEXT_BUILD_OUTPUTS_DIR, 'introspect.py'
+        )
         rc, introspect_output = self.run_in_container(
-            ['python3', '/context/introspect.py'], capture_output=True
+            ['python3', in_container_introspect_path], capture_output=True
         )
         collection_data = yaml.safe_load('\n'.join(introspect_output))
 
@@ -104,11 +111,11 @@ class AnsibleBuilder:
         python_lines = sanitize_requirements(collection_data['python'])
 
         if system_lines:
-            bindep_file = os.path.join(self.build_context, BINDEP_COMBINED)
+            bindep_file = os.path.join(self.build_outputs_dir, BINDEP_COMBINED)
             write_file(bindep_file, system_lines + [''])
 
         if python_lines:
-            pip_file = os.path.join(self.build_context, PIP_COMBINED)
+            pip_file = os.path.join(self.build_outputs_dir, PIP_COMBINED)
             write_file(pip_file, python_lines)
 
         return (system_lines, python_lines)
@@ -282,6 +289,7 @@ class Containerfile:
                  tag=None):
 
         self.build_context = build_context
+        self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
@@ -301,31 +309,32 @@ class Containerfile:
         # courteously validate items before starting to write files
         self.definition.validate()
 
-        os.makedirs(self.build_context, exist_ok=True)
+        os.makedirs(self.build_outputs_dir, exist_ok=True)
 
         for item, new_name in CONTEXT_FILES.items():
             requirement_path = self.definition.get_dep_abs_path(item)
             if requirement_path is None:
                 continue
-            dest = os.path.join(self.build_context, new_name)
+            dest = os.path.join(self.build_context, CONTEXT_BUILD_OUTPUTS_DIR, new_name)
             copy_file(requirement_path, dest)
 
         # copy introspect.py file from source into build context
         copy_file(
             ansible_builder.introspect.__file__,
-            os.path.join(self.build_context, 'introspect.py')
+            os.path.join(self.build_outputs_dir, 'introspect.py')
         )
 
         if self.definition.ansible_config:
             copy_file(
                 self.definition.ansible_config,
-                os.path.join(self.build_context, 'ansible.cfg')
+                os.path.join(self.build_outputs_dir, 'ansible.cfg')
             )
 
     def prepare_ansible_config_file(self):
         ansible_config_file_path = self.definition.ansible_config
         if ansible_config_file_path:
-            return self.steps.extend(AnsibleConfigSteps(ansible_config_file_path))
+            context_file_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, 'ansible.cfg')
+            return self.steps.extend(AnsibleConfigSteps(context_file_path))
 
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
@@ -347,17 +356,20 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
+            relative_galaxy_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, CONTEXT_FILES['galaxy'])
+            self.steps.extend(GalaxyInstallSteps(relative_galaxy_path))
         return self.steps
 
     def prepare_assemble_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_context, PIP_COMBINED))
+        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
         if requirements_file_exists:
-            self.steps.append("ADD {0} /tmp/src/requirements.txt".format(PIP_COMBINED))
+            relative_requirements_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, PIP_COMBINED)
+            self.steps.append(f"ADD {relative_requirements_path} /tmp/src/requirements.txt")
 
-        bindep_exists = os.path.exists(os.path.join(self.build_context, BINDEP_COMBINED))
+        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
         if bindep_exists:
-            self.steps.append("ADD {0} /tmp/src/bindep.txt".format(BINDEP_COMBINED))
+            relative_bindep_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, BINDEP_COMBINED)
+            self.steps.append(f"ADD {relative_bindep_path} /tmp/src/bindep.txt")
 
         if requirements_file_exists or bindep_exists:
             self.steps.append("RUN assemble")
@@ -365,8 +377,8 @@ class Containerfile:
         return self.steps
 
     def prepare_system_runtime_deps_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_context, PIP_COMBINED))
-        bindep_exists = os.path.exists(os.path.join(self.build_context, BINDEP_COMBINED))
+        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
+        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
 
         if requirements_file_exists or bindep_exists:
             self.steps.extend([

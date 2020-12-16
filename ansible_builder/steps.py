@@ -38,7 +38,7 @@ class GalaxyInstallSteps(Steps):
         """
         self.steps = []
         self.steps.append(
-            "ADD {0} /build/".format(requirements_naming)
+            "ADD {0} /build/{0}".format(requirements_naming)
         )
         self.steps.extend([
             "",
@@ -65,10 +65,10 @@ class GalaxyCopySteps(Steps):
 
 
 class AnsibleConfigSteps(Steps):
-    def __init__(self, ansible_config):
+    def __init__(self, context_file):
         """Copies a user's ansible.cfg file for accessing Galaxy server"""
         self.steps = []
         self.steps.extend([
-            "ADD ansible.cfg ~/.ansible.cfg",
+            f"ADD {context_file} ~/.ansible.cfg",
             "",
         ])
