@@ -39,6 +39,7 @@ class AnsibleBuilder:
     def __init__(self, action=None,
                  filename=constants.default_file,
                  base_image=None,
+                 build_args=None,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
@@ -59,6 +60,7 @@ class AnsibleBuilder:
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
         self.container_runtime = container_runtime
+        self.build_args = build_args or {}
         self.containerfile = Containerfile(
             definition=self.definition,
             base_image=self.base_image,
@@ -77,12 +79,23 @@ class AnsibleBuilder:
 
     @property
     def build_command(self):
-        return [
+        command = [
             self.container_runtime, "build",
             "-f", self.containerfile.path,
             "-t", self.tag,
-            self.build_context
         ]
+
+        for key, value in self.build_args.items():
+            if value:
+                build_arg = f"--build-arg={key}={value}"
+            else:
+                build_arg = f"--build-arg={key}"
+
+            command.append(build_arg)
+
+        command.append(self.build_context)
+
+        return command
 
     def run_in_container(self, command, **kwargs):
         wrapped_command = [self.container_runtime, 'run', '--rm']
@@ -298,7 +311,8 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "FROM {0} as galaxy".format(self.base_image),
+            "ARG BASE_IMAGE={}".format(self.base_image),
+            "FROM $BASE_IMAGE as galaxy",
             ""
         ]
 
@@ -399,7 +413,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM {0}".format(self.base_image),
+            "FROM $BASE_IMAGE"
             "",
         ])
         return self.steps

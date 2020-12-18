@@ -130,6 +130,42 @@ def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
     assert 'RUN whoami' in stages_content[-1]
 
 
+def test_build_args_basic(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'build_args', 'execution-environment.yml')
+    result = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} --build-arg FOO=bar -v3'
+    )
+    assert 'FOO=bar' in result.stdout
+
+
+def test_build_args_from_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    if container_runtime == 'podman':
+        pytest.skip('Skipped. Podman does not support this')
+
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'build_args', 'execution-environment.yml')
+    os.environ['FOO'] = 'secretsecret'
+    result = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} --build-arg FOO -v3'
+    )
+    assert 'secretsecret' in result.stdout
+
+
+def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'build_args', 'base-image.yml')
+    os.environ['FOO'] = 'secretsecret'
+
+    # Build with custom image tag, then use that as input to --build-arg BASE_IMAGE
+    cli(f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag}-custom --container-runtime {container_runtime} -v3')
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag}-custom --container-runtime {container_runtime} --build-arg BASE_IMAGE={ee_tag}-custom -v3'
+    )
+    result = cli(f"{container_runtime} run {ee_tag}-custom cat /base_image")
+    assert f"{ee_tag}-custom" in result.stdout
+
+
 class TestPytz:
 
     @pytest.fixture(scope='class')

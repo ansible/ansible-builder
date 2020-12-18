@@ -1,0 +1,5 @@
+---
+additional_build_steps:
+  prepend:
+    - ARG BASE_IMAGE
+    - RUN echo $BASE_IMAGE > /base_image

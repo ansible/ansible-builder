@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 import yaml
+import os
 
 from . import __version__
 
@@ -100,6 +101,11 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use. Defaults to {0}.'.format(constants.default_container_runtime))
 
+        p.add_argument('--build-arg',
+                       action=BuildArgAction,
+                       default={},
+                       dest='build_args')
+
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
                        type=int,
@@ -134,3 +140,17 @@ def parse_args(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     return args
+
+
+class BuildArgAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        key, *value = values.split('=')
+        attr = getattr(namespace, self.dest)
+
+        # None signifies that the build-arg will come from the environment.
+        # This is currently only supported by Docker. Podman will treat any
+        # usage of the $VALUE as a literal string.
+        if value:
+            attr[key] = value[0]
+        else:
+            attr[key] = None
