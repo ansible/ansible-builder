@@ -97,7 +97,7 @@ To use a custom base image:
 
 To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
 
-By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``BASE_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
+By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``ANSIBLE_RUNNER_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
 
 .. code::
 

@@ -311,8 +311,8 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "ARG BASE_IMAGE={}".format(self.base_image),
-            "FROM $BASE_IMAGE as galaxy",
+            "ARG ANSIBLE_RUNNER_IMAGE={}".format(self.base_image),
+            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
             ""
         ]
 
@@ -413,7 +413,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $BASE_IMAGE"
+            "FROM $ANSIBLE_RUNNER_IMAGE"
             "",
         ])
         return self.steps
