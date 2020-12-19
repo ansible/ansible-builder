@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 import yaml
-import os
 
 from . import __version__
 
