@@ -82,6 +82,16 @@ directory. To specify another location:
    $ ansible-builder build --context=/path/to/dir
 
 
+``--base-image``
+*************
+
+To use a custom base image:
+
+.. code::
+
+   $ ansible-builder build --base-image=registry.example.com/another-ee
+
+
 ``--build-arg``
 *************
 
