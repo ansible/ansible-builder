@@ -12,31 +12,16 @@ If you have questions about this document or anything not covered here, come cha
 
 ## Setting Up Your Development Environment
 
-Ansible Builder development is powered by [Poetry](https://python-poetry.org/); make sure you have it [installed](https://python-poetry.org/docs/#installation) and then:
+Inside of a virtual environment, simply run:
 
 ```bash
-(host)$ poetry install
-```
-
-This will automatically set up the development environment under a virtualenv, which you can then switch to with:
-
-```bash
-(host)$ poetry shell
+(ansible-builder) $ pip install -e .
 ```
 
 ## Linting and Unit Tests
 
-`tox` is used to run linters (`flake8` and `yamllint`) and unit tests on both Python 2 and 3. It uses Poetry to bootstrap these two environments.
+`tox` is used to run linters (`flake8` and `yamllint`) and unit tests on both Python 2 and 3.
 
-## A Note About `setup.py`
-
-In this repository you will find a [`setup.py` file](https://docs.python.org/3/installing/index.html#installing-index) (for downstream packaging purposes).  If your PR makes any changes to `pyproject.toml`, then this `setup.py` file needs to reflect those changes.  Poetry can help with this.
-
-```bash
-$ poetry run dephell deps convert --from=pyproject.toml --to=setup.py
-```
-
-A new `setup.py` file will be generated from these commands if edits are detected in `pyproject.toml`, which you can then commit along with any other changes.
 
 ## Gating and Merging
 
