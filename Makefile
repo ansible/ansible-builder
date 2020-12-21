@@ -50,7 +50,7 @@ sdist: dist/$(NAME)-$(VERSION).tar.gz
 # Generate setup.py transiently for the sdist so we don't have to deal with
 # packaging poetry as a RPM for rpm build time dependencies.
 dist/$(NAME)-$(VERSION).tar.gz:
-	dephell deps convert --from=pyproject.toml --to=setup.py
+	tox -e version
 	$(DIST_PYTHON) setup.py sdist
 
 dev:

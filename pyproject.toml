@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "ansible-builder"
-version = "0.4.0"
 description = "A tool for building Ansible Execution Environments"
-authors = ["Matthew Jones <matburt@redhat.com>",
-	   "Shane McDonald <shanemcd@redhat.com>"]
+authors = ["Ansible, Inc. <info@ansible.com>"]
+
+# This is a placeholder value, because poetry lacks proper support
+# for any kind of dynamic versioning. We publish releases via Zuul,
+# which calls `tox -e version` before building the sdist / wheel.
+version = "0.0.0"
 
 [tool.poetry.dependencies]
 python = "^3.6"

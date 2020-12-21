@@ -15,3 +15,7 @@ setup-to-compare.py
 /test/data/bc/
 artifacts/
 /docs/_build/
+/.eggs/
+/AUTHORS
+/ChangeLog
+/dist/
