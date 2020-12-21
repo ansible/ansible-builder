@@ -1,5 +1,7 @@
 ---
 - project:
+    templates:
+      - publish-to-pypi-poetry
     check:
       jobs:
         - ansible-builder-tox-integration:
