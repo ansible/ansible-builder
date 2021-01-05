@@ -86,10 +86,6 @@ def parse_args(args=sys.argv[1:]):
                        dest='filename',
                        help='The definition of the execution environment.')
 
-        p.add_argument('-b', '--base-image',
-                       default=None,
-                       help='The parent image for the execution environment.')
-
         p.add_argument('-c', '--context',
                        default=constants.default_build_context,
                        dest='build_context',

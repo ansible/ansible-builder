@@ -28,7 +28,6 @@ PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
     'version',
-    'base_image',
     'dependencies',
     'ansible_config',
     'additional_build_steps',
@@ -38,7 +37,6 @@ ALLOWED_KEYS = [
 class AnsibleBuilder:
     def __init__(self, action=None,
                  filename=constants.default_file,
-                 base_image=None,
                  build_args=None,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
@@ -47,15 +45,6 @@ class AnsibleBuilder:
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
-        # Handle precedence of the base image
-        if base_image is not None:
-            self.base_image = base_image
-        if base_image is None:
-            if self.definition.raw.get('base_image'):
-                self.base_image = self.definition.raw.get('base_image')
-            else:
-                self.base_image = constants.default_base_image
-
         self.tag = tag
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
@@ -63,7 +52,6 @@ class AnsibleBuilder:
         self.build_args = build_args or {}
         self.containerfile = Containerfile(
             definition=self.definition,
-            base_image=self.base_image,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             tag=self.tag)
@@ -259,15 +247,6 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
-        ee_base_image = self.raw.get('base_image')
-        if ee_base_image:
-            if not isinstance(ee_base_image, str):
-                raise DefinitionError(textwrap.dedent(
-                    f"""
-                    Error: Unknown type {type(ee_base_image)} found for base_image; must be a string.
-                    """)
-                )
-
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
             if not isinstance(additional_cmds, dict):
@@ -297,7 +276,6 @@ class Containerfile:
 
     def __init__(self, definition,
                  build_context=None,
-                 base_image=None,
                  container_runtime=None,
                  tag=None):
 
@@ -306,13 +284,11 @@ class Containerfile:
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
-        self.base_image = base_image
-        self.builder_stage_image = 'quay.io/ansible/python-builder:latest'
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "ARG ANSIBLE_RUNNER_IMAGE={}".format(self.base_image),
-            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
+            "ARG ANSIBLE_RUNNER_BASE_IMAGE={}".format(constants.default_base_image),
+            "FROM $ANSIBLE_RUNNER_BASE_IMAGE as galaxy",
             ""
         ]
 
@@ -405,7 +381,8 @@ class Containerfile:
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM {0} as builder".format(self.builder_stage_image),
+            "ARG PYTHON_BUILDER_IMAGE={}".format(constants.builder_stage_image),
+            "FROM $PYTHON_BUILDER_IMAGE as builder"
             "",
         ])
         return self.steps
@@ -413,7 +390,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $ANSIBLE_RUNNER_IMAGE"
+            "FROM $ANSIBLE_RUNNER_BASE_IMAGE"
             "",
         ])
         return self.steps
