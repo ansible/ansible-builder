@@ -11,9 +11,9 @@ def test_custom_image(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
 
-    aee = prepare(['build', '-f', path, '-b', 'my-custom-image', '-c', str(tmpdir)])
+    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_RUNNER_BASE_IMAGE=my-custom-image', '-c', str(tmpdir)])
 
-    assert aee.containerfile.base_image == 'my-custom-image'
+    assert aee.build_args == {'ANSIBLE_RUNNER_BASE_IMAGE': 'my-custom-image'}
 
 
 def test_build_context(good_exec_env_definition_path, tmpdir):

@@ -54,7 +54,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     assert f'ADD {CONTEXT_BUILD_OUTPUTS_DIR}/requirements.yml' in content
 
 
-def test_base_image(exec_env_definition_file, tmpdir):
+def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
@@ -65,28 +65,16 @@ def test_base_image(exec_env_definition_file, tmpdir):
 
     assert 'ansible-runner' in content
 
-    aee = AnsibleBuilder(filename=path, base_image='my-custom-image', build_context=tmpdir.mkdir('bc2'))
+    aee = AnsibleBuilder(
+        filename=path, build_args={'ANSIBLE_RUNNER_BASE_IMAGE': 'my-custom-image'},
+        build_context=tmpdir.mkdir('bc2')
+    )
     aee.build()
 
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'my-custom-image' in content
-
-
-def test_base_image_via_definition_file(exec_env_definition_file, tmpdir):
-    content = {
-        'version': 1,
-        'base_image': 'my-other-custom-image'
-    }
-    path = exec_env_definition_file(content=content)
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
-    aee.build()
-
-    with open(aee.containerfile.path) as f:
-        content = f.read()
-
-    assert 'my-other-custom-image' in content
+    assert 'ANSIBLE_RUNNER_BASE_IMAGE' in content  # TODO: should we make user value default?
 
 
 def test_build_command(exec_env_definition_file):
@@ -163,10 +151,6 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),
-        (
-            "{'version': 1, 'base_image': ['quay.io/ansible/ansible-runner:stable-2.10.devel']}",
-            "Error: Unknown type <class 'list'> found for base_image; must be a string."
         ),
         (
             "{'version': 1, 'ansible_config': ['ansible.cfg']}",
