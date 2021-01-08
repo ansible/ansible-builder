@@ -8,7 +8,8 @@ An example execution environment definition schema is as follows:
     ---
     version: 1
 
-    base_image: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
+    build_arg_defaults:
+      ANSIBLE_RUNNER_BASE_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
 
     ansible_config: 'ansible.cfg'
 
@@ -26,16 +27,26 @@ An example execution environment definition schema is as follows:
         - RUN ls -la /etc
 
 
-Base Image
-^^^^^^^^^^
+Build Args and Base Image
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The parent image for the execution environment can be specified in the
-definition file in the ``base_image`` section as a string; this is an
-optional alternative to using the default option or specifying via command
-line with the ``--base-image`` flag.
+Default values for build args can be specified in the definition file in
+the ``default_build_args`` section as a dictionary. This is an alternative
+to using the ``--build-arg`` CLI flag.
 
-If a base image is specified in both the definition file as well as via the
-command line, the CLI option will take precedence.
+Build args used by ansible-builder are the following.
+
+The ``ANSIBLE_RUNNER_BASE_IMAGE`` build arg specifies the parent image
+for the execution environment.
+
+The ``PYTHON_BUILDER_IMAGE`` build arg specifies the image used for
+compiling type tasks.
+
+Values given inside of ``default_build_args`` will be hard-coded into the
+Containerfile, so they will persist if ``podman build`` is called manually.
+
+If the same variable is specified in the CLI ``--build-arg`` flag,
+the CLI value will take higher precedence.
 
 Ansible Config File Path
 ^^^^^^^^^^^^^^^^^^^^^^^^

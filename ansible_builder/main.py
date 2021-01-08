@@ -196,6 +196,14 @@ class UserDefinition(BaseDefinition):
         self.user_python = self.read_dependency('python')
         self.user_system = self.read_dependency('system')
 
+        # Populate build arg defaults, which are customizable in definition
+        self.build_arg_defaults = {}
+        user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
+        if not isinstance(user_build_arg_defaults, dict):
+            user_build_arg_defaults = {}  # so that validate method can throw error
+        for key, default_value in constants.build_arg_defaults.items():
+            self.build_arg_defaults[key] = user_build_arg_defaults.get(key, default_value)
+
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
         """
@@ -247,6 +255,26 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
+        default_build_args = self.raw.get('default_build_args')
+        if default_build_args:
+            if not isinstance(default_build_args, dict):
+                raise DefinitionError(
+                    f"Error: Unknown type {type(default_build_args)} found for default_build_args; "
+                    f"must be a dict."
+                )
+            unexpected_keys = set(default_build_args.keys()) - set(constants.default_build_args)
+            if unexpected_keys:
+                raise DefinitionError(
+                    f"Keys {unexpected_keys} are not allowed in 'default_build_args'."
+                )
+            for key, value in constants.default_build_args.items():
+                user_value = default_build_args.get(key)
+                if user_value and not isinstance(user_value, str):
+                    raise DefinitionError(
+                        f"Expected default_build_args.{key} to be a string; "
+                        f"Found a {type(user_value)} instead."
+                    )
+
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
             if not isinstance(additional_cmds, dict):
@@ -287,7 +315,9 @@ class Containerfile:
         self.container_runtime = container_runtime
         self.tag = tag
         self.steps = [
-            "ARG ANSIBLE_RUNNER_BASE_IMAGE={}".format(constants.default_base_image),
+            "ARG ANSIBLE_RUNNER_BASE_IMAGE={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_RUNNER_BASE_IMAGE']
+            ),
             "FROM $ANSIBLE_RUNNER_BASE_IMAGE as galaxy",
             ""
         ]
@@ -381,7 +411,9 @@ class Containerfile:
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "ARG PYTHON_BUILDER_IMAGE={}".format(constants.builder_stage_image),
+            "ARG PYTHON_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
+            ),
             "FROM $PYTHON_BUILDER_IMAGE as builder"
             "",
         ])

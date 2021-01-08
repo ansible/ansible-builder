@@ -11,9 +11,10 @@ default_container_runtime = 'podman'
 base_roles_path = '/usr/share/ansible/roles'
 base_collections_path = '/usr/share/ansible/collections'
 
-# These can be overwritten by build args
-default_base_image = 'quay.io/ansible/ansible-runner:devel'
-builder_stage_image = 'quay.io/ansible/python-builder:latest'
+build_arg_defaults = dict(
+    ANSIBLE_RUNNER_BASE_IMAGE='quay.io/ansible/ansible-runner:devel',
+    PYTHON_BUILDER_IMAGE='quay.io/ansible/python-builder:latest'
+)
 
 if shutil.which('podman'):
     default_container_runtime = 'podman'
