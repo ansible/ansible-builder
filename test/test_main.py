@@ -77,6 +77,23 @@ def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     assert 'ANSIBLE_RUNNER_BASE_IMAGE' in content  # TODO: should we make user value default?
 
 
+def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpdir):
+    content = {
+        'version': 1,
+        'build_arg_defaults': {
+            'ANSIBLE_RUNNER_BASE_IMAGE': 'my-other-custom-image'
+        }
+    }
+    path = exec_env_definition_file(content=content)
+    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee.build()
+
+    with open(aee.containerfile.path) as f:
+        content = f.read()
+
+    assert 'ANSIBLE_RUNNER_BASE_IMAGE=my-other-custom-image' in content
+
+
 def test_build_command(exec_env_definition_file):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
@@ -151,7 +168,15 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),
+        ),  # there are no "middle" build steps
+        (
+            "{'version': 1, 'build_arg_defaults': {'ANSIBLE_RUNNER_BASE_IMAGE': ['foo']}}",
+            "Expected build_arg_defaults.ANSIBLE_RUNNER_BASE_IMAGE to be a string; Found a <class 'list'> instead."
+        ),  # image itself is wrong type
+        (
+            "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
+            "Keys {'BUILD_ARRRRRG'} are not allowed in 'build_arg_defaults'."
+        ),  # image itself is wrong type
         (
             "{'version': 1, 'ansible_config': ['ansible.cfg']}",
             "Expected 'ansible_config' in the provided definition file to\n"
@@ -161,6 +186,9 @@ class TestDefinitionErrors:
             "{'version': 1, 'foo': 'bar'}",
             "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
         ),
+    ], ids=[
+        'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
+        'build_args_value_type', 'unexpected_build_arg', 'config_type', 'unknown_key'
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

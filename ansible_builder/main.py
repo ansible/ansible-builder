@@ -28,6 +28,7 @@ PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
     'version',
+    'build_arg_defaults',
     'dependencies',
     'ansible_config',
     'additional_build_steps',
@@ -255,23 +256,23 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
-        default_build_args = self.raw.get('default_build_args')
-        if default_build_args:
-            if not isinstance(default_build_args, dict):
+        build_arg_defaults = self.raw.get('build_arg_defaults')
+        if build_arg_defaults:
+            if not isinstance(build_arg_defaults, dict):
                 raise DefinitionError(
-                    f"Error: Unknown type {type(default_build_args)} found for default_build_args; "
+                    f"Error: Unknown type {type(build_arg_defaults)} found for build_arg_defaults; "
                     f"must be a dict."
                 )
-            unexpected_keys = set(default_build_args.keys()) - set(constants.default_build_args)
+            unexpected_keys = set(build_arg_defaults.keys()) - set(constants.build_arg_defaults)
             if unexpected_keys:
                 raise DefinitionError(
-                    f"Keys {unexpected_keys} are not allowed in 'default_build_args'."
+                    f"Keys {unexpected_keys} are not allowed in 'build_arg_defaults'."
                 )
-            for key, value in constants.default_build_args.items():
-                user_value = default_build_args.get(key)
+            for key, value in constants.build_arg_defaults.items():
+                user_value = build_arg_defaults.get(key)
                 if user_value and not isinstance(user_value, str):
                     raise DefinitionError(
-                        f"Expected default_build_args.{key} to be a string; "
+                        f"Expected build_arg_defaults.{key} to be a string; "
                         f"Found a {type(user_value)} instead."
                     )
 
