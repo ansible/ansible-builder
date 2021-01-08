@@ -315,10 +315,15 @@ class Containerfile:
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
         self.tag = tag
+        # Build args all need to go at top of file to avoid errors
         self.steps = [
             "ARG ANSIBLE_RUNNER_BASE_IMAGE={}".format(
                 self.definition.build_arg_defaults['ANSIBLE_RUNNER_BASE_IMAGE']
             ),
+            "ARG PYTHON_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
+            ),
+            "",
             "FROM $ANSIBLE_RUNNER_BASE_IMAGE as galaxy",
             ""
         ]
@@ -412,9 +417,6 @@ class Containerfile:
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "ARG PYTHON_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
-            ),
             "FROM $PYTHON_BUILDER_IMAGE as builder"
             "",
         ])
