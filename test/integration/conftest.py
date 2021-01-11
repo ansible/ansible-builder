@@ -64,18 +64,14 @@ def run(args, *a, allow_error=False, **kw):
 @pytest.fixture(scope='session', autouse=True)
 def cleanup_ee_tags(container_runtime, request):
     def delete_images():
-        r = run(f'{container_runtime} images --format="{{{{.Repository}}}}"')
-        for image_name in r.stdout.split('\n'):
-            from_test = False
-            if not image_name:
-                pass
-            elif image_name.startswith('localhost/{0}'.format(TAG_PREFIX)):  # podman
-                from_test = True
-            elif image_name.startswith(TAG_PREFIX):  # docker
-                from_test = True
-            if from_test:
-                run(f'{container_runtime} rmi -f {image_name}')
-                logger.warning(f'Deleted image {image_name}')
+        cmd = (
+            f'{container_runtime} rmi -f $('
+            f'{container_runtime} images --format="{{{{.Repository}}}}"'
+            f' | grep "{TAG_PREFIX}" --color=never'
+            f')'
+        )
+        r = run(cmd)
+        print(f'Deleted images, cmd:\n{cmd}\nstdout:\n{r.stdout}\nstderr:\n{r.stderr}')
 
     request.addfinalizer(delete_images)
 
