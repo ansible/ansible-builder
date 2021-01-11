@@ -9,7 +9,7 @@ An example execution environment definition schema is as follows:
     version: 1
 
     build_arg_defaults:
-      ANSIBLE_RUNNER_BASE_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
+      ANSIBLE_RUNNER_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10.devel'
 
     ansible_config: 'ansible.cfg'
 
@@ -36,7 +36,7 @@ to using the ``--build-arg`` CLI flag.
 
 Build args used by ansible-builder are the following.
 
-The ``ANSIBLE_RUNNER_BASE_IMAGE`` build arg specifies the parent image
+The ``ANSIBLE_RUNNER_IMAGE`` build arg specifies the parent image
 for the execution environment.
 
 The ``PYTHON_BUILDER_IMAGE`` build arg specifies the image used for

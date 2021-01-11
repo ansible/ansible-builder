@@ -12,7 +12,7 @@ base_roles_path = '/usr/share/ansible/roles'
 base_collections_path = '/usr/share/ansible/collections'
 
 build_arg_defaults = dict(
-    ANSIBLE_RUNNER_BASE_IMAGE='quay.io/ansible/ansible-runner:devel',
+    ANSIBLE_RUNNER_IMAGE='quay.io/ansible/ansible-runner:devel',
     PYTHON_BUILDER_IMAGE='quay.io/ansible/python-builder:latest'
 )
 

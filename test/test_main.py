@@ -66,7 +66,7 @@ def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     assert 'ansible-runner' in content
 
     aee = AnsibleBuilder(
-        filename=path, build_args={'ANSIBLE_RUNNER_BASE_IMAGE': 'my-custom-image'},
+        filename=path, build_args={'ANSIBLE_RUNNER_IMAGE': 'my-custom-image'},
         build_context=tmpdir.mkdir('bc2')
     )
     aee.build()
@@ -74,14 +74,14 @@ def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'ANSIBLE_RUNNER_BASE_IMAGE' in content  # TODO: should we make user value default?
+    assert 'ANSIBLE_RUNNER_IMAGE' in content  # TODO: should we make user value default?
 
 
 def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpdir):
     content = {
         'version': 1,
         'build_arg_defaults': {
-            'ANSIBLE_RUNNER_BASE_IMAGE': 'my-other-custom-image'
+            'ANSIBLE_RUNNER_IMAGE': 'my-other-custom-image'
         }
     }
     path = exec_env_definition_file(content=content)
@@ -91,7 +91,7 @@ def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpd
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'ANSIBLE_RUNNER_BASE_IMAGE=my-other-custom-image' in content
+    assert 'ANSIBLE_RUNNER_IMAGE=my-other-custom-image' in content
 
 
 def test_build_command(exec_env_definition_file):
@@ -170,8 +170,8 @@ class TestDefinitionErrors:
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
         ),  # there are no "middle" build steps
         (
-            "{'version': 1, 'build_arg_defaults': {'ANSIBLE_RUNNER_BASE_IMAGE': ['foo']}}",
-            "Expected build_arg_defaults.ANSIBLE_RUNNER_BASE_IMAGE to be a string; Found a <class 'list'> instead."
+            "{'version': 1, 'build_arg_defaults': {'ANSIBLE_RUNNER_IMAGE': ['foo']}}",
+            "Expected build_arg_defaults.ANSIBLE_RUNNER_IMAGE to be a string; Found a <class 'list'> instead."
         ),  # image itself is wrong type
         (
             "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
