@@ -82,6 +82,24 @@ directory. To specify another location:
    $ ansible-builder build --context=/path/to/dir
 
 
+``--build-arg``
+*************
+
+To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
+
+By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``ANSIBLE_RUNNER_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
+
+.. code::
+
+   $ ansible-builder build --build-arg FOO=bar
+
+To use a custom base image:
+
+.. code::
+
+   $ ansible-builder build --build-arg ANSIBLE_RUNNER_IMAGE=registry.example.com/another-ee
+
+
 ``--container-runtime``
 ***********************
 
@@ -128,3 +146,10 @@ the private data directory.
 The ``awx.awx`` collection is a subset of content included in the default
 AWX execution environment. More details can be found at the
 `awx-ee <https://github.com/ansible/awx-ee>`__ repository.
+
+
+Deprecated Features
+-------------------
+
+The ``--base-image`` CLI option has been removed.
+See the ``--build-arg`` option for a replacement.

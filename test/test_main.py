@@ -54,7 +54,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     assert f'ADD {CONTEXT_BUILD_OUTPUTS_DIR}/requirements.yml' in content
 
 
-def test_base_image(exec_env_definition_file, tmpdir):
+def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
@@ -65,19 +65,24 @@ def test_base_image(exec_env_definition_file, tmpdir):
 
     assert 'ansible-runner' in content
 
-    aee = AnsibleBuilder(filename=path, base_image='my-custom-image', build_context=tmpdir.mkdir('bc2'))
+    aee = AnsibleBuilder(
+        filename=path, build_args={'ANSIBLE_RUNNER_IMAGE': 'my-custom-image'},
+        build_context=tmpdir.mkdir('bc2')
+    )
     aee.build()
 
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'my-custom-image' in content
+    assert 'ANSIBLE_RUNNER_IMAGE' in content  # TODO: should we make user value default?
 
 
-def test_base_image_via_definition_file(exec_env_definition_file, tmpdir):
+def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpdir):
     content = {
         'version': 1,
-        'base_image': 'my-other-custom-image'
+        'build_arg_defaults': {
+            'ANSIBLE_RUNNER_IMAGE': 'my-other-custom-image'
+        }
     }
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
@@ -86,7 +91,7 @@ def test_base_image_via_definition_file(exec_env_definition_file, tmpdir):
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'my-other-custom-image' in content
+    assert 'ANSIBLE_RUNNER_IMAGE=my-other-custom-image' in content
 
 
 def test_build_command(exec_env_definition_file):
@@ -163,11 +168,15 @@ class TestDefinitionErrors:
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
             "Keys ('middle',) are not allowed in 'additional_build_steps'."
-        ),
+        ),  # there are no "middle" build steps
         (
-            "{'version': 1, 'base_image': ['quay.io/ansible/ansible-runner:stable-2.10.devel']}",
-            "Error: Unknown type <class 'list'> found for base_image; must be a string."
-        ),
+            "{'version': 1, 'build_arg_defaults': {'ANSIBLE_RUNNER_IMAGE': ['foo']}}",
+            "Expected build_arg_defaults.ANSIBLE_RUNNER_IMAGE to be a string; Found a <class 'list'> instead."
+        ),  # image itself is wrong type
+        (
+            "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
+            "Keys {'BUILD_ARRRRRG'} are not allowed in 'build_arg_defaults'."
+        ),  # image itself is wrong type
         (
             "{'version': 1, 'ansible_config': ['ansible.cfg']}",
             "Expected 'ansible_config' in the provided definition file to\n"
@@ -177,6 +186,9 @@ class TestDefinitionErrors:
             "{'version': 1, 'foo': 'bar'}",
             "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
         ),
+    ], ids=[
+        'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
+        'build_args_value_type', 'unexpected_build_arg', 'config_type', 'unknown_key'
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

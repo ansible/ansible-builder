@@ -28,7 +28,7 @@ PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
     'version',
-    'base_image',
+    'build_arg_defaults',
     'dependencies',
     'ansible_config',
     'additional_build_steps',
@@ -38,7 +38,7 @@ ALLOWED_KEYS = [
 class AnsibleBuilder:
     def __init__(self, action=None,
                  filename=constants.default_file,
-                 base_image=None,
+                 build_args=None,
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
@@ -46,22 +46,13 @@ class AnsibleBuilder:
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
-        # Handle precedence of the base image
-        if base_image is not None:
-            self.base_image = base_image
-        if base_image is None:
-            if self.definition.raw.get('base_image'):
-                self.base_image = self.definition.raw.get('base_image')
-            else:
-                self.base_image = constants.default_base_image
-
         self.tag = tag
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
         self.container_runtime = container_runtime
+        self.build_args = build_args or {}
         self.containerfile = Containerfile(
             definition=self.definition,
-            base_image=self.base_image,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             tag=self.tag)
@@ -77,12 +68,23 @@ class AnsibleBuilder:
 
     @property
     def build_command(self):
-        return [
+        command = [
             self.container_runtime, "build",
             "-f", self.containerfile.path,
             "-t", self.tag,
-            self.build_context
         ]
+
+        for key, value in self.build_args.items():
+            if value:
+                build_arg = f"--build-arg={key}={value}"
+            else:
+                build_arg = f"--build-arg={key}"
+
+            command.append(build_arg)
+
+        command.append(self.build_context)
+
+        return command
 
     def run_in_container(self, command, **kwargs):
         wrapped_command = [self.container_runtime, 'run', '--rm']
@@ -195,6 +197,14 @@ class UserDefinition(BaseDefinition):
         self.user_python = self.read_dependency('python')
         self.user_system = self.read_dependency('system')
 
+        # Populate build arg defaults, which are customizable in definition
+        self.build_arg_defaults = {}
+        user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
+        if not isinstance(user_build_arg_defaults, dict):
+            user_build_arg_defaults = {}  # so that validate method can throw error
+        for key, default_value in constants.build_arg_defaults.items():
+            self.build_arg_defaults[key] = user_build_arg_defaults.get(key, default_value)
+
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
         """
@@ -246,14 +256,25 @@ class UserDefinition(BaseDefinition):
                 if not os.path.exists(requirement_path):
                     raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
-        ee_base_image = self.raw.get('base_image')
-        if ee_base_image:
-            if not isinstance(ee_base_image, str):
-                raise DefinitionError(textwrap.dedent(
-                    f"""
-                    Error: Unknown type {type(ee_base_image)} found for base_image; must be a string.
-                    """)
+        build_arg_defaults = self.raw.get('build_arg_defaults')
+        if build_arg_defaults:
+            if not isinstance(build_arg_defaults, dict):
+                raise DefinitionError(
+                    f"Error: Unknown type {type(build_arg_defaults)} found for build_arg_defaults; "
+                    f"must be a dict."
                 )
+            unexpected_keys = set(build_arg_defaults.keys()) - set(constants.build_arg_defaults)
+            if unexpected_keys:
+                raise DefinitionError(
+                    f"Keys {unexpected_keys} are not allowed in 'build_arg_defaults'."
+                )
+            for key, value in constants.build_arg_defaults.items():
+                user_value = build_arg_defaults.get(key)
+                if user_value and not isinstance(user_value, str):
+                    raise DefinitionError(
+                        f"Expected build_arg_defaults.{key} to be a string; "
+                        f"Found a {type(user_value)} instead."
+                    )
 
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
@@ -284,7 +305,6 @@ class Containerfile:
 
     def __init__(self, definition,
                  build_context=None,
-                 base_image=None,
                  container_runtime=None,
                  tag=None):
 
@@ -293,12 +313,18 @@ class Containerfile:
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
-        self.base_image = base_image
-        self.builder_stage_image = 'quay.io/ansible/python-builder:latest'
         self.container_runtime = container_runtime
         self.tag = tag
+        # Build args all need to go at top of file to avoid errors
         self.steps = [
-            "FROM {0} as galaxy".format(self.base_image),
+            "ARG ANSIBLE_RUNNER_IMAGE={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_RUNNER_IMAGE']
+            ),
+            "ARG PYTHON_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
+            ),
+            "",
+            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
             ""
         ]
 
@@ -391,7 +417,7 @@ class Containerfile:
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM {0} as builder".format(self.builder_stage_image),
+            "FROM $PYTHON_BUILDER_IMAGE as builder"
             "",
         ])
         return self.steps
@@ -399,7 +425,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM {0}".format(self.base_image),
+            "FROM $ANSIBLE_RUNNER_IMAGE"
             "",
         ])
         return self.steps

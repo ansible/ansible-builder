@@ -1,0 +1,5 @@
+---
+additional_build_steps:
+  prepend:
+    - ARG ANSIBLE_RUNNER_IMAGE
+    - RUN echo $ANSIBLE_RUNNER_IMAGE > /base_image

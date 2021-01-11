@@ -86,10 +86,6 @@ def parse_args(args=sys.argv[1:]):
                        dest='filename',
                        help='The definition of the execution environment.')
 
-        p.add_argument('-b', '--base-image',
-                       default=None,
-                       help='The parent image for the execution environment.')
-
         p.add_argument('-c', '--context',
                        default=constants.default_build_context,
                        dest='build_context',
@@ -99,6 +95,11 @@ def parse_args(args=sys.argv[1:]):
                        choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
                        help='Specifies which container runtime to use. Defaults to {0}.'.format(constants.default_container_runtime))
+
+        p.add_argument('--build-arg',
+                       action=BuildArgAction,
+                       default={},
+                       dest='build_args')
 
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
@@ -134,3 +135,17 @@ def parse_args(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     return args
+
+
+class BuildArgAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        key, *value = values.split('=')
+        attr = getattr(namespace, self.dest)
+
+        # None signifies that the build-arg will come from the environment.
+        # This is currently only supported by Docker. Podman will treat any
+        # usage of the $VALUE as a literal string.
+        if value:
+            attr[key] = value[0]
+        else:
+            attr[key] = None

@@ -1,0 +1,5 @@
+---
+additional_build_steps:
+  prepend:
+    - ARG FOO
+    - RUN echo $FOO
