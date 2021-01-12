@@ -175,9 +175,7 @@ class TestPytz:
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime} -v 3'
         )
         # Because of test multi-processing, this may or may not use cache, so allow either
-        assert (
-            ('Collecting pytz' in r.stdout) or ('requirements_combined.txt is already up-to-date' in r.stdout)
-        ), r.stdout
+        assert 'RUN /output/install-from-bindep && rm -rf /output/wheels' in r.stdout, r.stdout
         return (ee_tag_class, bc_folder)
 
     def test_has_pytz(self, cli, container_runtime, pytz):
