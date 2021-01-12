@@ -167,7 +167,9 @@ def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
 
 class TestPytz:
 
-    @pytest.fixture(scope='class')
+    # NOTE: this was intended to be a class scoped function to avoid re-building
+    # but that created problems with Zuul parallel tests so this is used
+    @pytest.fixture(scope='function')
     def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmpdir_factory):
         bc_folder = str(tmpdir_factory.mktemp('bc'))
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
