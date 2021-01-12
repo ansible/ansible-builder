@@ -1,4 +1,5 @@
 import sys
+import os
 
 from . import constants
 from .exceptions import DefinitionError
@@ -46,8 +47,6 @@ class GalaxyInstallSteps(Steps):
                 requirements_naming, constants.base_roles_path),
             "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r /build/{0} --collections-path {1}".format(
                 requirements_naming, constants.base_collections_path),
-            "",
-            "RUN mkdir -p {0} {1}".format(constants.base_roles_path, constants.base_collections_path),
         ])
 
 
@@ -58,8 +57,9 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "COPY --from=galaxy {0} {0}".format(constants.base_roles_path),
-            "COPY --from=galaxy {0} {0}".format(constants.base_collections_path),
+            "COPY --from=galaxy {0} {0}".format(
+                os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
+            ),
             "",
         ])
 
