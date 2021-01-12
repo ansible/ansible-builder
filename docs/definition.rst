@@ -36,6 +36,9 @@ to using the ``--build-arg`` CLI flag.
 
 Build args used by ansible-builder are the following.
 
+The ``ANSIBLE_GALAXY_CLI_COLLECTION_OPTS`` build arg allows the user to pass
+the '--pre' flag to enable the installation of pre-releases collections.
+
 The ``ANSIBLE_RUNNER_IMAGE`` build arg specifies the parent image
 for the execution environment.
 
