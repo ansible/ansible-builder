@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from collections import deque
 
 from .colors import MessageColors
 
@@ -72,10 +73,12 @@ def run_command(command, capture_output=False, allow_error=False):
         sys.exit(1)
 
     output = []
+    trailing_output = deque(maxlen=20)
     for line in iter(process.stdout.readline, b''):
         line = line.decode(sys.stdout.encoding)
         if capture_output:
             output.append(line.rstrip())
+        trailing_output.append(line.rstrip())
         logger.debug(line.rstrip('\n'))  # line ends added by logger itself
     logger.debug('')
 
@@ -86,9 +89,16 @@ def run_command(command, capture_output=False, allow_error=False):
             logger.error('Command that had error:')
             logger.error('  {0}'.format(' '.join(command)))
         if main_logger.level > logging.DEBUG:
-            for line in output:
-                logger.error(line)
-            logger.error('')
+            if capture_output:
+                for line in output:
+                    logger.error(line)
+                logger.error('')
+            else:
+                if len(trailing_output) == 20:
+                    logger.error('...showing last 20 lines of output...')
+                for line in trailing_output:
+                    logger.error(line)
+                logger.error('')
         logger.error(f"An error occured (rc={rc}), see output line(s) above for details.")
         sys.exit(1)
 
