@@ -61,41 +61,28 @@ def run(args, *a, allow_error=False, **kw):
     return ret
 
 
-@pytest.fixture(scope='session', autouse=True)
-def cleanup_ee_tags(container_runtime, request):
-    def delete_images():
-        r = run(f'{container_runtime} images --format="{{{{.Repository}}}}"')
-        for image_name in r.stdout.split('\n'):
-            from_test = False
-            if not image_name:
-                pass
-            elif image_name.startswith('localhost/{0}'.format(TAG_PREFIX)):  # podman
-                from_test = True
-            elif image_name.startswith(TAG_PREFIX):  # docker
-                from_test = True
-            if from_test:
-                run(f'{container_runtime} rmi -f {image_name}')
-                logger.warning(f'Deleted image {image_name}')
-
-    request.addfinalizer(delete_images)
-
-
 @pytest.fixture()
 def ee_tag(request, container_runtime):
-    return '_'.join([
+    image_name = '_'.join([
         TAG_PREFIX,
         request.node.name.lower().replace('[', '_').replace(']', '_'),
         str(uuid.uuid4())[:10]
     ])
+    yield image_name
+    # now delete that image, if the test happened to make one
+    run(f'{container_runtime} rmi -f {image_name}')
 
 
 @pytest.fixture(scope='class')
 def ee_tag_class(request, container_runtime):
-    return '_'.join([
+    image_name = '_'.join([
         TAG_PREFIX,
         request.node.name.lower().replace('[', '_').replace(']', '_'),
         str(uuid.uuid4())[:10]
     ])
+    yield image_name
+    # now delete that image, if the test happened to make one
+    run(f'{container_runtime} rmi -f {image_name}')
 
 
 class CompletedProcessProxy(object):
