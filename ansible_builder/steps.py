@@ -1,4 +1,5 @@
 import sys
+import os
 
 from . import constants
 from .exceptions import DefinitionError
@@ -58,8 +59,9 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "COPY --from=galaxy {0} {0}".format(constants.base_roles_path),
-            "COPY --from=galaxy {0} {0}".format(constants.base_collections_path),
+            "COPY --from=galaxy {0} {0}".format(
+                os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
+            ),
             "",
         ])
 
