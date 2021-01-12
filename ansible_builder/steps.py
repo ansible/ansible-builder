@@ -47,8 +47,6 @@ class GalaxyInstallSteps(Steps):
                 requirements_naming, constants.base_roles_path),
             "RUN ansible-galaxy collection install -r /build/{0} --collections-path {1}".format(
                 requirements_naming, constants.base_collections_path),
-            "",
-            "RUN mkdir -p {0} {1}".format(constants.base_roles_path, constants.base_collections_path),
         ])
 
 
