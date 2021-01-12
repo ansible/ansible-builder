@@ -191,4 +191,4 @@ class TestPytz:
         assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
         assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
-        assert 'RUN /output/install-from-bindep --> Using cache' in stdout_no_whitespace, r.stdout
+        assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace, r.stdout
