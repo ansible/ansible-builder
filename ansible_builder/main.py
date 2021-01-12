@@ -383,6 +383,9 @@ class Containerfile:
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
             relative_galaxy_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, CONTEXT_FILES['galaxy'])
+            self.steps.append(
+                "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
+                    self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']))
             self.steps.extend(GalaxyInstallSteps(relative_galaxy_path))
         return self.steps
 
