@@ -167,16 +167,17 @@ def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
 
 class TestPytz:
 
-    # NOTE: this was intended to be a class scoped function to avoid re-building
-    # but that created problems with Zuul parallel tests so this is used
-    @pytest.fixture(scope='function')
+    @pytest.fixture(scope='class')
     def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmpdir_factory):
         bc_folder = str(tmpdir_factory.mktemp('bc'))
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
         r = cli_class(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime} -v 3'
         )
-        assert 'Collecting pytz' in r.stdout, r.stdout
+        # Because of test multi-processing, this may or may not use cache, so allow either
+        assert (
+            ('Collecting pytz' in r.stdout) or ('requirements_combined.txt is already up-to-date' in r.stdout)
+        ), r.stdout
         return (ee_tag_class, bc_folder)
 
     def test_has_pytz(self, cli, container_runtime, pytz):
@@ -190,7 +191,7 @@ class TestPytz:
         r = cli(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v 3'
         )
-        assert 'Collecting pytz (from -r /build/' not in r.stdout, r.stdout
+        assert 'Collecting pytz' not in r.stdout, r.stdout
         assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
         assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace, r.stdout
