@@ -58,31 +58,42 @@ def run(args, *a, allow_error=False, **kw):
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
         return err
 
+    ret.rc = ret.result.returncode
+
     return ret
+
+
+def gen_image_name(request):
+    return '_'.join([
+        TAG_PREFIX,
+        request.node.name.lower().replace('[', '_').replace(']', '_'),
+        str(uuid.uuid4())[:10]
+    ])
+
+
+def delete_image(container_runtime, image_name):
+    # delete given image, if the test happened to make one
+    # allow error in case that image was not created
+    r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
+    if r.rc != 0:
+        if 'no such image' in r.stdout or 'no such image' in r.stderr:
+            return
+        else:
+            raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture()
 def ee_tag(request, container_runtime):
-    image_name = '_'.join([
-        TAG_PREFIX,
-        request.node.name.lower().replace('[', '_').replace(']', '_'),
-        str(uuid.uuid4())[:10]
-    ])
+    image_name = gen_image_name(request)
     yield image_name
-    # now delete that image, if the test happened to make one
-    run(f'{container_runtime} rmi -f {image_name}')
+    delete_image(container_runtime, image_name)
 
 
 @pytest.fixture(scope='class')
 def ee_tag_class(request, container_runtime):
-    image_name = '_'.join([
-        TAG_PREFIX,
-        request.node.name.lower().replace('[', '_').replace(']', '_'),
-        str(uuid.uuid4())[:10]
-    ])
+    image_name = gen_image_name(request)
     yield image_name
-    # now delete that image, if the test happened to make one
-    run(f'{container_runtime} rmi -f {image_name}')
+    delete_image(container_runtime, image_name)
 
 
 class CompletedProcessProxy(object):
