@@ -40,13 +40,21 @@ def run(args, *a, allow_error=False, **kw):
 
     kw.setdefault("env", os.environ.copy()).update({"LANG": "en_US.UTF-8"})
 
+    for i, arg in enumerate(args):
+        if not isinstance(arg, str):
+            raise pytest.fail(
+                f'Argument {arg} in {i} position is not string, args:\n{args}'
+            )
+
     try:
         ret = CompletedProcessProxy(subprocess.run(args, shell=True, *a, **kw))
     except subprocess.CalledProcessError as err:
         if not allow_error:
-            pytest.fail(
+            # Previously used pytest.fail here, but that missed some error details
+            print(
                 f"Running {err.cmd} resulted in a non-zero return code: {err.returncode} - stdout: {err.stdout}, stderr: {err.stderr}"
             )
+            raise
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
         return err
 
