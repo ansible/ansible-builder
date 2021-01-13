@@ -1,5 +1,8 @@
 import os
 import subprocess
+from pathlib import Path
+from glob import glob
+import shutil
 
 import tempfile
 import uuid
@@ -12,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 TAG_PREFIX = 'quay.io/example/builder-test'
+LOCK_DIR = '/tmp/ansible_builder_tests'
 
 
 @pytest.fixture
@@ -58,26 +62,49 @@ def run(args, *a, allow_error=False, **kw):
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
         return err
 
+    ret.rc = ret.result.returncode
+
     return ret
 
 
 @pytest.fixture(scope='session', autouse=True)
 def cleanup_ee_tags(container_runtime, request):
-    def delete_images():
-        r = run(f'{container_runtime} images --format="{{{{.Repository}}}}"')
-        for image_name in r.stdout.split('\n'):
-            from_test = False
-            if not image_name:
-                pass
-            elif image_name.startswith('localhost/{0}'.format(TAG_PREFIX)):  # podman
-                from_test = True
-            elif image_name.startswith(TAG_PREFIX):  # docker
-                from_test = True
-            if from_test:
-                run(f'{container_runtime} rmi -f {image_name}')
-                logger.warning(f'Deleted image {image_name}')
+    pid = os.getpid()
 
-    request.addfinalizer(delete_images)
+    try:
+        os.mkdir(LOCK_DIR)
+    except FileExistsError:
+        pass
+    except Exception:
+        raise
+
+    start_file = f'{LOCK_DIR}/start_{pid}.txt'
+    Path(start_file).touch()
+
+    try:
+        yield
+    finally:
+        start_glob = f'{LOCK_DIR}/start_*.txt'
+        end_glob = f'{LOCK_DIR}/end_*.txt'
+
+        is_final = bool(len(glob(start_glob)) <= len(glob(end_glob)) + 1)
+
+        end_file = f'{LOCK_DIR}/end_{pid}.txt'
+        Path(end_file).touch()
+
+        if is_final:
+            shutil.rmtree(LOCK_DIR)
+            list_cmd = (
+                f'{container_runtime} images --format="{{{{.Repository}}}}"'
+                f' | grep "{TAG_PREFIX}" --color=never'
+            )
+            cmd = f'{container_runtime} rmi -f $({list_cmd})'
+            r = run(cmd, allow_error=True)
+            if r.rc != 0:
+                listing = run(list_cmd, allow_error=True)
+                if listing.stdout.strip() != '':
+                    raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+            print(f'Deleted images, cmd:\n{cmd}\nstdout:\n{r.stdout}\nstderr:\n{r.stderr}')
 
 
 @pytest.fixture()
