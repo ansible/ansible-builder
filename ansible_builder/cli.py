@@ -3,12 +3,11 @@ import logging
 import sys
 import yaml
 
-from . import __version__
+from . import __version__, constants
 
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
-from . import constants
 from .introspect import add_introspect_options, process, simple_combine
 from .requirements import sanitize_requirements
 from .utils import configure_logger
@@ -77,38 +76,42 @@ def parse_args(args=sys.argv[1:]):
 
     build_command_parser.add_argument('-t', '--tag',
                                       default=constants.default_tag,
-                                      help='The name for the container image being built.')
+                                      help='The name for the container image being built (default: %(default)s)')
 
     for p in [build_command_parser]:
 
         p.add_argument('-f', '--file',
                        default=constants.default_file,
                        dest='filename',
-                       help='The definition of the execution environment.')
+                       help='The definition of the execution environment (default: %(default)s)')
 
         p.add_argument('-c', '--context',
                        default=constants.default_build_context,
                        dest='build_context',
-                       help='The directory to use for the build context. Defaults to $PWD/context.')
+                       help='The directory to use for the build context (default: %(default)s)')
 
         p.add_argument('--container-runtime',
                        choices=list(constants.runtime_files.keys()),
                        default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use. Defaults to {0}.'.format(constants.default_container_runtime))
+                       help='Specifies which container runtime to use (default: %(default)s)')
 
         p.add_argument('--build-arg',
                        action=BuildArgAction,
                        default={},
-                       dest='build_args')
+                       dest='build_args',
+                       help='Build-time variables to pass to any podman or docker calls. '
+                            'Internally ansible-builder makes use of {0}.'.format(
+                                ', '.join(constants.build_arg_defaults.keys()))
+                       )
 
         p.add_argument('-v', '--verbosity',
                        dest='verbosity',
                        type=int,
                        choices=[0, 1, 2, 3],
-                       default=2,
+                       default=constants.default_verbosity,
                        help='Increase the output verbosity, for up to three levels of verbosity '
                             '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-                            'in value from 0 to 3)')
+                            'in value from 0 to 3) (default: %(default)s)')
 
     introspect_parser = subparsers.add_parser(
         'introspect',

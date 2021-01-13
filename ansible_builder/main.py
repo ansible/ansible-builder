@@ -42,7 +42,7 @@ class AnsibleBuilder:
                  build_context=constants.default_build_context,
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
-                 verbosity=2):
+                 verbosity=constants.default_verbosity):
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
