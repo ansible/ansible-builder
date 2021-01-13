@@ -3,4 +3,6 @@
     check:
       jobs:
         - ansible-builder-tox-integration:
-            voting: false
+    gate:
+      jobs:
+        - ansible-builder-tox-integration:
