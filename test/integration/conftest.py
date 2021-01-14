@@ -58,44 +58,42 @@ def run(args, *a, allow_error=False, **kw):
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
         return err
 
+    ret.rc = ret.result.returncode
+
     return ret
 
 
-@pytest.fixture(scope='session', autouse=True)
-def cleanup_ee_tags(container_runtime, request):
-    def delete_images():
-        r = run(f'{container_runtime} images --format="{{{{.Repository}}}}"')
-        for image_name in r.stdout.split('\n'):
-            from_test = False
-            if not image_name:
-                pass
-            elif image_name.startswith('localhost/{0}'.format(TAG_PREFIX)):  # podman
-                from_test = True
-            elif image_name.startswith(TAG_PREFIX):  # docker
-                from_test = True
-            if from_test:
-                run(f'{container_runtime} rmi -f {image_name}')
-                logger.warning(f'Deleted image {image_name}')
+def gen_image_name(request):
+    return '_'.join([
+        TAG_PREFIX,
+        request.node.name.lower().replace('[', '_').replace(']', '_'),
+        str(uuid.uuid4())[:10]
+    ])
 
-    request.addfinalizer(delete_images)
+
+def delete_image(container_runtime, image_name):
+    # delete given image, if the test happened to make one
+    # allow error in case that image was not created
+    r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
+    if r.rc != 0:
+        if 'no such image' in r.stdout or 'no such image' in r.stderr:
+            return
+        else:
+            raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture()
 def ee_tag(request, container_runtime):
-    return '_'.join([
-        TAG_PREFIX,
-        request.node.name.lower().replace('[', '_').replace(']', '_'),
-        str(uuid.uuid4())[:10]
-    ])
+    image_name = gen_image_name(request)
+    yield image_name
+    delete_image(container_runtime, image_name)
 
 
 @pytest.fixture(scope='class')
 def ee_tag_class(request, container_runtime):
-    return '_'.join([
-        TAG_PREFIX,
-        request.node.name.lower().replace('[', '_').replace(']', '_'),
-        str(uuid.uuid4())[:10]
-    ])
+    image_name = gen_image_name(request)
+    yield image_name
+    delete_image(container_runtime, image_name)
 
 
 class CompletedProcessProxy(object):

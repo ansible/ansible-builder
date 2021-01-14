@@ -82,7 +82,7 @@ def run_command(command, capture_output=False, allow_error=False):
         logger.debug(line.rstrip('\n'))  # line ends added by logger itself
     logger.debug('')
 
-    rc = process.poll()
+    rc = process.wait()
     if rc is not None and rc != 0 and (not allow_error):
         main_logger = logging.getLogger('ansible_builder')
         if main_logger.level > logging.INFO:

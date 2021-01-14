@@ -23,7 +23,7 @@ def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
         f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v3",
         allow_error=True
     )
-    assert r.rc != 0
+    assert r.rc != 0, (r.stdout + r.stderr)
     assert 'RUN thisisnotacommand' in (r.stdout + r.stderr), (r.stdout + r.stderr)
     assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
