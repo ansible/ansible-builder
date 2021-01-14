@@ -18,6 +18,8 @@ build_arg_defaults = dict(
     PYTHON_BUILDER_IMAGE='quay.io/ansible/python-builder:latest'
 )
 
+user_content_subfolder = '_build'
+
 if shutil.which('podman'):
     default_container_runtime = 'podman'
 else:

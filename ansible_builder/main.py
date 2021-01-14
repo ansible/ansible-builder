@@ -20,9 +20,6 @@ CONTEXT_FILES = {
     'galaxy': 'requirements.yml'
 }
 
-# Subdirectory in the build context where files to ADD get copied
-CONTEXT_BUILD_OUTPUTS_DIR = '_build'
-
 BINDEP_COMBINED = 'bindep_combined.txt'
 PIP_COMBINED = 'requirements_combined.txt'
 
@@ -48,7 +45,8 @@ class AnsibleBuilder:
 
         self.tag = tag
         self.build_context = build_context
-        self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
+        self.build_outputs_dir = os.path.join(
+            build_context, constants.user_content_subfolder)
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
         self.containerfile = Containerfile(
@@ -310,7 +308,8 @@ class Containerfile:
                  tag=None):
 
         self.build_context = build_context
-        self.build_outputs_dir = os.path.join(build_context, CONTEXT_BUILD_OUTPUTS_DIR)
+        self.build_outputs_dir = os.path.join(
+            build_context, constants.user_content_subfolder)
         self.definition = definition
         filename = constants.runtime_files[container_runtime]
         self.path = os.path.join(self.build_context, filename)
@@ -342,7 +341,8 @@ class Containerfile:
             requirement_path = self.definition.get_dep_abs_path(item)
             if requirement_path is None:
                 continue
-            dest = os.path.join(self.build_context, CONTEXT_BUILD_OUTPUTS_DIR, new_name)
+            dest = os.path.join(
+                self.build_context, constants.user_content_subfolder, new_name)
             copy_file(requirement_path, dest)
 
         if self.definition.ansible_config:
@@ -354,7 +354,8 @@ class Containerfile:
     def prepare_ansible_config_file(self):
         ansible_config_file_path = self.definition.ansible_config
         if ansible_config_file_path:
-            context_file_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, 'ansible.cfg')
+            context_file_path = os.path.join(
+                constants.user_content_subfolder, 'ansible.cfg')
             return self.steps.extend(AnsibleConfigSteps(context_file_path))
 
     def prepare_prepended_steps(self):
@@ -377,22 +378,23 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            relative_galaxy_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, CONTEXT_FILES['galaxy'])
             self.steps.append(
                 "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
                     self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']))
-            self.steps.extend(GalaxyInstallSteps(relative_galaxy_path))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
     def prepare_assemble_steps(self):
         requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
         if requirements_file_exists:
-            relative_requirements_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, PIP_COMBINED)
+            relative_requirements_path = os.path.join(
+                constants.user_content_subfolder, PIP_COMBINED)
             self.steps.append(f"ADD {relative_requirements_path} /tmp/src/requirements.txt")
 
         bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
         if bindep_exists:
-            relative_bindep_path = os.path.join(CONTEXT_BUILD_OUTPUTS_DIR, BINDEP_COMBINED)
+            relative_bindep_path = os.path.join(
+                constants.user_content_subfolder, BINDEP_COMBINED)
             self.steps.append(f"ADD {relative_bindep_path} /tmp/src/bindep.txt")
 
         if requirements_file_exists or bindep_exists:
