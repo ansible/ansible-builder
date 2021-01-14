@@ -5,7 +5,10 @@ import os
 
 
 @pytest.fixture(autouse=True)
-def do_not_run_commands():
+def do_not_run_commands(request):
+    if 'run_command' in request.keywords:
+        yield
+        return
     cmd_mock = mock.MagicMock(return_value=[1, [
         'python:', '  foo: []', 'system: {}',
     ]])

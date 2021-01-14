@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ansible_builder.utils import write_file, copy_file
+from ansible_builder.utils import write_file, copy_file, run_command
 
 
 def test_write_file(tmpdir):
@@ -58,3 +58,29 @@ def test_copy_touched_file(dest_file, source_file):
 
     assert copy_file(source_file, dest_file)
     assert not copy_file(source_file, dest_file)
+
+
+@pytest.mark.run_command
+def test_failed_command():
+    """This is regression coverage for a bug where run_command exited before
+    subprocess finished, which was flaky, or possibly resource-dependent.
+    The bug tended to fail on iteration number 3 to 6, thus the loop.
+    We would prefer not to do the loop, but we prefer
+    deterministic testing even more.
+    """
+    for i in range(10):
+        rc = 'not-set'
+        print(f'test_failed_command iteration {i}')
+        with pytest.raises(SystemExit):
+            rc, _ = run_command(['sleep', 'invalidargument'])
+        assert rc == 'not-set'
+
+
+@pytest.mark.run_command
+def test_failed_command_with_allow_error():
+    for i in range(10):
+        rc, _ = run_command(
+            ['sleep', 'invalidargument'],
+            allow_error=True
+        )
+        assert rc == 1, f'Failed on iteration {i}'
