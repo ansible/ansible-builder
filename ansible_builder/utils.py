@@ -122,7 +122,10 @@ def write_file(filename: str, lines: list) -> bool:
 def copy_file(source: str, dest: str) -> bool:
     should_copy = False
 
-    if not os.path.exists(dest):
+    if os.path.abspath(source) == os.path.abspath(dest):
+        logger.info("File {0} was placed in build context by user, leaving unmodified.".format(dest))
+        return False
+    elif not os.path.exists(dest):
         logger.debug("File {0} will be created.".format(dest))
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):
