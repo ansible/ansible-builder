@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 import yaml
+import os
 
 from . import __version__, constants
 
@@ -26,7 +27,10 @@ def run():
         action = getattr(ab, ab.action)
         try:
             if action():
-                print(MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(ab.build_context) + MessageColors.ENDC)
+                print(
+                    MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(
+                        os.path.abspath(ab.build_context)
+                    ) + MessageColors.ENDC)
                 sys.exit(0)
         except DefinitionError as e:
             logger.error(e.args[0])
@@ -102,6 +106,14 @@ def parse_args(args=sys.argv[1:]):
                        help='Build-time variables to pass to any podman or docker calls. '
                             'Internally ansible-builder makes use of {0}.'.format(
                                 ', '.join(constants.build_arg_defaults.keys()))
+                       )
+
+        p.add_argument('--output-filename',
+                       choices=list(constants.runtime_files.values()),
+                       default=None,
+                       help='Name of file to write image definition to '
+                            '(default depends on --container-runtime, {0})'.format(
+                                ' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()]))
                        )
 
         p.add_argument('-v', '--verbosity',

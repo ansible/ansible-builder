@@ -145,6 +145,22 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
     assert f'ADD {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
 
 
+def test_use_dockerfile_with_podman(exec_env_definition_file, tmpdir):
+    path = exec_env_definition_file(content={'version': 1})
+    aee = AnsibleBuilder(
+        filename=path, build_context=tmpdir.mkdir('bc'),
+        container_runtime='podman', output_filename='Dockerfile'
+    )
+    aee.build()
+
+    assert aee.containerfile.path.endswith('Dockerfile')
+
+    with open(aee.containerfile.path) as f:
+        content = f.read()
+
+    assert 'FROM' in content
+
+
 class TestDefinitionErrors:
 
     def test_definition_syntax_error(self, data_dir):

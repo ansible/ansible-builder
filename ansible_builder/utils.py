@@ -8,6 +8,7 @@ import sys
 from collections import deque
 
 from .colors import MessageColors
+from . import constants
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,13 @@ def run_command(command, capture_output=False, allow_error=False):
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)
     except FileNotFoundError:
-        logger.error(f"You do not have {command[0]} installed, please specify a different container runtime for this command.")
+        msg = f"You do not have {command[0]} installed."
+        if command[0] in constants.runtime_files:
+            msg += "\nPlease specify a different --container-runtime."
+            msg += "\nOption avaibility: {0}.".format(
+                ', '.join([f'{runtime}: {bool(shutil.which(runtime))}' for runtime in constants.runtime_files])
+            )
+        logger.error(msg)
         sys.exit(1)
 
     output = []

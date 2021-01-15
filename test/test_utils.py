@@ -84,3 +84,12 @@ def test_failed_command_with_allow_error():
             allow_error=True
         )
         assert rc == 1, f'Failed on iteration {i}'
+
+
+@pytest.mark.run_command
+def test_invalid_non_docker_command(caplog):
+    with pytest.raises(SystemExit):
+        run_command(['thisisnotacommand'], capture_output=True)
+    record = caplog.records[-1]  # final log message emitted
+    assert 'You do not have thisisnotacommand installed' in record.msg
+    assert 'container-runtime' not in record.msg
