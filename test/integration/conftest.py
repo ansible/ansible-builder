@@ -7,11 +7,10 @@ import uuid
 import pytest
 import logging
 
-
 logger = logging.getLogger(__name__)
 
-
 TAG_PREFIX = 'quay.io/example/builder-test'
+KEEP_IMAGES = bool(os.environ.get('KEEP_IMAGES', False))
 
 
 @pytest.fixture
@@ -72,6 +71,8 @@ def gen_image_name(request):
 
 
 def delete_image(container_runtime, image_name):
+    if KEEP_IMAGES:
+        return
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
     r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
