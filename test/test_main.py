@@ -2,9 +2,10 @@ import os
 import pytest
 
 from ansible_builder import __version__
+from ansible_builder import constants
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import (
-    AnsibleBuilder, UserDefinition, CONTEXT_BUILD_OUTPUTS_DIR
+    AnsibleBuilder, UserDefinition
 )
 
 
@@ -51,7 +52,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert f'ADD {CONTEXT_BUILD_OUTPUTS_DIR}/requirements.yml' in content
+    assert f'ADD {constants.user_content_subfolder} /build' in content
 
 
 def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
@@ -116,7 +117,7 @@ def test_nested_galaxy_file(data_dir, tmpdir):
     bc_folder = str(tmpdir)
     AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=bc_folder).build()
 
-    req_in_bc = os.path.join(bc_folder, CONTEXT_BUILD_OUTPUTS_DIR, 'requirements.yml')
+    req_in_bc = os.path.join(bc_folder, constants.user_content_subfolder, 'requirements.yml')
     assert os.path.exists(req_in_bc)
 
     req_original = 'test/data/foo/requirements.yml'
@@ -141,7 +142,7 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert f'ADD {CONTEXT_BUILD_OUTPUTS_DIR}/ansible.cfg ~/.ansible.cfg' in content
+    assert f'ADD {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
 
 
 class TestDefinitionErrors:

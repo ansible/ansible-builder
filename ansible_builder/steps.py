@@ -39,13 +39,15 @@ class GalaxyInstallSteps(Steps):
         """
         self.steps = []
         self.steps.append(
-            "ADD {0} /build/{0}".format(requirements_naming)
+            "ADD {0} /build".format(
+                constants.user_content_subfolder)
         )
         self.steps.extend([
             "",
-            "RUN ansible-galaxy role install -r /build/{0} --roles-path {1}".format(
+            "WORKDIR /build",
+            "RUN ansible-galaxy role install -r {0} --roles-path {1}".format(
                 requirements_naming, constants.base_roles_path),
-            "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r /build/{0} --collections-path {1}".format(
+            "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {0} --collections-path {1}".format(
                 requirements_naming, constants.base_collections_path),
         ])
 
