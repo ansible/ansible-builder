@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 import tempfile
@@ -71,29 +72,31 @@ def gen_image_name(request):
     ])
 
 
-def delete_image(container_runtime, image_name):
+def delete_images(container_runtime):
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
-    r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
-    if r.rc != 0:
-        if 'no such image' in r.stdout or 'no such image' in r.stderr:
-            return
-        else:
-            raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+    cmd = (
+      f"{container_runtime} images | grep {TAG_PREFIX} | cut -d ' ' -f 1 | xargs {container_runtime} rmi --force")
+    run(cmd, allow_error=True)
+
+
+def pytest_unconfigure(config):
+    if shutil.which('podman'):
+        delete_images('podman')
+    else:
+        delete_images('docker')
 
 
 @pytest.fixture()
 def ee_tag(request, container_runtime):
     image_name = gen_image_name(request)
     yield image_name
-    delete_image(container_runtime, image_name)
 
 
 @pytest.fixture(scope='class')
 def ee_tag_class(request, container_runtime):
     image_name = gen_image_name(request)
     yield image_name
-    delete_image(container_runtime, image_name)
 
 
 class CompletedProcessProxy(object):
