@@ -16,3 +16,5 @@
     vars:
       tox_envlist: integration
       tox_install_siblings: false
+      tox_environment:
+        KEEP_IMAGES: true
