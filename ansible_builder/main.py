@@ -89,7 +89,10 @@ class AnsibleBuilder:
     def run_in_container(self, command, **kwargs):
         wrapped_command = [self.container_runtime, 'run', '--rm']
 
-        wrapped_command.extend(['-v', f"{os.path.abspath(self.build_context)}:/context:Z"])
+        # ansible builder root on the controller machine
+        ab_lib_path = os.path.dirname(ansible_builder.introspect.__file__)
+
+        wrapped_command.extend(['-v', f"{ab_lib_path}:/ansible_builder_mount:Z"])
 
         wrapped_command.extend([self.tag] + command)
 
@@ -98,9 +101,7 @@ class AnsibleBuilder:
     def run_intermission(self):
         run_command(self.build_command, capture_output=True)
 
-        in_container_introspect_path = os.path.join(
-            '/context', CONTEXT_BUILD_OUTPUTS_DIR, 'introspect.py'
-        )
+        in_container_introspect_path = '/ansible_builder_mount/introspect.py'
         rc, introspect_output = self.run_in_container(
             ['python3', in_container_introspect_path], capture_output=True
         )
@@ -343,12 +344,6 @@ class Containerfile:
                 continue
             dest = os.path.join(self.build_context, CONTEXT_BUILD_OUTPUTS_DIR, new_name)
             copy_file(requirement_path, dest)
-
-        # copy introspect.py file from source into build context
-        copy_file(
-            ansible_builder.introspect.__file__,
-            os.path.join(self.build_outputs_dir, 'introspect.py')
-        )
 
         if self.definition.ansible_config:
             copy_file(
