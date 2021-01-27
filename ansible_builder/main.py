@@ -411,7 +411,11 @@ class Containerfile:
         if requirements_file_exists or bindep_exists:
             self.steps.extend([
                 "COPY --from=builder /output/ /output/",
+                "",
+                "USER root",
                 "RUN /output/install-from-bindep && rm -rf /output/wheels",
+                "USER runner",
+                "",
             ])
 
         return self.steps
@@ -428,8 +432,6 @@ class Containerfile:
         self.steps.extend([
             "",
             "FROM $ANSIBLE_RUNNER_IMAGE"
-            "",
-            "USER root",
             "",
         ])
         return self.steps
