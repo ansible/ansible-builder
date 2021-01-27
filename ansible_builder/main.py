@@ -325,6 +325,8 @@ class Containerfile:
             ),
             "",
             "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
+            "",
+            "USER root",
             ""
         ]
 
@@ -426,6 +428,8 @@ class Containerfile:
         self.steps.extend([
             "",
             "FROM $ANSIBLE_RUNNER_IMAGE"
+            "",
+            "USER root",
             "",
         ])
         return self.steps
