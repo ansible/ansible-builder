@@ -25,7 +25,7 @@ the requirements they expect by using the introspect command. Example:
 Python Dependencies
 ^^^^^^^^^^^^^^^^^^^
 
-Python requirements files are combined into a single file using the
+Python requirements files are combined into a single file using code from the
 ``requirements-parser`` library in order to support complex syntax like
 references to other files.
 

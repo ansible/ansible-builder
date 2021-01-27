@@ -1,5 +1,5 @@
 import logging
-import requirements
+from . import requirements_parser as requirements
 
 
 logger = logging.getLogger(__name__)
