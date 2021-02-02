@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import pytest
+from unittest import mock
 
 from ansible_builder.utils import write_file, copy_file, run_command
 
@@ -93,3 +94,14 @@ def test_invalid_non_docker_command(caplog):
     record = caplog.records[-1]  # final log message emitted
     assert 'You do not have thisisnotacommand installed' in record.msg
     assert 'container-runtime' not in record.msg
+
+
+@pytest.mark.run_command
+def test_invalid_docker_command(caplog):
+    with mock.patch('ansible_builder.utils.subprocess.Popen', side_effect=FileNotFoundError):
+        with mock.patch('ansible_builder.utils.shutil.which', return_value=False):
+            with pytest.raises(SystemExit):
+                run_command(['docker', 'history', 'quay.io/foo/fooooo'], capture_output=True)
+    record = caplog.records[-1]  # final log message emitted
+    assert 'You do not have docker installed' in record.msg
+    assert 'podman: not installed, docker: not installed' in record.msg

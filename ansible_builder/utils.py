@@ -72,9 +72,18 @@ def run_command(command, capture_output=False, allow_error=False):
     except FileNotFoundError:
         msg = f"You do not have {command[0]} installed."
         if command[0] in constants.runtime_files:
-            msg += "\nPlease specify a different --container-runtime."
-            msg += "\nOption avaibility: {0}.".format(
-                ', '.join([f'{runtime}: {bool(shutil.which(runtime))}' for runtime in constants.runtime_files])
+            install_summary = ', '.join([
+                '{runtime}: {blurb}'.format(
+                    runtime=runtime,
+                    blurb={True: 'installed', False: 'not installed'}.get(bool(shutil.which(runtime)))
+                ) for runtime in constants.runtime_files
+            ])
+            msg += (
+                f'\nYou do not have {command[0]} installed.\n'
+                f'Please either install {command[0]} or specify an alternative container '
+                f'runtime by passing --container-runtime on the command line.\n'
+                f'Below are the supported container runtimes and whether '
+                f'or not they were found on your system.\n{install_summary}'
             )
         logger.error(msg)
         sys.exit(1)
