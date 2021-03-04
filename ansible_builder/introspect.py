@@ -105,7 +105,7 @@ def process(data_dir=base_collections_path):
         cmd = "ansible-galaxy collection list --format=yaml"
         galaxy_list_yaml = subprocess.check_output(shlex.split(cmd), stderr=subprocess.DEVNULL)
         galaxy_list = yaml.safe_load(galaxy_list_yaml)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         galaxy_list = {}
 
     return {
