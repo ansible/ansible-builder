@@ -2,6 +2,7 @@ import logging
 import os
 import textwrap
 import yaml
+import json
 
 from . import constants
 from .exceptions import DefinitionError
@@ -112,6 +113,7 @@ class AnsibleBuilder:
         collection_data['python']['user'] = self.definition.user_python
         system_lines = ansible_builder.introspect.simple_combine(collection_data['system'])
         python_lines = sanitize_requirements(collection_data['python'])
+        collections = collection_data['collections']
 
         if system_lines:
             bindep_file = os.path.join(self.build_outputs_dir, BINDEP_COMBINED)
@@ -121,7 +123,7 @@ class AnsibleBuilder:
             pip_file = os.path.join(self.build_outputs_dir, PIP_COMBINED)
             write_file(pip_file, python_lines)
 
-        return (system_lines, python_lines)
+        return (system_lines, python_lines, collections)
 
     def build(self):
         # Phase 1 of Containerfile
@@ -130,13 +132,13 @@ class AnsibleBuilder:
         self.containerfile.prepare_galaxy_install_steps()
         logger.debug('Writing partial Containerfile without collection requirements')
         self.containerfile.write()
-        system_lines, python_lines = self.run_intermission()
+        system_lines, python_lines, collections = self.run_intermission()
 
         # Phase 2 of Containerfile
         self.containerfile.prepare_build_stage_steps()
         self.containerfile.prepare_assemble_steps()
 
-        self.containerfile.prepare_final_stage_steps()
+        self.containerfile.prepare_final_stage_steps(collections)
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.prepare_system_runtime_deps_steps()
@@ -428,12 +430,18 @@ class Containerfile:
         ])
         return self.steps
 
-    def prepare_final_stage_steps(self):
+    def prepare_final_stage_steps(self, collections):
         self.steps.extend([
             "",
             "FROM $ANSIBLE_RUNNER_IMAGE"
             "",
         ])
+        if collections:
+            self.steps.extend([
+                "",
+                "LABEL collections='{}'".format(json.dumps(collections)),
+                "",
+            ])
         return self.steps
 
     def prepare_galaxy_copy_steps(self):

@@ -10,7 +10,7 @@ def do_not_run_commands(request):
         yield
         return
     cmd_mock = mock.MagicMock(return_value=[1, [
-        'python:', '  foo: []', 'system: {}',
+        'python:', '  foo: []', 'system: {}', 'collections: {}',
     ]])
     with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
         yield cmd_mock

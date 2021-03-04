@@ -4,6 +4,8 @@ import os
 import sys
 import yaml
 import argparse
+import subprocess
+import shlex
 
 
 base_collections_path = '/usr/share/ansible/collections'
@@ -99,9 +101,17 @@ def process(data_dir=base_collections_path):
         if col_sys_lines:
             sys_req[key] = col_sys_lines
 
+    try:
+        cmd = "ansible-galaxy collection list --format=yaml"
+        galaxy_list_yaml = subprocess.check_output(shlex.split(cmd), stderr=subprocess.DEVNULL)
+        galaxy_list = yaml.safe_load(galaxy_list_yaml)
+    except subprocess.CalledProcessError:
+        galaxy_list = {}
+
     return {
         'python': py_req,
-        'system': sys_req
+        'system': sys_req,
+        'collections': galaxy_list,
     }
 
 

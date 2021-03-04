@@ -10,14 +10,18 @@ def test_multiple_collection_metadata(data_dir):
     files['python'] = sanitize_requirements(files['python'])
     files['system'] = simple_combine(files['system'])
 
-    assert files == {'python': [
-        'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
-        'pytz  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile'
-    ], 'system': [
-        'subversion [platform:rpm]  # from collection test.bindep',
-        'subversion [platform:dpkg]  # from collection test.bindep'
-    ]}
+    assert files == {
+        'python': [
+            'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
+            'pytz  # from collection test.reqfile',
+            'tacacs_plus  # from collection test.reqfile'
+        ],
+        'system': [
+            'subversion [platform:rpm]  # from collection test.bindep',
+            'subversion [platform:dpkg]  # from collection test.bindep'
+        ],
+        'collections': {}
+    }
 
 
 def test_single_collection_metadata(data_dir):
