@@ -2,11 +2,11 @@ Collection-level Metadata
 =========================
 
 Collections inside of the ``galaxy`` entry of an execution environment
-will contribute their python and system requirements to the image.
+will contribute their Python and system requirements to the image.
 
 Requirements from a collection can be recognized in these ways:
 
--  A file ``meta/execution-environment.yml`` references the python
+-  A file ``meta/execution-environment.yml`` references the Python
    and/or bindep requirements files
 -  A file named ``requirements.txt`` is in the root level of the
    collection

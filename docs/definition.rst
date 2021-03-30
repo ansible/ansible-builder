@@ -34,7 +34,7 @@ Default values for build args can be specified in the definition file in
 the ``default_build_args`` section as a dictionary. This is an alternative
 to using the ``--build-arg`` CLI flag.
 
-Build args used by ansible-builder are the following.
+Build args used by ``ansible-builder`` are the following:
 
 The ``ANSIBLE_GALAXY_CLI_COLLECTION_OPTS`` build arg allows the user to pass
 the '--pre' flag to enable the installation of pre-releases collections.
@@ -62,8 +62,7 @@ phase of the build.
 Ansible Galaxy Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The ``galaxy`` entry points to a valid requirements file for the
-``ansible-galaxy collection install -r ...`` command. The ``python``
-entry points to a python requirements file for ``pip install -r ...``.
+``ansible-galaxy collection install -r ...`` command.
 
 The entry ``requirements.yml`` may be
 a relative path from the directory of the execution environment
@@ -91,6 +90,7 @@ Additional Custom Build Steps
 
 Additional commands may be specified in the ``additional_build_steps``
 section, either for before the main build steps (``prepend``) or after
-(``append``). The syntax needs to be either a: - multi-line string
-(example shown in the ``prepend`` section above) - dictionary (as shown
-via ``append``)
+(``append``). The syntax needs to be one of the following:
+
+- a multi-line string (example shown in the ``prepend`` section above)
+- a dictionary (as shown via ``append``)
