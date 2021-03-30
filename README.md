@@ -1,5 +1,6 @@
 # Ansible Builder
 
+
 Ansible Builder is a tool that automates the process of building execution
 environments using the schemas and tooling defined in various Ansible
 Collections and by the user.
