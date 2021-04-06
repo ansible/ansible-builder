@@ -6,8 +6,8 @@ Introduction
 ============
 
 Using Ansible content that depends on non-default dependencies can be tricky.
-Packages must be installed on each node, play nice with other software installed
-on the host system, and kept in sync.
+Packages must be installed on each node, play nicely with other software installed
+on the host system, and be kept in sync.
 
 To help simplify this process, we have introduced the concept of Execution
 Environments, which you can create with Ansible Builder.
@@ -43,7 +43,7 @@ Getting Started
 To get started with Ansible Builder, start by creating an
 :ref:`Execution Environment definition<Definition:Execution Environment Definition>`. This
 file allows you to specify which content you would like to include in your
-Execution Environment, such as Collections, Python requirements, and
+execution environment, such as collections, Python requirements, and
 system-level packages.
 
 Once you have created a definition, read through the :ref:`Usage:CLI Usage`.
