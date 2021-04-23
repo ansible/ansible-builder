@@ -2,7 +2,7 @@
 - job:
     name: ansible-builder-tox-integration
     parent: ansible-buildset-registry-consumer
-    timeout: 3600
+    timeout: 4500
     vars:
       container_command: podman
 
