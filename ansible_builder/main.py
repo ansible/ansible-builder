@@ -17,11 +17,10 @@ logger = logging.getLogger(__name__)
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {
-    'galaxy': 'requirements.yml'
+    'galaxy': 'requirements.yml',
+    'python': 'requirements.txt',
+    'system': 'bindep.txt',
 }
-
-BINDEP_COMBINED = 'bindep_combined.txt'
-PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
     'version',
@@ -98,43 +97,15 @@ class AnsibleBuilder:
 
         return run_command(wrapped_command, **kwargs)
 
-    def run_intermission(self):
-        run_command(self.build_command, capture_output=True)
-
-        in_container_introspect_path = '/ansible_builder_mount/introspect.py'
-        rc, introspect_output = self.run_in_container(
-            ['python3', in_container_introspect_path], capture_output=True
-        )
-        collection_data = yaml.safe_load('\n'.join(introspect_output))
-
-        # Add data from user definition, go from dicts to list
-        collection_data['system']['user'] = self.definition.user_system
-        collection_data['python']['user'] = self.definition.user_python
-        system_lines = ansible_builder.introspect.simple_combine(collection_data['system'])
-        python_lines = sanitize_requirements(collection_data['python'])
-
-        if system_lines:
-            bindep_file = os.path.join(self.build_outputs_dir, BINDEP_COMBINED)
-            write_file(bindep_file, system_lines + [''])
-
-        if python_lines:
-            pip_file = os.path.join(self.build_outputs_dir, PIP_COMBINED)
-            write_file(pip_file, python_lines)
-
-        return (system_lines, python_lines)
-
     def build(self):
         # Phase 1 of Containerfile
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
         self.containerfile.prepare_galaxy_install_steps()
-        logger.debug('Writing partial Containerfile without collection requirements')
-        self.containerfile.write()
-        system_lines, python_lines = self.run_intermission()
-
-        # Phase 2 of Containerfile
-        self.containerfile.prepare_build_stage_steps()
         self.containerfile.prepare_assemble_steps()
+
+
+
 
         self.containerfile.prepare_final_stage_steps()
         self.containerfile.prepare_prepended_steps()
@@ -195,9 +166,6 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
-        self.user_python = self.read_dependency('python')
-        self.user_system = self.read_dependency('system')
-
         # Populate build arg defaults, which are customizable in definition
         self.build_arg_defaults = {}
         user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
@@ -226,16 +194,6 @@ class UserDefinition(BaseDefinition):
             return req_file
 
         return os.path.join(self.reference_path, req_file)
-
-    def read_dependency(self, entry):
-        requirement_path = self.get_dep_abs_path(entry)
-        if not requirement_path:
-            return []
-        try:
-            with open(requirement_path, 'r') as f:
-                return f.read().split('\n')
-        except FileNotFoundError:
-            raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
     def validate(self):
         # Check that all specified keys in the definition file are valid.
@@ -330,7 +288,7 @@ class Containerfile:
                 self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
             ),
             "",
-            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
+            "FROM $ANSIBLE_RUNNER_IMAGE as builder",
             "USER root",
             ""
         ]
@@ -392,41 +350,28 @@ class Containerfile:
         return self.steps
 
     def prepare_assemble_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
+        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['python']))
         if requirements_file_exists:
             relative_requirements_path = os.path.join(
-                constants.user_content_subfolder, PIP_COMBINED)
+                constants.user_content_subfolder, CONTEXT_FILES['python'])
             self.steps.append(f"ADD {relative_requirements_path} /tmp/src/requirements.txt")
 
-        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
+        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
         if bindep_exists:
             relative_bindep_path = os.path.join(
-                constants.user_content_subfolder, BINDEP_COMBINED)
+                constants.user_content_subfolder, CONTEXT_FILES['system'])
             self.steps.append(f"ADD {relative_bindep_path} /tmp/src/bindep.txt")
 
-        if requirements_file_exists or bindep_exists:
-            self.steps.append("RUN assemble")
+        self.steps.append("RUN assemble")
 
         return self.steps
 
     def prepare_system_runtime_deps_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
-        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
-
-        if requirements_file_exists or bindep_exists:
-            self.steps.extend([
-                "COPY --from=builder /output/ /output/",
-                "RUN /output/install-from-bindep && rm -rf /output/wheels",
-            ])
-
-        return self.steps
-
-    def prepare_build_stage_steps(self):
         self.steps.extend([
-            "",
-            "FROM $PYTHON_BUILDER_IMAGE as builder"
-            "",
+            "COPY --from=builder /output/ /output/",
+            "RUN install-from-bindep && rm -rf /output/wheels",
         ])
+
         return self.steps
 
     def prepare_final_stage_steps(self):

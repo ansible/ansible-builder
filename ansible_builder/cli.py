@@ -37,14 +37,21 @@ def run():
             sys.exit(1)
     elif args.action == 'introspect':
         data = process(args.folder)
-        if args.sanitize:
+        if args.sanitize or args.raw:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
             logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
             print('# Dependency data for {0}'.format(args.folder))
-        print('---')
-        print(yaml.dump(data, default_flow_style=False))
+
+        if args.raw:
+            if args.type[0] == 'python':
+                print('\n'.join(data['python']))
+            elif args.type[0] == 'system':
+                print('\n'.join(data['system']))
+        else:
+            print('---')
+            print(yaml.dump(data, default_flow_style=False))
         sys.exit(0)
 
     logger.error("An error has occured.")
@@ -135,19 +142,30 @@ def parse_args(args=sys.argv[1:]):
         )
     )
     add_introspect_options(introspect_parser)
-    introspect_parser.add_argument(
-        '--sanitize', help=(
-            'Sanitize and de-duplicate requirements. '
-            'This is normally done separately from the introspect script, but this '
-            'option is given to more accurately test collection content.'
-        ), action='store_true')
-    introspect_parser.add_argument(
-        '-v', '--verbosity', dest='verbosity', action='count', default=0, help=(
-            'Increase the output verbosity, for up to three levels of verbosity '
-            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-            'in value from 0 to 3)'))
+    introspect_parser.add_argument('--sanitize', action='store_true', help=('Sanitize and de-duplicate requirements. '
+                                                                            'This is normally done separately from the introspect script, but this '
+                                                                            'option is given to more accurately test collection content.'))
+
+    introspect_parser.add_argument('-v', '--verbosity', dest='verbosity', action='count', default=0,
+                                   help=('Increase the output verbosity, for up to three levels of verbosity '
+                                         '(invoked via "--verbosity" or "-v" followed by an integer ranging '
+                                         'in value from 0 to 3)'))
+
+    introspect_parser.add_argument('--raw', action='store_true', default=False, dest='raw',
+                                   help=('Sanitize and de-duplicate requirements. '))
+
+    introspect_parser.add_argument('--type', choices=['python', 'system'], dest='type', nargs=1, default=None,
+                                   help=('R'))
+
 
     args = parser.parse_args(args)
+
+    if args.action == 'introspect':
+        if args.type and not args.raw:
+            introspect_parser.error("The --type option can only be used with --raw.")
+
+        if args.raw and not args.type:
+            introspect_parser.error("The --type option is requires when using --raw.")
 
     return args
 

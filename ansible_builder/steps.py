@@ -59,7 +59,7 @@ class GalaxyCopySteps(Steps):
         self.steps = []
         self.steps.extend([
             "",
-            "COPY --from=galaxy {0} {0}".format(
+            "COPY --from=builder {0} {0}".format(
                 os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
             ),
             "",
