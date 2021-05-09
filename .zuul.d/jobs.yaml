@@ -9,6 +9,7 @@
 - job:
     name: ansible-builder-tox-integration
     parent: ansible-tox-py38
+    timeout: 4500
     requires:
       - ansible-runner-container-image
       - python-builder-container-image
