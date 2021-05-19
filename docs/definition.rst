@@ -9,7 +9,7 @@ An example execution environment definition schema is as follows:
     version: 1
 
     build_arg_defaults:
-      ANSIBLE_RUNNER_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10-devel'
+      EE_BASE_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10-devel'
 
     ansible_config: 'ansible.cfg'
 
@@ -39,10 +39,10 @@ Build args used by ``ansible-builder`` are the following:
 The ``ANSIBLE_GALAXY_CLI_COLLECTION_OPTS`` build arg allows the user to pass
 the '--pre' flag to enable the installation of pre-releases collections.
 
-The ``ANSIBLE_RUNNER_IMAGE`` build arg specifies the parent image
+The ``EE_BASE_IMAGE`` build arg specifies the parent image
 for the execution environment.
 
-The ``PYTHON_BUILDER_IMAGE`` build arg specifies the image used for
+The ``EE_BUILDER_IMAGE`` build arg specifies the image used for
 compiling type tasks.
 
 Values given inside of ``default_build_args`` will be hard-coded into the

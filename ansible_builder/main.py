@@ -268,14 +268,14 @@ class Containerfile:
         self.tag = tag
         # Build args all need to go at top of file to avoid errors
         self.steps = [
-            "ARG ANSIBLE_RUNNER_IMAGE={}".format(
-                self.definition.build_arg_defaults['ANSIBLE_RUNNER_IMAGE']
+            "ARG EE_BASE_IMAGE={}".format(
+                self.definition.build_arg_defaults['EE_BASE_IMAGE']
             ),
-            "ARG PYTHON_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
+            "ARG EE_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
             ),
             "",
-            "FROM $ANSIBLE_RUNNER_IMAGE as builder",
+            "FROM $EE_BASE_IMAGE as builder",
             "USER root",
             ""
         ]
@@ -364,7 +364,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $ANSIBLE_RUNNER_IMAGE",
+            "FROM $EE_BASE_IMAGE",
             "USER root"
             "",
         ])

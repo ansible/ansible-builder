@@ -87,7 +87,7 @@ directory. To specify another location:
 
 To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
 
-By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``ANSIBLE_RUNNER_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
+By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
 
 .. code::
 
@@ -97,7 +97,7 @@ To use a custom base image:
 
 .. code::
 
-   $ ansible-builder build --build-arg ANSIBLE_RUNNER_IMAGE=registry.example.com/another-ee
+   $ ansible-builder build --build-arg EE_BASE_IMAGE=registry.example.com/another-ee
 
 
 ``--container-runtime``

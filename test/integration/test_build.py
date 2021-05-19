@@ -157,10 +157,10 @@ def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
     ee_def = os.path.join(data_dir, 'build_args', 'base-image.yml')
     os.environ['FOO'] = 'secretsecret'
 
-    # Build with custom image tag, then use that as input to --build-arg ANSIBLE_RUNNER_IMAGE
+    # Build with custom image tag, then use that as input to --build-arg EE_BASE_IMAGE
     cli(f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag}-custom --container-runtime {container_runtime} -v3')
     cli(f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag}-custom '
-        f'--container-runtime {container_runtime} --build-arg ANSIBLE_RUNNER_IMAGE={ee_tag}-custom -v3')
+        f'--container-runtime {container_runtime} --build-arg EE_BASE_IMAGE={ee_tag}-custom -v3')
     result = cli(f"{container_runtime} run {ee_tag}-custom cat /base_image")
     assert f"{ee_tag}-custom" in result.stdout
 
