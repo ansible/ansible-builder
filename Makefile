@@ -10,7 +10,7 @@ CONTAINER_ENGINE ?= docker
 NAME = ansible-builder
 IMAGE_NAME ?= quay.io/ansible/ansible-builder
 PIP_NAME = ansible_builder
-LONG_VERSION := $(shell poetry version)
+LONG_VERSION := latest
 VERSION := $(filter-out $(NAME), $(LONG_VERSION))
 ifeq ($(OFFICIAL),yes)
     RELEASE ?= 1
@@ -55,9 +55,11 @@ dist/$(NAME)-$(VERSION).tar.gz:
 	tox -e version
 	$(DIST_PYTHON) setup.py sdist
 
-image: sdist
+# TODO: implications need to be understood of sdist
+image:
+	python setup.py sdist
 	$(CONTAINER_ENGINE) build --rm=true -t $(IMAGE_NAME) -f Containerfile .
-	$(CONTAINER_ENGINE) tag $(IMAGE_NAME) $(IMAGE_NAME):$(GIT_BRANCH)
+	$(CONTAINER_ENGINE) tag $(IMAGE_NAME) $(IMAGE_NAME):$(VERSION)
 
 dev:
 	poetry install
