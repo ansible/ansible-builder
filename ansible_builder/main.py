@@ -84,28 +84,16 @@ class AnsibleBuilder:
 
         return command
 
-    def run_in_container(self, command, **kwargs):
-        wrapped_command = [self.container_runtime, 'run', '--rm']
-
-        # ansible builder root on the controller machine
-        ab_lib_path = os.path.dirname(ansible_builder.introspect.__file__)
-
-        wrapped_command.extend(['-v', f"{ab_lib_path}:/ansible_builder_mount:Z"])
-
-        wrapped_command.extend([self.tag] + command)
-
-        return run_command(wrapped_command, **kwargs)
-
     def build(self):
-        # Phase 1 of Containerfile
+        # File preparation
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
+
+        # First stage, builder
         self.containerfile.prepare_galaxy_install_steps()
         self.containerfile.prepare_assemble_steps()
 
-
-
-
+        # Second stage
         self.containerfile.prepare_final_stage_steps()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_copy_steps()
