@@ -14,7 +14,7 @@ FROM $ANSIBLE_RUNNER_IMAGE
 # =============================================================================
 
 COPY --from=builder /output/ /output
-RUN /output/install-from-bindep rm -rf /output
+RUN /output/install-from-bindep && rm -rf /output
 
 # move the assemble scripts themselves into this container
 COPY --from=builder /usr/local/bin/assemble /usr/local/bin/assemble
