@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-
 import os
-import sys
 import yaml
-import argparse
 
 
 base_collections_path = '/usr/share/ansible/collections'
@@ -188,28 +184,3 @@ def simple_combine(reqs):
                 fancy_lines.append(fancy_line)
 
     return fancy_lines
-
-
-def add_introspect_options(parser):
-    parser.add_argument(
-        'folder', default=base_collections_path, nargs='?',
-        help=(
-            'Ansible collections path(s) to introspect. '
-            'This should have a folder named ansible_collections inside of it.'
-        )
-    )
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        prog='ansible-builder-introspector',
-        description=(
-            'This is for programmatic use. '
-            'Use ansible-builder introspect instead.'
-        )
-    )
-    add_introspect_options(parser)
-    args = parser.parse_args()
-    data = process(args.folder)
-    print(yaml.dump(data, default_flow_style=False))
-    sys.exit(0)

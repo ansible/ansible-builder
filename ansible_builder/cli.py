@@ -9,9 +9,9 @@ from . import __version__, constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
-from .introspect import add_introspect_options, process, simple_combine
+from .introspect import process, simple_combine, base_collections_path
 from .requirements import sanitize_requirements
-from .utils import configure_logger
+from .utils import configure_logger, write_file
 
 
 logger = logging.getLogger(__name__)
@@ -37,21 +37,21 @@ def run():
             sys.exit(1)
     elif args.action == 'introspect':
         data = process(args.folder)
-        if args.sanitize or args.raw:
+        if args.sanitize:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
             logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
             print('# Dependency data for {0}'.format(args.folder))
 
-        if args.raw:
-            if args.type[0] == 'python':
-                print('\n'.join(data['python']))
-            elif args.type[0] == 'system':
-                print('\n'.join(data['system']))
-        else:
-            print('---')
-            print(yaml.dump(data, default_flow_style=False))
+        print('---')
+        print(yaml.dump(data, default_flow_style=False))
+
+        if args.write_pip and data.get('python'):
+            write_file(args.write_pip, simple_combine(data.get('python')) + [''])
+        if args.write_bindep and data.get('system'):
+            write_file(args.write_bindep, simple_combine(data.get('system')) + [''])
+
         sys.exit(0)
 
     logger.error("An error has occured.")
@@ -141,31 +141,32 @@ def parse_args(args=sys.argv[1:]):
             'This is targeted toward collection authors and maintainers.'
         )
     )
-    add_introspect_options(introspect_parser)
     introspect_parser.add_argument('--sanitize', action='store_true', help=('Sanitize and de-duplicate requirements. '
                                                                             'This is normally done separately from the introspect script, but this '
                                                                             'option is given to more accurately test collection content.'))
+    introspect_parser.add_argument(
+        'folder', default=base_collections_path, nargs='?',
+        help=(
+            'Ansible collections path(s) to introspect. '
+            'This should have a folder named ansible_collections inside of it.'
+        )
+    )
+    introspect_parser.add_argument(
+        '--write-pip', dest='write_pip',
+        help='Write the combined bindep file to this location.'
+    )
+    introspect_parser.add_argument(
+        '--write-bindep', dest='write_bindep',
+        help='Write the combined bindep file to this location.'
+    )
 
     introspect_parser.add_argument('-v', '--verbosity', dest='verbosity', action='count', default=0,
                                    help=('Increase the output verbosity, for up to three levels of verbosity '
                                          '(invoked via "--verbosity" or "-v" followed by an integer ranging '
                                          'in value from 0 to 3)'))
 
-    introspect_parser.add_argument('--raw', action='store_true', default=False, dest='raw',
-                                   help=('Sanitize and de-duplicate requirements. '))
-
-    introspect_parser.add_argument('--type', choices=['python', 'system'], dest='type', nargs=1, default=None,
-                                   help=('R'))
-
 
     args = parser.parse_args(args)
-
-    if args.action == 'introspect':
-        if args.type and not args.raw:
-            introspect_parser.error("The --type option can only be used with --raw.")
-
-        if args.raw and not args.type:
-            introspect_parser.error("The --type option is requires when using --raw.")
 
     return args
 

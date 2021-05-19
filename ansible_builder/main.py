@@ -8,8 +8,7 @@ from .exceptions import DefinitionError
 from .steps import (
     AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
-from .utils import run_command, write_file, copy_file
-from .requirements import sanitize_requirements
+from .utils import run_command, copy_file
 import ansible_builder.introspect
 
 
