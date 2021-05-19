@@ -8,8 +8,7 @@ endif
 NAME = ansible-builder
 IMAGE_NAME ?= $(NAME)
 PIP_NAME = ansible_builder
-LONG_VERSION := $(shell poetry version)
-VERSION := $(filter-out $(NAME), $(LONG_VERSION))
+VERSION := $(shell python -c "import ast; print(ast.parse(open('ansible_builder/__init__.py', 'r').read()).body[0].value.value)")
 ifeq ($(OFFICIAL),yes)
     RELEASE ?= 1
 else
