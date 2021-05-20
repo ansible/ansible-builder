@@ -356,7 +356,7 @@ class Containerfile:
     def prepare_system_runtime_deps_steps(self):
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
-            "RUN install-from-bindep && rm -rf /output/wheels",
+            "RUN /output/install-from-bindep && rm -rf /output/wheels",
         ])
 
         return self.steps
