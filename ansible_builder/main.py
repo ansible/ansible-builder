@@ -329,7 +329,8 @@ class Containerfile:
         return False
 
     def prepare_build_context(self):
-        self.steps.extend(BuildContextSteps())
+        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
+            self.steps.extend(BuildContextSteps())
         return self.steps
 
     def prepare_galaxy_install_steps(self):
@@ -341,20 +342,25 @@ class Containerfile:
         return self.steps
 
     def prepare_introspect_assemble_steps(self):
-        introspect_cmd = "RUN ansible-builder introspect"
+        # The introspect/assemble block is valid if there are any form of requirements
+        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['python']))
-        if requirements_file_exists:
-            # WORKDIR is /build, so we use the (shorter) relative paths there
-            introspect_cmd += " --user-pip={0}".format(CONTEXT_FILES['python'])
-        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
-        if bindep_exists:
-            introspect_cmd += " --user-bindep={0}".format(CONTEXT_FILES['system'])
+            introspect_cmd = "RUN ansible-builder introspect"
 
-        introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+            requirements_file_exists = os.path.exists(os.path.join(
+                self.build_outputs_dir, CONTEXT_FILES['python']
+            ))
+            if requirements_file_exists:
+                # WORKDIR is /build, so we use the (shorter) relative paths there
+                introspect_cmd += " --user-pip={0}".format(CONTEXT_FILES['python'])
+            bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
+            if bindep_exists:
+                introspect_cmd += " --user-bindep={0}".format(CONTEXT_FILES['system'])
 
-        self.steps.append(introspect_cmd)
-        self.steps.append("RUN assemble")
+            introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+
+            self.steps.append(introspect_cmd)
+            self.steps.append("RUN assemble")
 
         return self.steps
 
