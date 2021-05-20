@@ -153,11 +153,11 @@ def parse_args(args=sys.argv[1:]):
     )
     # TODO: If we can allow python-builder scripts to be fed multiple files
     # then we should prefer that over the --user-* options
-    parser.add_argument(
+    introspect_parser.add_argument(
         '--user-pip', dest='user_pip',
         help='An additional file to combine with collection pip requirements.'
     )
-    parser.add_argument(
+    introspect_parser.add_argument(
         '--user-bindep', dest='user_bindep',
         help='An additional file to combine with collection bindep requirements.'
     )
