@@ -9,7 +9,6 @@ from .steps import (
     AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
 from .utils import run_command, copy_file
-import ansible_builder.introspect
 
 
 logger = logging.getLogger(__name__)
@@ -91,7 +90,7 @@ class AnsibleBuilder:
 
         # First stage, builder
         self.containerfile.prepare_galaxy_install_steps()
-        self.containerfile.prepare_assemble_steps()
+        self.containerfile.prepare_introspect_assemble_steps()
 
         # Second stage
         self.containerfile.prepare_final_stage_steps()
@@ -275,7 +274,7 @@ class Containerfile:
                 self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
             ),
             "",
-            "FROM $EE_BASE_IMAGE as builder",
+            "FROM $EE_BUILDER_IMAGE as builder",
             "USER root",
             ""
         ]
@@ -336,19 +335,20 @@ class Containerfile:
             self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
-    def prepare_assemble_steps(self):
+    def prepare_introspect_assemble_steps(self):
+        introspect_cmd = "RUN ansible-builder introspect"
+
         requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['python']))
         if requirements_file_exists:
-            relative_requirements_path = os.path.join(
-                constants.user_content_subfolder, CONTEXT_FILES['python'])
-            self.steps.append(f"ADD {relative_requirements_path} /tmp/src/requirements.txt")
-
+            # WORKDIR is /build, so we use the (shorter) relative paths there
+            introspect_cmd += " --user-pip={0}".format(CONTEXT_FILES['python'])
         bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
         if bindep_exists:
-            relative_bindep_path = os.path.join(
-                constants.user_content_subfolder, CONTEXT_FILES['system'])
-            self.steps.append(f"ADD {relative_bindep_path} /tmp/src/bindep.txt")
+            introspect_cmd += " --user-bindep={0}".format(CONTEXT_FILES['system'])
 
+        introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+
+        self.steps.append(introspect_cmd)
         self.steps.append("RUN assemble")
 
         return self.steps

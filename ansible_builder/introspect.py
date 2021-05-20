@@ -63,7 +63,7 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=base_collections_path):
+def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
 
@@ -94,6 +94,16 @@ def process(data_dir=base_collections_path):
 
         if col_sys_lines:
             sys_req[key] = col_sys_lines
+
+    # add on entries from user files, if they are given
+    if user_pip:
+        col_pip_lines = pip_file_data(user_pip)
+        if col_pip_lines:
+            py_req['user'] = col_pip_lines
+    if user_bindep:
+        col_sys_lines = bindep_file_data(user_bindep)
+        if col_sys_lines:
+            sys_req['user'] = col_sys_lines
 
     return {
         'python': py_req,

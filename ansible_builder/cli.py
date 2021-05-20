@@ -36,7 +36,7 @@ def run():
             logger.error(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
-        data = process(args.folder)
+        data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
         if args.sanitize:
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
@@ -150,6 +150,16 @@ def parse_args(args=sys.argv[1:]):
             'Ansible collections path(s) to introspect. '
             'This should have a folder named ansible_collections inside of it.'
         )
+    )
+    # TODO: If we can allow python-builder scripts to be fed multiple files
+    # then we should prefer that over the --user-* options
+    parser.add_argument(
+        '--user-pip', dest='user_pip',
+        help='An additional file to combine with collection pip requirements.'
+    )
+    parser.add_argument(
+        '--user-bindep', dest='user_bindep',
+        help='An additional file to combine with collection bindep requirements.'
     )
     introspect_parser.add_argument(
         '--write-pip', dest='write_pip',
