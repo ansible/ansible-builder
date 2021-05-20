@@ -10,9 +10,16 @@ def line_is_empty(line):
     return bool((not line.strip()) or line.startswith('#'))
 
 
-def pip_file_data(path):
+def read_req_file(path):
+    """Provide some minimal error and display handling for file reading"""
+    if not os.path.exists(path):
+        print('Expected requirements file not present at: {0}'.format(os.path.abspath(path)))
     with open(path, 'r') as f:
-        pip_content = f.read()
+        return f.read()
+
+
+def pip_file_data(path):
+    pip_content = read_req_file(path)
 
     pip_lines = []
     for line in pip_content.split('\n'):
@@ -29,8 +36,7 @@ def pip_file_data(path):
 
 
 def bindep_file_data(path):
-    with open(path, 'r') as f:
-        sys_content = f.read()
+    sys_content = read_req_file(path)
 
     sys_lines = []
     for line in sys_content.split('\n'):

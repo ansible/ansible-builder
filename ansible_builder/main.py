@@ -6,7 +6,7 @@ import yaml
 from . import constants
 from .exceptions import DefinitionError
 from .steps import (
-    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
+    AdditionalBuildSteps, BuildContextSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
 from .utils import run_command, copy_file
 
@@ -89,6 +89,7 @@ class AnsibleBuilder:
         self.containerfile.prepare_ansible_config_file()
 
         # First stage, builder
+        self.containerfile.prepare_build_context()
         self.containerfile.prepare_galaxy_install_steps()
         self.containerfile.prepare_introspect_assemble_steps()
 
@@ -326,6 +327,10 @@ class Containerfile:
                 return self.steps.extend(AdditionalBuildSteps(appended_steps))
 
         return False
+
+    def prepare_build_context(self):
+        self.steps.extend(BuildContextSteps())
+        return self.steps
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
