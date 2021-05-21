@@ -190,6 +190,5 @@ class TestPytz:
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v 3'
         )
         assert 'Collecting pytz' not in r.stdout, r.stdout
-        assert 'requirements_combined.txt is already up-to-date' in r.stdout, r.stdout
         stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
         assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace, r.stdout
