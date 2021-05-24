@@ -88,9 +88,14 @@ class AnsibleBuilder:
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
 
-        # First stage, builder
+        # First stage, galaxy
+        self.containerfile.prepare_galaxy_stage_steps()
         self.containerfile.prepare_build_context()
         self.containerfile.prepare_galaxy_install_steps()
+
+        # Second stage, builder
+        self.containerfile.prepare_build_stage_steps()
+        self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.prepare_introspect_assemble_steps()
 
         # Second stage
@@ -274,10 +279,6 @@ class Containerfile:
             "ARG EE_BUILDER_IMAGE={}".format(
                 self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
             ),
-            "",
-            "FROM $EE_BUILDER_IMAGE as builder",
-            "USER root",
-            ""
         ]
 
     def create_folder_copy_files(self):
@@ -351,10 +352,14 @@ class Containerfile:
                 self.build_outputs_dir, CONTEXT_FILES['python']
             ))
             if requirements_file_exists:
+                relative_requirements_path = os.path.join(constants.user_content_subfolder, CONTEXT_FILES['python'])
+                self.steps.append(f"ADD {relative_requirements_path} {CONTEXT_FILES['python']}")
                 # WORKDIR is /build, so we use the (shorter) relative paths there
                 introspect_cmd += " --user-pip={0}".format(CONTEXT_FILES['python'])
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
             if bindep_exists:
+                relative_bindep_path = os.path.join(constants.user_content_subfolder, CONTEXT_FILES['system'])
+                self.steps.append(f"ADD {relative_bindep_path} {CONTEXT_FILES['system']}")
                 introspect_cmd += " --user-bindep={0}".format(CONTEXT_FILES['system'])
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
@@ -368,6 +373,25 @@ class Containerfile:
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
             "RUN /output/install-from-bindep && rm -rf /output/wheels",
+        ])
+
+        return self.steps
+
+    def prepare_galaxy_stage_steps(self):
+        self.steps.extend([
+            "",
+            "FROM $EE_BASE_IMAGE as galaxy",
+            "USER root",
+            ""
+        ])
+
+        return self.steps
+
+    def prepare_build_stage_steps(self):
+        self.steps.extend([
+            "",
+            "FROM $EE_BUILDER_IMAGE as builder"
+            "",
         ])
 
         return self.steps

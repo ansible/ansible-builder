@@ -1,16 +1,16 @@
-ARG ANSIBLE_RUNNER_IMAGE=quay.io/ansible/ansible-runner:devel
+ARG PYTHON_BASE_IMAGE=quay.io/ansible/python-base:latest
 ARG PYTHON_BUILDER_IMAGE=quay.io/ansible/python-builder:latest
 
 FROM $PYTHON_BUILDER_IMAGE as python_builder
 # =============================================================================
 ARG ZUUL_SIBLINGS
 
-# install this library (meaning ansible-builder)
+# build this library (meaning ansible-builder)
 COPY . /tmp/src
 RUN assemble
 
 
-FROM $ANSIBLE_RUNNER_IMAGE
+FROM $PYTHON_BASE_IMAGE
 # =============================================================================
 
 COPY --from=python_builder /output/ /output

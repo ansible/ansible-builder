@@ -11,7 +11,7 @@
     parent: ansible-tox-py38
     timeout: 4500
     requires:
-      - ansible-runner-container-image
+      - python-base-container-image
       - python-builder-container-image
     nodeset: ubuntu-bionic-4vcpu
     vars:
@@ -27,7 +27,7 @@
     description: Build ansible-builder container image
     provides: ansible-builder-container-image
     requires:
-      - ansible-runner-container-image
+      - python-base-container-image
       - python-builder-container-image
     vars: &vars
       container_images: &container_images
