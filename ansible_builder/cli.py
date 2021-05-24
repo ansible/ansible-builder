@@ -151,8 +151,9 @@ def parse_args(args=sys.argv[1:]):
             'This should have a folder named ansible_collections inside of it.'
         )
     )
-    # TODO: If we can allow python-builder scripts to be fed multiple files
-    # then we should prefer that over the --user-* options
+    # Combine user requirements and collection requirements into single file
+    # in the future, could look into passing multilple files to
+    # python-builder scripts to be fed multiple files as opposed to this
     introspect_parser.add_argument(
         '--user-pip', dest='user_pip',
         help='An additional file to combine with collection pip requirements.'

@@ -10,8 +10,7 @@ CONTAINER_ENGINE ?= docker
 NAME = ansible-builder
 IMAGE_NAME ?= quay.io/ansible/ansible-builder
 PIP_NAME = ansible_builder
-LONG_VERSION := latest
-VERSION := $(filter-out $(NAME), $(LONG_VERSION))
+VERSION := $(shell git describe --tags)
 ifeq ($(OFFICIAL),yes)
     RELEASE ?= 1
 else
@@ -55,7 +54,7 @@ dist/$(NAME)-$(VERSION).tar.gz:
 	tox -e version
 	$(DIST_PYTHON) setup.py sdist
 
-# TODO: implications need to be understood of sdist
+# Used to make image for running tests
 image:
 	python setup.py sdist
 	$(CONTAINER_ENGINE) build --rm=true -t $(IMAGE_NAME) -f Containerfile .
