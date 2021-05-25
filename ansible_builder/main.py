@@ -336,9 +336,6 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.append(
-                "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
-                    self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']))
             self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
@@ -381,6 +378,9 @@ class Containerfile:
         self.steps.extend([
             "",
             "FROM $EE_BASE_IMAGE as galaxy",
+            "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
+            ),
             "USER root",
             ""
         ])
