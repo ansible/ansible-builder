@@ -16,6 +16,13 @@ FROM $PYTHON_BASE_IMAGE
 COPY --from=python_builder /output/ /output
 RUN /output/install-from-bindep && rm -rf /output
 
+RUN dnf update -y \
+  && dnf install -y python38-wheel git \
+  && dnf clean all \
+  && rm -rf /var/cache/{dnf,yum} \
+  && rm -rf /var/lib/dnf/history.* \
+  && rm -rf /var/log/*
+
 # move the assemble scripts themselves into this container
 COPY --from=python_builder /usr/local/bin/assemble /usr/local/bin/assemble
 COPY --from=python_builder /usr/local/bin/get-extras-packages /usr/local/bin/get-extras-packages
