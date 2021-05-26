@@ -116,6 +116,15 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     assert result.rc != 0
 
 
+def test_python_git_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
+    bc = str(tmpdir)
+    ee_def = os.path.join(data_dir, 'needs_git', 'execution-environment.yml')
+    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    cli(command)
+    result = cli(f'{container_runtime} run --rm {ee_tag} pip3 freeze')
+    assert 'flask' in result.stdout, result.stdout
+
+
 def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
     """
     Tests that prepended steps are in final stage
