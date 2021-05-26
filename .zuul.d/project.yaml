@@ -2,11 +2,11 @@
 - project:
     check:
       jobs:
-        - ansible-builder-tox-integration
+        # - ansible-builder-tox-integration
         - ansible-builder-build-container-image
     gate:
       jobs:
-        - ansible-builder-tox-integration
+        # - ansible-builder-tox-integration
         - ansible-builder-build-container-image
     post:
       jobs:
