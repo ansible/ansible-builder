@@ -50,9 +50,12 @@ def run(args, *a, allow_error=False, **kw):
     except subprocess.CalledProcessError as err:
         if not allow_error:
             # Previously used pytest.fail here, but that missed some error details
-            print(
-                f"Running {err.cmd} resulted in a non-zero return code: {err.returncode} - stdout: {err.stdout}, stderr: {err.stderr}"
-            )
+            print(f"Running following command resulted in a non-zero return code: {err.returncode}")
+            print(err.cmd)
+            print('stdout:')
+            print(err.stdout)
+            print('stderr:')
+            print(err.stderr)
             raise
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
         return err

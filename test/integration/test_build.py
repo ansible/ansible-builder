@@ -110,6 +110,10 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
         f'{container_runtime} run --rm {ee_tag} pip3 show awxkit'
     )
     assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
+    result = cli(
+        f'{container_runtime} run --rm {ee_tag} pip3 show voluptuous', allow_error=True
+    )
+    assert result.rc != 0
 
 
 def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):

@@ -343,7 +343,7 @@ class Containerfile:
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-            introspect_cmd = "RUN ansible-builder introspect"
+            introspect_cmd = "RUN ansible-builder introspect --sanitize"
 
             requirements_file_exists = os.path.exists(os.path.join(
                 self.build_outputs_dir, CONTEXT_FILES['python']
