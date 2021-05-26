@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 EXCLUDE_REQUIREMENTS = frozenset((
     # obviously already satisfied or unwanted
-    'ansible', 'ansible-base', 'python',
+    'ansible', 'ansible-base', 'python', 'ansible-core',
     # general python test requirements
     'tox', 'pycodestyle', 'yamllint', 'pylint',
     'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock',
