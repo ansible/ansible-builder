@@ -4,10 +4,16 @@
       jobs:
         # - ansible-builder-tox-integration
         - ansible-builder-build-container-image
+        - github-workflows:
+            files:
+              - .github/workflows/.*
     gate:
       jobs:
         # - ansible-builder-tox-integration
         - ansible-builder-build-container-image
+        - github-workflows:
+            files:
+              - .github/workflows/.*
     post:
       jobs:
         - ansible-builder-upload-container-image:
