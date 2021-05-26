@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-
 import os
-import sys
 import yaml
-import argparse
 
 
 base_collections_path = '/usr/share/ansible/collections'
@@ -14,9 +10,16 @@ def line_is_empty(line):
     return bool((not line.strip()) or line.startswith('#'))
 
 
-def pip_file_data(path):
+def read_req_file(path):
+    """Provide some minimal error and display handling for file reading"""
+    if not os.path.exists(path):
+        print('Expected requirements file not present at: {0}'.format(os.path.abspath(path)))
     with open(path, 'r') as f:
-        pip_content = f.read()
+        return f.read()
+
+
+def pip_file_data(path):
+    pip_content = read_req_file(path)
 
     pip_lines = []
     for line in pip_content.split('\n'):
@@ -33,8 +36,7 @@ def pip_file_data(path):
 
 
 def bindep_file_data(path):
-    with open(path, 'r') as f:
-        sys_content = f.read()
+    sys_content = read_req_file(path)
 
     sys_lines = []
     for line in sys_content.split('\n'):
@@ -67,7 +69,7 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=base_collections_path):
+def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
 
@@ -98,6 +100,16 @@ def process(data_dir=base_collections_path):
 
         if col_sys_lines:
             sys_req[key] = col_sys_lines
+
+    # add on entries from user files, if they are given
+    if user_pip:
+        col_pip_lines = pip_file_data(user_pip)
+        if col_pip_lines:
+            py_req['user'] = col_pip_lines
+    if user_bindep:
+        col_sys_lines = bindep_file_data(user_bindep)
+        if col_sys_lines:
+            sys_req['user'] = col_sys_lines
 
     return {
         'python': py_req,
@@ -188,28 +200,3 @@ def simple_combine(reqs):
                 fancy_lines.append(fancy_line)
 
     return fancy_lines
-
-
-def add_introspect_options(parser):
-    parser.add_argument(
-        'folder', default=base_collections_path, nargs='?',
-        help=(
-            'Ansible collections path(s) to introspect. '
-            'This should have a folder named ansible_collections inside of it.'
-        )
-    )
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        prog='ansible-builder-introspector',
-        description=(
-            'This is for programmatic use. '
-            'Use ansible-builder introspect instead.'
-        )
-    )
-    add_introspect_options(parser)
-    args = parser.parse_args()
-    data = process(args.folder)
-    print(yaml.dump(data, default_flow_style=False))
-    sys.exit(0)

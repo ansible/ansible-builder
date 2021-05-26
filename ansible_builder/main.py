@@ -6,22 +6,19 @@ import yaml
 from . import constants
 from .exceptions import DefinitionError
 from .steps import (
-    AdditionalBuildSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
+    AdditionalBuildSteps, BuildContextSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
-from .utils import run_command, write_file, copy_file
-from .requirements import sanitize_requirements
-import ansible_builder.introspect
+from .utils import run_command, copy_file
 
 
 logger = logging.getLogger(__name__)
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {
-    'galaxy': 'requirements.yml'
+    'galaxy': 'requirements.yml',
+    'python': 'requirements.txt',
+    'system': 'bindep.txt',
 }
-
-BINDEP_COMBINED = 'bindep_combined.txt'
-PIP_COMBINED = 'requirements_combined.txt'
 
 ALLOWED_KEYS = [
     'version',
@@ -86,56 +83,22 @@ class AnsibleBuilder:
 
         return command
 
-    def run_in_container(self, command, **kwargs):
-        wrapped_command = [self.container_runtime, 'run', '--rm']
-
-        # ansible builder root on the controller machine
-        ab_lib_path = os.path.dirname(ansible_builder.introspect.__file__)
-
-        wrapped_command.extend(['-v', f"{ab_lib_path}:/ansible_builder_mount:Z"])
-
-        wrapped_command.extend([self.tag] + command)
-
-        return run_command(wrapped_command, **kwargs)
-
-    def run_intermission(self):
-        run_command(self.build_command, capture_output=True)
-
-        in_container_introspect_path = '/ansible_builder_mount/introspect.py'
-        rc, introspect_output = self.run_in_container(
-            ['python3', in_container_introspect_path], capture_output=True
-        )
-        collection_data = yaml.safe_load('\n'.join(introspect_output))
-
-        # Add data from user definition, go from dicts to list
-        collection_data['system']['user'] = self.definition.user_system
-        collection_data['python']['user'] = self.definition.user_python
-        system_lines = ansible_builder.introspect.simple_combine(collection_data['system'])
-        python_lines = sanitize_requirements(collection_data['python'])
-
-        if system_lines:
-            bindep_file = os.path.join(self.build_outputs_dir, BINDEP_COMBINED)
-            write_file(bindep_file, system_lines + [''])
-
-        if python_lines:
-            pip_file = os.path.join(self.build_outputs_dir, PIP_COMBINED)
-            write_file(pip_file, python_lines)
-
-        return (system_lines, python_lines)
-
     def build(self):
-        # Phase 1 of Containerfile
+        # File preparation
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
+
+        # First stage, galaxy
+        self.containerfile.prepare_galaxy_stage_steps()
+        self.containerfile.prepare_build_context()
         self.containerfile.prepare_galaxy_install_steps()
-        logger.debug('Writing partial Containerfile without collection requirements')
-        self.containerfile.write()
-        system_lines, python_lines = self.run_intermission()
 
-        # Phase 2 of Containerfile
+        # Second stage, builder
         self.containerfile.prepare_build_stage_steps()
-        self.containerfile.prepare_assemble_steps()
+        self.containerfile.prepare_galaxy_copy_steps()
+        self.containerfile.prepare_introspect_assemble_steps()
 
+        # Second stage
         self.containerfile.prepare_final_stage_steps()
         self.containerfile.prepare_prepended_steps()
         self.containerfile.prepare_galaxy_copy_steps()
@@ -195,9 +158,6 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
-        self.user_python = self.read_dependency('python')
-        self.user_system = self.read_dependency('system')
-
         # Populate build arg defaults, which are customizable in definition
         self.build_arg_defaults = {}
         user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
@@ -226,16 +186,6 @@ class UserDefinition(BaseDefinition):
             return req_file
 
         return os.path.join(self.reference_path, req_file)
-
-    def read_dependency(self, entry):
-        requirement_path = self.get_dep_abs_path(entry)
-        if not requirement_path:
-            return []
-        try:
-            with open(requirement_path, 'r') as f:
-                return f.read().split('\n')
-        except FileNotFoundError:
-            raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
 
     def validate(self):
         # Check that all specified keys in the definition file are valid.
@@ -323,16 +273,12 @@ class Containerfile:
         self.tag = tag
         # Build args all need to go at top of file to avoid errors
         self.steps = [
-            "ARG ANSIBLE_RUNNER_IMAGE={}".format(
-                self.definition.build_arg_defaults['ANSIBLE_RUNNER_IMAGE']
+            "ARG EE_BASE_IMAGE={}".format(
+                self.definition.build_arg_defaults['EE_BASE_IMAGE']
             ),
-            "ARG PYTHON_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['PYTHON_BUILDER_IMAGE']
+            "ARG EE_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
             ),
-            "",
-            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
-            "USER root",
-            ""
         ]
 
     def create_folder_copy_files(self):
@@ -383,56 +329,77 @@ class Containerfile:
 
         return False
 
+    def prepare_build_context(self):
+        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
+            self.steps.extend(BuildContextSteps())
+        return self.steps
+
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.append(
-                "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
-                    self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']))
             self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
         return self.steps
 
-    def prepare_assemble_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
-        if requirements_file_exists:
-            relative_requirements_path = os.path.join(
-                constants.user_content_subfolder, PIP_COMBINED)
-            self.steps.append(f"ADD {relative_requirements_path} /tmp/src/requirements.txt")
+    def prepare_introspect_assemble_steps(self):
+        # The introspect/assemble block is valid if there are any form of requirements
+        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
-        if bindep_exists:
-            relative_bindep_path = os.path.join(
-                constants.user_content_subfolder, BINDEP_COMBINED)
-            self.steps.append(f"ADD {relative_bindep_path} /tmp/src/bindep.txt")
+            introspect_cmd = "RUN ansible-builder introspect --sanitize"
 
-        if requirements_file_exists or bindep_exists:
+            requirements_file_exists = os.path.exists(os.path.join(
+                self.build_outputs_dir, CONTEXT_FILES['python']
+            ))
+            if requirements_file_exists:
+                relative_requirements_path = os.path.join(constants.user_content_subfolder, CONTEXT_FILES['python'])
+                self.steps.append(f"ADD {relative_requirements_path} {CONTEXT_FILES['python']}")
+                # WORKDIR is /build, so we use the (shorter) relative paths there
+                introspect_cmd += " --user-pip={0}".format(CONTEXT_FILES['python'])
+            bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, CONTEXT_FILES['system']))
+            if bindep_exists:
+                relative_bindep_path = os.path.join(constants.user_content_subfolder, CONTEXT_FILES['system'])
+                self.steps.append(f"ADD {relative_bindep_path} {CONTEXT_FILES['system']}")
+                introspect_cmd += " --user-bindep={0}".format(CONTEXT_FILES['system'])
+
+            introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+
+            self.steps.append(introspect_cmd)
             self.steps.append("RUN assemble")
 
         return self.steps
 
     def prepare_system_runtime_deps_steps(self):
-        requirements_file_exists = os.path.exists(os.path.join(self.build_outputs_dir, PIP_COMBINED))
-        bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, BINDEP_COMBINED))
+        self.steps.extend([
+            "COPY --from=builder /output/ /output/",
+            "RUN /output/install-from-bindep && rm -rf /output/wheels",
+        ])
 
-        if requirements_file_exists or bindep_exists:
-            self.steps.extend([
-                "COPY --from=builder /output/ /output/",
-                "RUN /output/install-from-bindep && rm -rf /output/wheels",
-            ])
+        return self.steps
+
+    def prepare_galaxy_stage_steps(self):
+        self.steps.extend([
+            "",
+            "FROM $EE_BASE_IMAGE as galaxy",
+            "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
+            ),
+            "USER root",
+            ""
+        ])
 
         return self.steps
 
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $PYTHON_BUILDER_IMAGE as builder"
+            "FROM $EE_BUILDER_IMAGE as builder"
             "",
         ])
+
         return self.steps
 
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $ANSIBLE_RUNNER_IMAGE",
+            "FROM $EE_BASE_IMAGE",
             "USER root"
             "",
         ])

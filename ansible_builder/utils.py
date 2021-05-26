@@ -122,6 +122,10 @@ def run_command(command, capture_output=False, allow_error=False):
 
 
 def write_file(filename: str, lines: list) -> bool:
+    parent_dir = os.path.dirname(filename)
+    if parent_dir and not os.path.exists(parent_dir):
+        logger.warning('Creating parent directory for {0}'.format(filename))
+        os.makedirs(parent_dir)
     new_text = '\n'.join(lines)
     if os.path.exists(filename):
         with open(filename, 'r') as f:

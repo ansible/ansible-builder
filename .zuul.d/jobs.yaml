@@ -11,7 +11,7 @@
     parent: ansible-tox-py38
     timeout: 4500
     requires:
-      - ansible-runner-container-image
+      - python-base-container-image
       - python-builder-container-image
     nodeset: ubuntu-bionic-4vcpu
     vars:
@@ -19,3 +19,33 @@
       tox_install_siblings: false
       tox_environment:
         KEEP_IMAGES: true
+
+# Jobs for the ansible-builder image
+- job:
+    name: ansible-builder-build-container-image
+    parent: ansible-build-container-image
+    description: Build ansible-builder container image
+    provides: ansible-builder-container-image
+    requires:
+      - python-base-container-image
+      - python-builder-container-image
+    vars: &vars
+      container_images: &container_images
+        - context: .
+          container_filename: Containerfile
+          registry: quay.io
+          repository: quay.io/ansible/ansible-builder
+          tags:
+            # If zuul.tag is defined: [ '3', '3.19', '3.19.0' ].  Only works for 3-component tags.
+            # Otherwise: ['latest']
+            "{{ zuul.tag is defined | ternary([zuul.get('tag', '').split('.')[0], '.'.join(zuul.get('tag', '').split('.')[:2]), zuul.get('tag', '')], ['latest']) }}"
+      docker_images: *container_images
+
+- job:
+    name: ansible-builder-upload-container-image
+    parent: ansible-upload-container-image
+    description: Build ansible-builder container image and upload to quay.io
+    timeout: 2700
+    provides: ansible-builder-container-image
+    requires: python-base-container-image
+    vars: *vars

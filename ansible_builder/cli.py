@@ -9,9 +9,9 @@ from . import __version__, constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
-from .introspect import add_introspect_options, process, simple_combine
+from .introspect import process, simple_combine, base_collections_path
 from .requirements import sanitize_requirements
-from .utils import configure_logger
+from .utils import configure_logger, write_file
 
 
 logger = logging.getLogger(__name__)
@@ -36,15 +36,26 @@ def run():
             logger.error(e.args[0])
             sys.exit(1)
     elif args.action == 'introspect':
-        data = process(args.folder)
+        data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
         if args.sanitize:
+            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
+            data_for_write = data
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
-            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
-            print('# Dependency data for {0}'.format(args.folder))
+            logger.info('# Dependency data for {0}'.format(args.folder))
+            data_for_write = data.copy()
+            data_for_write['python'] = simple_combine(data['python'])
+            data_for_write['system'] = simple_combine(data['system'])
+
         print('---')
         print(yaml.dump(data, default_flow_style=False))
+
+        if args.write_pip and data.get('python'):
+            write_file(args.write_pip, data_for_write.get('python') + [''])
+        if args.write_bindep and data.get('system'):
+            write_file(args.write_bindep, data_for_write.get('system') + [''])
+
         sys.exit(0)
 
     logger.error("An error has occured.")
@@ -134,18 +145,41 @@ def parse_args(args=sys.argv[1:]):
             'This is targeted toward collection authors and maintainers.'
         )
     )
-    add_introspect_options(introspect_parser)
+    introspect_parser.add_argument('--sanitize', action='store_true', help=('Sanitize and de-duplicate requirements. '
+                                                                            'This is normally done separately from the introspect script, but this '
+                                                                            'option is given to more accurately test collection content.'))
     introspect_parser.add_argument(
-        '--sanitize', help=(
-            'Sanitize and de-duplicate requirements. '
-            'This is normally done separately from the introspect script, but this '
-            'option is given to more accurately test collection content.'
-        ), action='store_true')
+        'folder', default=base_collections_path, nargs='?',
+        help=(
+            'Ansible collections path(s) to introspect. '
+            'This should have a folder named ansible_collections inside of it.'
+        )
+    )
+    # Combine user requirements and collection requirements into single file
+    # in the future, could look into passing multilple files to
+    # python-builder scripts to be fed multiple files as opposed to this
     introspect_parser.add_argument(
-        '-v', '--verbosity', dest='verbosity', action='count', default=0, help=(
-            'Increase the output verbosity, for up to three levels of verbosity '
-            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-            'in value from 0 to 3)'))
+        '--user-pip', dest='user_pip',
+        help='An additional file to combine with collection pip requirements.'
+    )
+    introspect_parser.add_argument(
+        '--user-bindep', dest='user_bindep',
+        help='An additional file to combine with collection bindep requirements.'
+    )
+    introspect_parser.add_argument(
+        '--write-pip', dest='write_pip',
+        help='Write the combined bindep file to this location.'
+    )
+    introspect_parser.add_argument(
+        '--write-bindep', dest='write_bindep',
+        help='Write the combined bindep file to this location.'
+    )
+
+    introspect_parser.add_argument('-v', '--verbosity', dest='verbosity', action='count', default=0,
+                                   help=('Increase the output verbosity, for up to three levels of verbosity '
+                                         '(invoked via "--verbosity" or "-v" followed by an integer ranging '
+                                         'in value from 0 to 3)'))
+
 
     args = parser.parse_args(args)
 

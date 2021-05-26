@@ -5,11 +5,12 @@ else
     DIST_PYTHON ?= $(PYTHON)
 endif
 
+CONTAINER_ENGINE ?= docker
+
 NAME = ansible-builder
-IMAGE_NAME ?= $(NAME)
+IMAGE_NAME ?= quay.io/ansible/ansible-builder
 PIP_NAME = ansible_builder
-LONG_VERSION := $(shell poetry version)
-VERSION := $(filter-out $(NAME), $(LONG_VERSION))
+VERSION := $(shell git describe --tags)
 ifeq ($(OFFICIAL),yes)
     RELEASE ?= 1
 else
@@ -52,6 +53,12 @@ sdist: dist/$(NAME)-$(VERSION).tar.gz
 dist/$(NAME)-$(VERSION).tar.gz:
 	tox -e version
 	$(DIST_PYTHON) setup.py sdist
+
+# Used to make image for running tests
+image:
+	python setup.py sdist
+	$(CONTAINER_ENGINE) build --rm=true -t $(IMAGE_NAME) -f Containerfile .
+	$(CONTAINER_ENGINE) tag $(IMAGE_NAME) $(IMAGE_NAME):$(VERSION)
 
 dev:
 	poetry install

@@ -33,23 +33,25 @@ class AdditionalBuildSteps(Steps):
         return iter(self.steps)
 
 
+class BuildContextSteps(Steps):
+    def __init__(self):
+        self.steps = [
+            "ADD {0} /build".format(constants.user_content_subfolder),
+            "WORKDIR /build",
+            "",
+        ]
+
+
 class GalaxyInstallSteps(Steps):
     def __init__(self, requirements_naming):
         """Assumes given requirements file name has been placed in the build context
         """
-        self.steps = []
-        self.steps.append(
-            "ADD {0} /build".format(
-                constants.user_content_subfolder)
-        )
-        self.steps.extend([
-            "",
-            "WORKDIR /build",
+        self.steps = [
             "RUN ansible-galaxy role install -r {0} --roles-path {1}".format(
                 requirements_naming, constants.base_roles_path),
             "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {0} --collections-path {1}".format(
                 requirements_naming, constants.base_collections_path),
-        ])
+        ]
 
 
 class GalaxyCopySteps(Steps):
