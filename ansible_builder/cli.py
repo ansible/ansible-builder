@@ -3,8 +3,9 @@ import logging
 import sys
 import yaml
 import os
+import pkg_resources
 
-from . import __version__, constants
+from . import constants
 
 from .colors import MessageColors
 from .exceptions import DefinitionError
@@ -62,6 +63,10 @@ def run():
     sys.exit(1)
 
 
+def get_version():
+    return pkg_resources.get_distribution('ansible_builder').version
+
+
 def parse_args(args=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         prog='ansible-builder',
@@ -71,7 +76,7 @@ def parse_args(args=sys.argv[1:]):
         )
     )
     parser.add_argument(
-        '--version', action='version', version=__version__,
+        '--version', action='version', version=get_version(),
         help='Print ansible-builder version and exit.'
     )
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
