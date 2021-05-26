@@ -38,19 +38,23 @@ def run():
     elif args.action == 'introspect':
         data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
         if args.sanitize:
+            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
+            data_for_write = data
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
-            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
         else:
-            print('# Dependency data for {0}'.format(args.folder))
+            logger.info('# Dependency data for {0}'.format(args.folder))
+            data_for_write = data.copy()
+            data_for_write['python'] = simple_combine(data['python'])
+            data_for_write['system'] = simple_combine(data['system'])
 
         print('---')
         print(yaml.dump(data, default_flow_style=False))
 
         if args.write_pip and data.get('python'):
-            write_file(args.write_pip, simple_combine(data.get('python')) + [''])
+            write_file(args.write_pip, data_for_write.get('python') + [''])
         if args.write_bindep and data.get('system'):
-            write_file(args.write_bindep, simple_combine(data.get('system')) + [''])
+            write_file(args.write_bindep, data_for_write.get('system') + [''])
 
         sys.exit(0)
 

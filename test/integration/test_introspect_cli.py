@@ -42,3 +42,15 @@ def test_introspect_write_python(cli, data_dir, tmpdir):
             'pyvcloud>=18.0.10  # from collection test.reqfile',
             ''
         ])
+
+
+def test_introspect_write_python_and_sanitize(cli, data_dir, tmpdir):
+    dest_file = os.path.join(str(tmpdir), 'req.txt')
+    cli(f'ansible-builder introspect {data_dir} --write-pip={dest_file} --sanitize')
+    with open(dest_file, 'r') as f:
+        assert f.read() == '\n'.join([
+            'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
+            'pytz  # from collection test.reqfile',
+            'tacacs_plus  # from collection test.reqfile',
+            ''
+        ])
