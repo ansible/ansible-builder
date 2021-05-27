@@ -9,7 +9,7 @@ EXCLUDE_REQUIREMENTS = frozenset((
     'ansible', 'ansible-base', 'python', 'ansible-core',
     # general python test requirements
     'tox', 'pycodestyle', 'yamllint', 'pylint',
-    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock',
+    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock', 'testinfra',
     # test requirements highly specific to Ansible testing
     'ansible-lint', 'molecule', 'galaxy-importer', 'voluptuous',
     # already present in image for py3 environments
