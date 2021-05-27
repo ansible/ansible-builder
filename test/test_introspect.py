@@ -1,13 +1,13 @@
 import os
 
 from ansible_builder.introspect import process, process_collection, simple_combine
-from ansible_builder.requirements import sanitize_requirements
+from ansible_builder.requirements import sanitize_python_requirements
 
 
 def test_multiple_collection_metadata(data_dir):
 
     files = process(data_dir)
-    files['python'] = sanitize_requirements(files['python'])
+    files['python'] = sanitize_python_requirements(files['python'])
     files['system'] = simple_combine(files['system'])
 
     assert files == {'python': [

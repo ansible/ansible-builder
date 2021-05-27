@@ -1,5 +1,10 @@
 import logging
+
+# python requirements-parser
 import requirements
+
+# bindep is available as CLI, but this interface gives us extra information
+from bindep.depends import Depends
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +22,7 @@ EXCLUDE_REQUIREMENTS = frozenset((
 ))
 
 
-def sanitize_requirements(collection_py_reqs):
+def sanitize_python_requirements(collection_py_reqs):
     # de-duplication
     consolidated = []
     seen_pkgs = set()
@@ -38,7 +43,10 @@ def sanitize_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            logger.warning('Warning: failed to parse requirments from {}, error: {}'.format(collection, e))
+            raise RuntimeError(
+                'Failed to parse system requirement from {}, lines: \n{}\nerror: \n{}'.format(
+                    collection, lines, str(e)
+                ))
 
     # removal of unwanted packages
     sanitized = []
@@ -56,5 +64,80 @@ def sanitize_requirements(collection_py_reqs):
             raise RuntimeError('Could not process {0}'.format(req.line))
 
         sanitized.append(new_line + '  # from collection {}'.format(','.join(req.collections)))
+
+    return sanitized
+
+
+EXCLUDE_SYSTEM_REQUIREMENTS = frozenset((
+    # obviously already satisfied or unwanted
+    'ansible', 'ansible-test',
+))
+
+
+def parse_bindep_lines(lines):
+    text = '\n'.join(lines)
+    if not text.endswith('\n'):
+        text += '\n'
+    depends = Depends(text)
+    return depends._rules
+
+
+def render_bindep_data(entry, collections):
+    lines = []
+    for entry in entry:
+        name = entry[0]
+
+        condition_strings = []
+        for condition in entry[1]:
+            negate_str = '' if condition[0] else '!'
+            condition_strings.append(f'{negate_str}{condition[1]}')
+        conditions = ' '.join(condition_strings)
+
+        version_strings = []
+        for version_c in entry[2]:
+            version_strings.append(''.join(version_c))
+        versions = ','.join(version_strings)
+
+        lines.append(f'{name} [{conditions}] {versions}'.strip())
+    return '\n'.join(lines)
+
+
+def sanitize_system_requirements(collection_sys_reqs):
+    # de-duplication
+    consolidated = []
+    seen_entries = set()
+    for collection, lines in collection_sys_reqs.items():
+        try:
+            for entry in parse_bindep_lines(lines):
+                if not entry:
+                    continue
+
+                if entry in seen_entries:
+                    for prior_entry in consolidated:
+                        if entry == prior_entry:
+                            prior_entry[3].append(collection)
+                            break
+                    continue
+
+                entry_w_collection = entry + ([collection],)
+
+                consolidated.append(entry_w_collection)
+                seen_entries.add(entry)
+        except Exception as e:
+            raise RuntimeError(
+                'Failed to parse system requirement from {}, lines: \n{}\nerror: \n{}'.format(
+                    collection, lines, str(e)
+                ))
+
+    # removal of unwanted packages
+    sanitized = []
+    for entry in consolidated:
+        name = entry[0]
+        if name and name.lower() in EXCLUDE_SYSTEM_REQUIREMENTS:
+            continue
+
+        new_line = render_bindep_data(entry)
+
+        sanitized.append(new_line + '  # from collection {}'.format(','.join(entry[3])))
 
     return sanitized

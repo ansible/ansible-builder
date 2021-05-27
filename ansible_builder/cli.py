@@ -11,7 +11,7 @@ from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .introspect import process, simple_combine, base_collections_path
-from .requirements import sanitize_requirements
+from .requirements import sanitize_python_requirements
 from .utils import configure_logger, write_file
 
 
@@ -41,7 +41,7 @@ def run():
         if args.sanitize:
             logger.info('# Sanitized dependencies for {0}'.format(args.folder))
             data_for_write = data
-            data['python'] = sanitize_requirements(data['python'])
+            data['python'] = sanitize_python_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
         else:
             logger.info('# Dependency data for {0}'.format(args.folder))
