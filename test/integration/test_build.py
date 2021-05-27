@@ -122,7 +122,7 @@ def test_python_git_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir
     command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     cli(command)
     result = cli(f'{container_runtime} run --rm {ee_tag} pip3 freeze')
-    assert 'flask' in result.stdout, result.stdout
+    assert 'flask' in result.stdout.lower(), result.stdout
 
 
 def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
