@@ -43,10 +43,11 @@ def sanitize_python_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            raise RuntimeError(
+            logger.warn(
                 'Failed to parse system requirement from {}, lines: \n{}\nerror: \n{}'.format(
                     collection, lines, str(e)
-                ))
+                )
+            )
 
     # removal of unwanted packages
     sanitized = []
@@ -70,7 +71,7 @@ def sanitize_python_requirements(collection_py_reqs):
 
 EXCLUDE_SYSTEM_REQUIREMENTS = frozenset((
     # obviously already satisfied or unwanted
-    'ansible', 'ansible-test',
+    'python', 'ansible', 'ansible-test',
 ))
 
 
@@ -82,23 +83,29 @@ def parse_bindep_lines(lines):
     return depends._rules
 
 
-def render_bindep_data(entry, collections):
+def render_bindep_data(entry):
     lines = []
     for entry in entry:
         name = entry[0]
+        this_line = name
 
         condition_strings = []
         for condition in entry[1]:
             negate_str = '' if condition[0] else '!'
             condition_strings.append(f'{negate_str}{condition[1]}')
         conditions = ' '.join(condition_strings)
+        if conditions:
+            this_line += f' [{conditions}]'
 
         version_strings = []
         for version_c in entry[2]:
             version_strings.append(''.join(version_c))
         versions = ','.join(version_strings)
+        if versions:
+            this_line += f' {versions}'
 
-        lines.append(f'{name} [{conditions}] {versions}'.strip())
+        lines.append(this_line)
+
     return '\n'.join(lines)
 
 
@@ -108,26 +115,32 @@ def sanitize_system_requirements(collection_sys_reqs):
     seen_entries = set()
     for collection, lines in collection_sys_reqs.items():
         try:
-            for entry in parse_bindep_lines(lines):
-                if not entry:
-                    continue
-
-                if entry in seen_entries:
-                    for prior_entry in consolidated:
-                        if entry == prior_entry:
-                            prior_entry[3].append(collection)
-                            break
-                    continue
-
-                entry_w_collection = entry + ([collection],)
-
-                consolidated.append(entry_w_collection)
-                seen_entries.add(entry)
+            parsed_data = parse_bindep_lines(lines)
         except Exception as e:
             raise RuntimeError(
                 'Failed to parse system requirement from {}, lines: \n{}\nerror: \n{}'.format(
                     collection, lines, str(e)
-                ))
+                )
+            )
+        for entry in parsed_data:
+            if not entry:
+                continue
+
+            if repr(entry[:3]) in seen_entries:  # TODO maybe find a better way of this...
+                for prior_entry in consolidated:
+                    if repr(entry[:3]) == repr(prior_entry[:3]):
+                        prior_entry[3].append(collection)
+                        break
+                else:
+                    print(repr(entry))
+                    print(seen_entries)
+                    raise Exception
+                continue
+
+            entry_w_collection = entry + ([collection],)
+
+            consolidated.append(entry_w_collection)
+            seen_entries.add(repr(entry[:3]))
 
     # removal of unwanted packages
     sanitized = []
@@ -136,7 +149,7 @@ def sanitize_system_requirements(collection_sys_reqs):
         if name and name.lower() in EXCLUDE_SYSTEM_REQUIREMENTS:
             continue
 
-        new_line = render_bindep_data(entry)
+        new_line = render_bindep_data([entry])
 
         sanitized.append(new_line + '  # from collection {}'.format(','.join(entry[3])))
 
