@@ -63,27 +63,10 @@ class AnsibleBuilder:
     def ansible_config(self):
         return self.definition.ansible_config
 
-    @property
-    def build_command(self):
-        command = [
-            self.container_runtime, "build",
-            "-f", self.containerfile.path,
-            "-t", self.tag,
-        ]
+    def create(self):
+        return self.write_containerfile()
 
-        for key, value in self.build_args.items():
-            if value:
-                build_arg = f"--build-arg={key}={value}"
-            else:
-                build_arg = f"--build-arg={key}"
-
-            command.append(build_arg)
-
-        command.append(self.build_context)
-
-        return command
-
-    def build(self):
+    def write_containerfile(self):
         # File preparation
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
@@ -105,7 +88,30 @@ class AnsibleBuilder:
         self.containerfile.prepare_system_runtime_deps_steps()
         self.containerfile.prepare_appended_steps()
         logger.debug('Rewriting Containerfile to capture collection requirements')
-        self.containerfile.write()
+        return self.containerfile.write()
+
+    @property
+    def build_command(self):
+        command = [
+            self.container_runtime, "build",
+            "-f", self.containerfile.path,
+            "-t", self.tag,
+        ]
+
+        for key, value in self.build_args.items():
+            if value:
+                build_arg = f"--build-arg={key}={value}"
+            else:
+                build_arg = f"--build-arg={key}"
+
+            command.append(build_arg)
+
+        command.append(self.build_context)
+
+        return command
+
+    def build(self):
+        self.write_containerfile()
         run_command(self.build_command)
         return True
 

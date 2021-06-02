@@ -22,20 +22,11 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
 
-    if args.action in ['create']:
-        logger.debug(f'Ansible Builder is creating a Containerfile for your execution environment image, "{args.tag}".')
-        ab = AnsibleBuilder(**vars(args))
-        action = getattr(ab, ab.action)
-        try:
-            if action():
-                print("Complete! Build context is at: {}".format(ab.build_context))
-                sys.exit(0)
-        except DefinitionError as e:
-            logger.error(e.args[0])
-            sys.exit(1)
-
-    elif args.action in ['build']:
-        logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
+    if args.action in ['create', 'build']:
+        if args.action == 'build':
+            logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
+        else:
+            logger.debug('Ansible Builder is generating your execution environment build context.')
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
