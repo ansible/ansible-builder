@@ -42,7 +42,7 @@ the '--pre' flag to enable the installation of pre-releases collections.
 The ``EE_BASE_IMAGE`` build arg specifies the parent image
 for the execution environment.
 
-The ``EE_BUILDER_IMAGE`` build arg specifies the image used for
+The ``ANSIBLE_BUILDER_IMAGE`` build arg specifies the image used for
 compiling type tasks.
 
 Values given inside of ``default_build_args`` will be hard-coded into the

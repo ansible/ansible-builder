@@ -15,7 +15,7 @@ base_collections_path = '/usr/share/ansible/collections'
 build_arg_defaults = dict(
     ANSIBLE_GALAXY_CLI_COLLECTION_OPTS='',
     EE_BASE_IMAGE='quay.io/ansible/ansible-runner:devel',
-    EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest'
+    ANSIBLE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest'
 )
 
 user_content_subfolder = '_build'

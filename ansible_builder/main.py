@@ -276,8 +276,8 @@ class Containerfile:
             "ARG EE_BASE_IMAGE={}".format(
                 self.definition.build_arg_defaults['EE_BASE_IMAGE']
             ),
-            "ARG EE_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
+            "ARG ANSIBLE_BUILDER_IMAGE={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_BUILDER_IMAGE']
             ),
         ]
 
@@ -390,7 +390,7 @@ class Containerfile:
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BUILDER_IMAGE as builder"
+            "FROM $ANSIBLE_BUILDER_IMAGE as builder"
             "",
         ])
 
