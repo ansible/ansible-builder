@@ -273,8 +273,8 @@ class Containerfile:
         self.tag = tag
         # Build args all need to go at top of file to avoid errors
         self.steps = [
-            "ARG EE_BASE_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BASE_IMAGE']
+            "ARG ANSIBLE_RUNNER_IMAGE={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_RUNNER_IMAGE']
             ),
             "ARG ANSIBLE_BUILDER_IMAGE={}".format(
                 self.definition.build_arg_defaults['ANSIBLE_BUILDER_IMAGE']
@@ -377,7 +377,7 @@ class Containerfile:
     def prepare_galaxy_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BASE_IMAGE as galaxy",
+            "FROM $ANSIBLE_RUNNER_IMAGE as galaxy",
             "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
                 self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
             ),
@@ -399,7 +399,7 @@ class Containerfile:
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BASE_IMAGE",
+            "FROM $ANSIBLE_RUNNER_IMAGE",
             "USER root"
             "",
         ])
