@@ -22,8 +22,7 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
 
-    if args.action in ['build']:
-        logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
+    if args.action in ['create', 'build']:
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
@@ -36,6 +35,7 @@ def run():
         except DefinitionError as e:
             logger.error(e.args[0])
             sys.exit(1)
+
     elif args.action == 'introspect':
         data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
         if args.sanitize:
@@ -82,6 +82,15 @@ def parse_args(args=sys.argv[1:]):
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
     subparsers.required = True # This can be a kwarg in python 3.7+
 
+    create_command_parser = subparsers.add_parser(
+        'create',
+        help='Creates a build context, which can be used by podman to build an image.',
+        description=(
+            'Creates a build context (including a Containerfile) from an execution environment spec. '
+            'This build context is populated with dependencies including requirements files.'
+        )
+    )
+
     build_command_parser = subparsers.add_parser(
         'build',
         help='Builds a container image.',
@@ -98,7 +107,20 @@ def parse_args(args=sys.argv[1:]):
                                       default=constants.default_tag,
                                       help='The name for the container image being built (default: %(default)s)')
 
-    for p in [build_command_parser]:
+    build_command_parser.add_argument('--container-runtime',
+                                      choices=list(constants.runtime_files.keys()),
+                                      default=constants.default_container_runtime,
+                                      help='Specifies which container runtime to use (default: %(default)s)')
+
+    build_command_parser.add_argument('--build-arg',
+                                      action=BuildArgAction,
+                                      default={},
+                                      dest='build_args',
+                                      help='Build-time variables to pass to any podman or docker calls. '
+                                           'Internally ansible-builder makes use of {0}.'.format(
+                                           ', '.join(constants.build_arg_defaults.keys())))
+
+    for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
                        default=constants.default_file,
@@ -109,20 +131,6 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_build_context,
                        dest='build_context',
                        help='The directory to use for the build context (default: %(default)s)')
-
-        p.add_argument('--container-runtime',
-                       choices=list(constants.runtime_files.keys()),
-                       default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use (default: %(default)s)')
-
-        p.add_argument('--build-arg',
-                       action=BuildArgAction,
-                       default={},
-                       dest='build_args',
-                       help='Build-time variables to pass to any podman or docker calls. '
-                            'Internally ansible-builder makes use of {0}.'.format(
-                                ', '.join(constants.build_arg_defaults.keys()))
-                       )
 
         p.add_argument('--output-filename',
                        choices=list(constants.runtime_files.values()),
