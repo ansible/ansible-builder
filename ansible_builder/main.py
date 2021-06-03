@@ -171,7 +171,7 @@ class UserDefinition(BaseDefinition):
                 f"""
                 Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
                 Allowed options are:
-                {CONTEXT_FILES.keys()}
+                {list(CONTEXT_FILES.keys())}
                 """)
             )
 
@@ -215,6 +215,17 @@ class UserDefinition(BaseDefinition):
                 Error: Unknown yaml key(s), {invalid_keys}, found in the definition file.\n
                 Allowed options are:
                 {ALLOWED_KEYS}
+                """)
+            )
+        
+        dependencies_keys = set(self.raw.get('dependencies'))
+        invalid_dependencies_keys = dependencies_keys - set(CONTEXT_FILES.keys())
+        if invalid_dependencies_keys:
+            raise DefinitionError(textwrap.dedent(
+                f"""
+                Error: Unknown yaml key(s), {invalid_dependencies_keys}, found in dependencies.\n
+                Allowed options are:
+                {list(CONTEXT_FILES.keys())}
                 """)
             )
 
