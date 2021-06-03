@@ -158,6 +158,15 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
+        if not isinstance(self.raw.get('dependencies'), dict):
+            raise DefinitionError(textwrap.dedent(
+                f"""
+                Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
+                Allowed options are:
+                {CONTEXT_FILES.keys()}
+                """)
+            )
+
         # Populate build arg defaults, which are customizable in definition
         self.build_arg_defaults = {}
         user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
