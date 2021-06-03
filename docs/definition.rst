@@ -93,4 +93,4 @@ section, either for before the main build steps (``prepend``) or after
 (``append``). The syntax needs to be one of the following:
 
 - a multi-line string (example shown in the ``prepend`` section above)
-- a dictionary (as shown via ``append``)
+- a list (as shown via ``append``)
