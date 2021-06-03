@@ -23,10 +23,6 @@ def run():
     configure_logger(args.verbosity)
 
     if args.action in ['create', 'build']:
-        if args.action == 'build':
-            logger.debug(f'Ansible Builder is building your execution environment image, "{args.tag}".')
-        else:
-            logger.debug('Ansible Builder is generating your execution environment build context.')
         ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
@@ -111,6 +107,19 @@ def parse_args(args=sys.argv[1:]):
                                       default=constants.default_tag,
                                       help='The name for the container image being built (default: %(default)s)')
 
+    build_command_parser.add_argument('--container-runtime',
+                                      choices=list(constants.runtime_files.keys()),
+                                      default=constants.default_container_runtime,
+                                      help='Specifies which container runtime to use (default: %(default)s)')
+
+    build_command_parser.add_argument('--build-arg',
+                                      action=BuildArgAction,
+                                      default={},
+                                      dest='build_args',
+                                      help='Build-time variables to pass to any podman or docker calls. '
+                                           'Internally ansible-builder makes use of {0}.'.format(
+                                           ', '.join(constants.build_arg_defaults.keys())))
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
@@ -122,20 +131,6 @@ def parse_args(args=sys.argv[1:]):
                        default=constants.default_build_context,
                        dest='build_context',
                        help='The directory to use for the build context (default: %(default)s)')
-
-        p.add_argument('--container-runtime',
-                       choices=list(constants.runtime_files.keys()),
-                       default=constants.default_container_runtime,
-                       help='Specifies which container runtime to use (default: %(default)s)')
-
-        p.add_argument('--build-arg',
-                       action=BuildArgAction,
-                       default={},
-                       dest='build_args',
-                       help='Build-time variables to pass to any podman or docker calls. '
-                            'Internally ansible-builder makes use of {0}.'.format(
-                                ', '.join(constants.build_arg_defaults.keys()))
-                       )
 
         p.add_argument('--output-filename',
                        choices=list(constants.runtime_files.values()),

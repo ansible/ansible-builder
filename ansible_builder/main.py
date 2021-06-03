@@ -64,6 +64,7 @@ class AnsibleBuilder:
         return self.definition.ansible_config
 
     def create(self):
+        logger.debug('Ansible Builder is generating your execution environment build context.')
         return self.write_containerfile()
 
     def write_containerfile(self):
@@ -111,6 +112,7 @@ class AnsibleBuilder:
         return command
 
     def build(self):
+        logger.debug(f'Ansible Builder is building your execution environment image, "{self.tag}".')
         self.write_containerfile()
         run_command(self.build_command)
         return True
