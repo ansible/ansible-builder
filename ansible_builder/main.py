@@ -166,14 +166,15 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
-        if not isinstance(self.raw.get('dependencies'), dict):
-            raise DefinitionError(textwrap.dedent(
-                f"""
-                Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
-                Allowed options are:
-                {list(CONTEXT_FILES.keys())}
-                """)
-            )
+        if self.raw.get('dependencies') is not None:
+            if not isinstance(self.raw.get('dependencies'), dict):
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
+                    Allowed options are:
+                    {list(CONTEXT_FILES.keys())}
+                    """)
+                )
 
         # Populate build arg defaults, which are customizable in definition
         self.build_arg_defaults = {}
@@ -218,16 +219,17 @@ class UserDefinition(BaseDefinition):
                 """)
             )
         
-        dependencies_keys = set(self.raw.get('dependencies'))
-        invalid_dependencies_keys = dependencies_keys - set(CONTEXT_FILES.keys())
-        if invalid_dependencies_keys:
-            raise DefinitionError(textwrap.dedent(
-                f"""
-                Error: Unknown yaml key(s), {invalid_dependencies_keys}, found in dependencies.\n
-                Allowed options are:
-                {list(CONTEXT_FILES.keys())}
-                """)
-            )
+        if self.raw.get('dependencies') is not None:
+            dependencies_keys = set(self.raw.get('dependencies'))
+            invalid_dependencies_keys = dependencies_keys - set(CONTEXT_FILES.keys())
+            if invalid_dependencies_keys:
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown yaml key(s), {invalid_dependencies_keys}, found in dependencies.\n
+                    Allowed options are:
+                    {list(CONTEXT_FILES.keys())}
+                    """)
+                )
 
         for item in CONTEXT_FILES:
             requirement_path = self.get_dep_abs_path(item)
