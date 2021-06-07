@@ -140,15 +140,6 @@ def parse_args(args=sys.argv[1:]):
                                 ' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()]))
                        )
 
-        p.add_argument('-v', '--verbosity',
-                       dest='verbosity',
-                       type=int,
-                       choices=[0, 1, 2, 3],
-                       default=constants.default_verbosity,
-                       help='Increase the output verbosity, for up to three levels of verbosity '
-                            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-                            'in value from 0 to 3) (default: %(default)s)')
-
     introspect_parser = subparsers.add_parser(
         'introspect',
         help='Introspects collections in folder.',
@@ -188,10 +179,16 @@ def parse_args(args=sys.argv[1:]):
         help='Write the combined bindep file to this location.'
     )
 
-    introspect_parser.add_argument('-v', '--verbosity', dest='verbosity', action='count', default=0,
-                                   help=('Increase the output verbosity, for up to three levels of verbosity '
-                                         '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-                                         'in value from 0 to 3)'))
+    for n in [create_command_parser, build_command_parser, introspect_parser]:
+
+        n.add_argument('-v', '--verbosity',
+                       dest='verbosity',
+                       type=int,
+                       choices=[0, 1, 2, 3],
+                       default=constants.default_verbosity,
+                       help='Increase the output verbosity, for up to three levels of verbosity '
+                            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
+                            'in value from 0 to 3) (default: %(default)s)')
 
 
     args = parser.parse_args(args)
