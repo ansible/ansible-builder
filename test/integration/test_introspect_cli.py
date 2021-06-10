@@ -54,3 +54,13 @@ def test_introspect_write_python_and_sanitize(cli, data_dir, tmpdir):
             'tacacs_plus  # from collection test.reqfile',
             ''
         ])
+
+
+def test_introspect_bad_bindep_file(cli, data_dir):
+    r = cli(
+        f'ansible-builder introspect {data_dir} '
+        f'--user-bindep={data_dir}/build_fail/bindep1.txt --sanitize',
+        allow_error=True
+    )
+    assert 'Failed to parse system requirement from `user`' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+    assert 'at [platform:rpm' in (r.stdout + r.stderr), (r.stdout + r.stderr)

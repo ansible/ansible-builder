@@ -1,5 +1,7 @@
 import logging
 
+from .exceptions import DefinitionError
+
 # python requirements-parser
 import requirements
 
@@ -116,10 +118,11 @@ def sanitize_system_requirements(collection_sys_reqs):
     for collection, lines in collection_sys_reqs.items():
         try:
             parsed_data = parse_bindep_lines(lines)
-        except Exception as e:
-            raise RuntimeError(
-                'Failed to parse system requirement from {}, lines: \n{}\nerror: \n{}'.format(
-                    collection, lines, str(e)
+        except Exception:
+            # The parent exception is printed to terminal due to how exception handling works
+            raise DefinitionError(
+                'Failed to parse system requirement from `{}`\nbindep lines that caused error: \n{}'.format(
+                    collection, '\n'.join(lines)
                 )
             )
         for entry in parsed_data:
