@@ -62,6 +62,7 @@ def test_sanitize_system_requirements():
     input = {
         'test.bindep': [
             '# this is a comment',
+            '',
             'subversion [platform:rpm]',
             'subversion [platform:dpkg]'
         ],

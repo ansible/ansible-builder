@@ -114,7 +114,6 @@ def render_bindep_data(entry):
 def sanitize_system_requirements(collection_sys_reqs):
     # de-duplication
     consolidated = []
-    seen_entries = set()
     for collection, lines in collection_sys_reqs.items():
         try:
             parsed_data = parse_bindep_lines(lines)
@@ -129,21 +128,14 @@ def sanitize_system_requirements(collection_sys_reqs):
             if not entry:
                 continue
 
-            if repr(entry[:3]) in seen_entries:  # TODO maybe find a better way of this...
-                for prior_entry in consolidated:
-                    if repr(entry[:3]) == repr(prior_entry[:3]):
-                        prior_entry[3].append(collection)
-                        break
-                else:
-                    print(repr(entry))
-                    print(seen_entries)
-                    raise Exception
-                continue
-
-            entry_w_collection = entry + ([collection],)
-
-            consolidated.append(entry_w_collection)
-            seen_entries.add(repr(entry[:3]))
+            for prior_entry_w_collection in consolidated:
+                prior_entry = prior_entry_w_collection[:-1]
+                if entry == prior_entry:
+                    prior_entry_w_collection[-1].append(collection)
+                    break
+            else:
+                entry_w_collection = entry + ([collection],)
+                consolidated.append(entry_w_collection)
 
     # removal of unwanted packages
     sanitized = []
