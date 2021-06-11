@@ -71,7 +71,7 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
 def test_python_git_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
     bc = str(tmpdir)
     ee_def = os.path.join(data_dir, 'needs_git', 'execution-environment.yml')
-    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
+    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v3'
     r = cli(command)
     print('build output')
     print(r.stdout)
