@@ -63,27 +63,11 @@ class AnsibleBuilder:
     def ansible_config(self):
         return self.definition.ansible_config
 
-    @property
-    def build_command(self):
-        command = [
-            self.container_runtime, "build",
-            "-f", self.containerfile.path,
-            "-t", self.tag,
-        ]
+    def create(self):
+        logger.debug('Ansible Builder is generating your execution environment build context.')
+        return self.write_containerfile()
 
-        for key, value in self.build_args.items():
-            if value:
-                build_arg = f"--build-arg={key}={value}"
-            else:
-                build_arg = f"--build-arg={key}"
-
-            command.append(build_arg)
-
-        command.append(self.build_context)
-
-        return command
-
-    def build(self):
+    def write_containerfile(self):
         # File preparation
         self.containerfile.create_folder_copy_files()
         self.containerfile.prepare_ansible_config_file()
@@ -105,7 +89,31 @@ class AnsibleBuilder:
         self.containerfile.prepare_system_runtime_deps_steps()
         self.containerfile.prepare_appended_steps()
         logger.debug('Rewriting Containerfile to capture collection requirements')
-        self.containerfile.write()
+        return self.containerfile.write()
+
+    @property
+    def build_command(self):
+        command = [
+            self.container_runtime, "build",
+            "-f", self.containerfile.path,
+            "-t", self.tag,
+        ]
+
+        for key, value in self.build_args.items():
+            if value:
+                build_arg = f"--build-arg={key}={value}"
+            else:
+                build_arg = f"--build-arg={key}"
+
+            command.append(build_arg)
+
+        command.append(self.build_context)
+
+        return command
+
+    def build(self):
+        logger.debug(f'Ansible Builder is building your execution environment image, "{self.tag}".')
+        self.write_containerfile()
         run_command(self.build_command)
         return True
 
@@ -158,6 +166,16 @@ class UserDefinition(BaseDefinition):
         if not isinstance(self.raw, dict):
             raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
 
+        if self.raw.get('dependencies') is not None:
+            if not isinstance(self.raw.get('dependencies'), dict):
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
+                    Allowed options are:
+                    {list(CONTEXT_FILES.keys())}
+                    """)
+                )
+
         # Populate build arg defaults, which are customizable in definition
         self.build_arg_defaults = {}
         user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
@@ -200,6 +218,18 @@ class UserDefinition(BaseDefinition):
                 {ALLOWED_KEYS}
                 """)
             )
+        
+        if self.raw.get('dependencies') is not None:
+            dependencies_keys = set(self.raw.get('dependencies'))
+            invalid_dependencies_keys = dependencies_keys - set(CONTEXT_FILES.keys())
+            if invalid_dependencies_keys:
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown yaml key(s), {invalid_dependencies_keys}, found in dependencies.\n
+                    Allowed options are:
+                    {list(CONTEXT_FILES.keys())}
+                    """)
+                )
 
         for item in CONTEXT_FILES:
             requirement_path = self.get_dep_abs_path(item)

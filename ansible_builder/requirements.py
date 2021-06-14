@@ -9,7 +9,7 @@ EXCLUDE_REQUIREMENTS = frozenset((
     'ansible', 'ansible-base', 'python', 'ansible-core',
     # general python test requirements
     'tox', 'pycodestyle', 'yamllint', 'pylint',
-    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock',
+    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock', 'testinfra',
     # test requirements highly specific to Ansible testing
     'ansible-lint', 'molecule', 'galaxy-importer', 'voluptuous',
     # already present in image for py3 environments
@@ -44,6 +44,7 @@ def sanitize_requirements(collection_py_reqs):
     sanitized = []
     for req in consolidated:
         if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS:
+            logger.debug(f'# Excluding requirement {req.name} from {req.collections}')
             continue
         if req.name is None and req.vcs:
             # A source control requirement like git+, return as-is

@@ -120,6 +120,17 @@ To customize the level of verbosity:
    $ ansible-builder build --verbosity 2
 
 
+``ansible-builder create``
+------------------------
+
+The ``ansible-builder create`` command works similarly to the ``build``
+command in that it takes an execution environment definition as an input
+and outputs the build context necessary for building an execution environment
+image. However, the ``create`` command *will not* build the execution environment
+image; this is useful for creating just the build context and a ``Containerfile``
+that can then be shared.
+
+
 Examples
 --------
 
