@@ -1,6 +1,6 @@
 # Ansible Builder Contributing Guidelines
 
-If you have questions about this document or anything not covered here, come chat with us at `#ansible-awx` or `#ansible-builder` on irc.freenode.net
+If you have questions about this document or anything not covered here, come chat with us at `#ansible-awx` or `#ansible-builder` on irc.libera.chat
 
 
 ## Things to Know Before Submitting Code
