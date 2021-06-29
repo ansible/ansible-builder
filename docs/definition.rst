@@ -31,7 +31,7 @@ Build Args and Base Image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Default values for build args can be specified in the definition file in
-the ``default_build_args`` section as a dictionary. This is an alternative
+the ``build_arg_defaults`` section as a dictionary. This is an alternative
 to using the ``--build-arg`` CLI flag.
 
 Build args used by ``ansible-builder`` are the following:
@@ -45,7 +45,7 @@ for the execution environment.
 The ``EE_BUILDER_IMAGE`` build arg specifies the image used for
 compiling type tasks.
 
-Values given inside of ``default_build_args`` will be hard-coded into the
+Values given inside of ``build_arg_defaults`` will be hard-coded into the
 Containerfile, so they will persist if ``podman build`` is called manually.
 
 If the same variable is specified in the CLI ``--build-arg`` flag,
