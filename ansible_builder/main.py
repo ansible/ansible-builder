@@ -86,10 +86,10 @@ class AnsibleBuilder:
     def build(self):
         # File preparation
         self.containerfile.create_folder_copy_files()
-        self.containerfile.prepare_ansible_config_file()
 
         # First stage, galaxy
         self.containerfile.prepare_galaxy_stage_steps()
+        self.containerfile.prepare_ansible_config_file()
         self.containerfile.prepare_build_context()
         self.containerfile.prepare_galaxy_install_steps()
 
