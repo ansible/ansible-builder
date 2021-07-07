@@ -22,6 +22,7 @@ An example execution environment definition schema is as follows:
       prepend: |
         RUN whoami
         RUN cat /etc/os-release
+        RUN yum module enable postgresql:12/client -y
       append:
         - RUN echo This is a post-install command!
         - RUN ls -la /etc
@@ -84,6 +85,10 @@ The ``system`` entry points to a
 `bindep <https://docs.openstack.org/infra/bindep/readme.html>`__
 requirements file. This will be processed by ``bindep`` and then passed
 to ``dnf``, other platforms are not yet supported.
+
+NOTE: bindep does not support Application Streams (AppStreams) directly.  
+If you need to enable a particular AppStream module, you must do so in 
+the `prepend:` section of the `additional_build_steps` (see example above).
 
 Additional Custom Build Steps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
