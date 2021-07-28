@@ -6,7 +6,7 @@ your Execution Environment.
 
 
 ``ansible-builder build``
-------------------------
+-------------------------
 
 The ``ansible-builder build`` command takes an execution environment
 definition as an input. It outputs the build context necessary for
@@ -83,7 +83,7 @@ directory. To specify another location:
 
 
 ``--build-arg``
-*************
+***************
 
 To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
 
@@ -121,7 +121,7 @@ To customize the level of verbosity:
 
 
 ``ansible-builder create``
-------------------------
+--------------------------
 
 The ``ansible-builder create`` command works similarly to the ``build``
 command in that it takes an execution environment definition as an input
