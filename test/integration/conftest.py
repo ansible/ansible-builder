@@ -80,7 +80,7 @@ def delete_image(container_runtime, image_name):
     # allow error in case that image was not created
     r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
     if r.rc != 0:
-        if 'no such image' in r.stdout or 'no such image' in r.stderr:
+        if 'no such image' in r.stdout or 'no such image' in r.stderr or 'image not known' in r.stdout or 'image not known' in r.stderr:
             return
         else:
             raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
