@@ -1,0 +1,5 @@
+team = "ansible"
+repo = "ansible-builder"
+check_sha = "00d6fbd7d406a071f12424631fe9e0aaf360aa46"  # the very first commit in repo
+fix_commit_msg = false  # Don't replace "#" with "GH-"
+default_branch = "devel"
