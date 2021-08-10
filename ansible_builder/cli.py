@@ -80,7 +80,7 @@ def parse_args(args=sys.argv[1:]):
         help='Print ansible-builder version and exit.'
     )
     subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
-    subparsers.required = True # This can be a kwarg in python 3.7+
+    subparsers.required = True  # This can be a kwarg in python 3.7+
 
     create_command_parser = subparsers.add_parser(
         'create',
@@ -189,7 +189,6 @@ def parse_args(args=sys.argv[1:]):
                        help='Increase the output verbosity, for up to three levels of verbosity '
                             '(invoked via "--verbosity" or "-v" followed by an integer ranging '
                             'in value from 0 to 3) (default: %(default)s)')
-
 
     args = parser.parse_args(args)
 
