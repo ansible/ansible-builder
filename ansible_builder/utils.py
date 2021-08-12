@@ -61,7 +61,6 @@ def configure_logger(verbosity):
     logging.config.dictConfig(LOGGING)
 
 
-
 def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
     logger.info('  {0}'.format(' '.join(command)))
