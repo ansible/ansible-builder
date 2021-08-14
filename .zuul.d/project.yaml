@@ -1,7 +1,7 @@
 ---
 - project:
     check:
-      jobs:
+      jobs: &id001
         # - ansible-builder-tox-integration
         - ansible-tox-docs:
             vars:
@@ -11,22 +11,11 @@
             files:
               - .github/workflows/.*
     gate:
-      jobs:
-        # - ansible-builder-tox-integration
-        - ansible-tox-docs:
-            vars:
-                sphinx_build_dir: docs/build
-        - ansible-builder-build-container-image
-        - github-workflows:
-            files:
-              - .github/workflows/.*
+      jobs: *id001
     post:
-      jobs:
+      jobs: &id002
         - ansible-builder-upload-container-image:
             vars:
               upload_container_image_promote: false
     periodic:
-      jobs:
-        - ansible-builder-upload-container-image:
-            vars:
-              upload_container_image_promote: false
+      jobs: *id002
