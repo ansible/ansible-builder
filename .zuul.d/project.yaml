@@ -7,6 +7,7 @@
         - ansible-tox-docs:
             vars:
                 sphinx_build_dir: docs/build
+        - ansible-tox-py38
         - github-workflows:
             files:
               - .github/workflows/.*
