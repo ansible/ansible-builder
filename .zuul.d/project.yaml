@@ -3,10 +3,10 @@
     check:
       jobs: &id001
         # - ansible-builder-tox-integration
+        - ansible-builder-build-container-image
         - ansible-tox-docs:
             vars:
                 sphinx_build_dir: docs/build
-        - ansible-builder-build-container-image
         - github-workflows:
             files:
               - .github/workflows/.*
