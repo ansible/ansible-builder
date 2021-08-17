@@ -1,0 +1,6 @@
+[extras]
+name=CentOS Linux $releasever - Extras
+baseurl=http://centos.mirror.vexxhost.com/$releasever/extras/$basearch/os/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
