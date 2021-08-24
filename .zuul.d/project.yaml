@@ -10,6 +10,7 @@
         - github-workflows:
             files:
               - .github/workflows/.*
+        - ansible-tox-py38
     gate:
       jobs:
         # - ansible-builder-tox-integration
@@ -20,6 +21,7 @@
         - github-workflows:
             files:
               - .github/workflows/.*
+        - ansible-tox-py38
     post:
       jobs:
         - ansible-builder-upload-container-image:
