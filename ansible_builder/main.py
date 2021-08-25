@@ -10,6 +10,8 @@ from .steps import (
 )
 from .utils import run_command, copy_file
 
+from abc import ABC, abstractmethod
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,13 @@ ALLOWED_KEYS = [
     'ansible_config',
     'additional_build_steps',
 ]
+
+
+def get_output_class(format, kwargs):
+    if format == "container":
+        return Containerfile(**kwargs)
+    elif format == "srpm":
+        return SRPM(**kwargs)
 
 
 class AnsibleBuilder:
@@ -47,7 +56,8 @@ class AnsibleBuilder:
             build_context, constants.user_content_subfolder)
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
-        self.containerfile = Containerfile(
+        self.output_type = get_output_class(
+            "container",
             definition=self.definition,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
@@ -65,31 +75,7 @@ class AnsibleBuilder:
 
     def create(self):
         logger.debug('Ansible Builder is generating your execution environment build context.')
-        return self.write_containerfile()
-
-    def write_containerfile(self):
-        # File preparation
-        self.containerfile.create_folder_copy_files()
-
-        # First stage, galaxy
-        self.containerfile.prepare_galaxy_stage_steps()
-        self.containerfile.prepare_ansible_config_file()
-        self.containerfile.prepare_build_context()
-        self.containerfile.prepare_galaxy_install_steps()
-
-        # Second stage, builder
-        self.containerfile.prepare_build_stage_steps()
-        self.containerfile.prepare_galaxy_copy_steps()
-        self.containerfile.prepare_introspect_assemble_steps()
-
-        # Second stage
-        self.containerfile.prepare_final_stage_steps()
-        self.containerfile.prepare_prepended_steps()
-        self.containerfile.prepare_galaxy_copy_steps()
-        self.containerfile.prepare_system_runtime_deps_steps()
-        self.containerfile.prepare_appended_steps()
-        logger.debug('Rewriting Containerfile to capture collection requirements')
-        return self.containerfile.write()
+        return self.output_type.write()
 
     @property
     def build_command(self):
@@ -113,7 +99,7 @@ class AnsibleBuilder:
 
     def build(self):
         logger.debug(f'Ansible Builder is building your execution environment image, "{self.tag}".')
-        self.write_containerfile()
+        self.output_type.write()
         run_command(self.build_command)
         return True
 
@@ -281,7 +267,13 @@ class UserDefinition(BaseDefinition):
                     """).format(type(ansible_config_path).__name__))
 
 
-class Containerfile:
+class OutputFormat(ABC):
+    @abstractmethod
+    def write(self):
+        pass
+
+
+class Containerfile(OutputFormat):
     newline_char = '\n'
 
     def __init__(self, definition,
@@ -440,9 +432,38 @@ class Containerfile:
             self.steps.extend(GalaxyCopySteps())
         return self.steps
 
+    def write_containerfile(self):
+        # File preparation
+        self.create_folder_copy_files()
+
+        # First stage, galaxy
+        self.prepare_galaxy_stage_steps()
+        self.prepare_ansible_config_file()
+        self.prepare_build_context()
+        self.prepare_galaxy_install_steps()
+
+        # Second stage, builder
+        self.prepare_build_stage_steps()
+        self.prepare_galaxy_copy_steps()
+        self.prepare_introspect_assemble_steps()
+
+        # Second stage
+        self.prepare_final_stage_steps()
+        self.prepare_prepended_steps()
+        self.prepare_galaxy_copy_steps()
+        self.prepare_system_runtime_deps_steps()
+        self.prepare_appended_steps()
+        logger.debug('Rewriting Containerfile to capture collection requirements')
+
     def write(self):
+        self.write_containerfile()
         with open(self.path, 'w') as f:
             for step in self.steps:
                 f.write(step + self.newline_char)
 
         return True
+
+
+class SRPM(OutputFormat):
+    def write(self):
+        pass
