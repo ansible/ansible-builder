@@ -30,7 +30,9 @@ ALLOWED_KEYS = [
 
 
 class AnsibleBuilder:
-    def __init__(self, action=None,
+    def __init__(self,
+                 command_type=None,
+                 action=None,
                  filename=constants.default_file,
                  build_args=None,
                  build_context=constants.default_build_context,

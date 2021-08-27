@@ -22,42 +22,43 @@ def run():
     args = parse_args()
     configure_logger(args.verbosity)
 
-    if args.action in ['create', 'build']:
-        ab = AnsibleBuilder(**vars(args))
-        action = getattr(ab, ab.action)
-        try:
-            if action():
-                print(
-                    MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(
-                        os.path.abspath(ab.build_context)
-                    ) + MessageColors.ENDC)
-                sys.exit(0)
-        except DefinitionError as e:
-            logger.error(e.args[0])
-            sys.exit(1)
+    if args.command_type == 'container':
+        if args.action in ['create', 'build']:
+            ab = AnsibleBuilder(**vars(args))
+            action = getattr(ab, ab.action)
+            try:
+                if action():
+                    print(
+                        MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(
+                            os.path.abspath(ab.build_context)
+                        ) + MessageColors.ENDC)
+                    sys.exit(0)
+            except DefinitionError as e:
+                logger.error(e.args[0])
+                sys.exit(1)
 
-    elif args.action == 'introspect':
-        data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
-        if args.sanitize:
-            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
-            data_for_write = data
-            data['python'] = sanitize_requirements(data['python'])
-            data['system'] = simple_combine(data['system'])
-        else:
-            logger.info('# Dependency data for {0}'.format(args.folder))
-            data_for_write = data.copy()
-            data_for_write['python'] = simple_combine(data['python'])
-            data_for_write['system'] = simple_combine(data['system'])
+        elif args.action == 'introspect':
+            data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
+            if args.sanitize:
+                logger.info('# Sanitized dependencies for {0}'.format(args.folder))
+                data_for_write = data
+                data['python'] = sanitize_requirements(data['python'])
+                data['system'] = simple_combine(data['system'])
+            else:
+                logger.info('# Dependency data for {0}'.format(args.folder))
+                data_for_write = data.copy()
+                data_for_write['python'] = simple_combine(data['python'])
+                data_for_write['system'] = simple_combine(data['system'])
 
-        print('---')
-        print(yaml.dump(data, default_flow_style=False))
+            print('---')
+            print(yaml.dump(data, default_flow_style=False))
 
-        if args.write_pip and data.get('python'):
-            write_file(args.write_pip, data_for_write.get('python') + [''])
-        if args.write_bindep and data.get('system'):
-            write_file(args.write_bindep, data_for_write.get('system') + [''])
+            if args.write_pip and data.get('python'):
+                write_file(args.write_pip, data_for_write.get('python') + [''])
+            if args.write_bindep and data.get('system'):
+                write_file(args.write_bindep, data_for_write.get('system') + [''])
 
-        sys.exit(0)
+            sys.exit(0)
 
     logger.error("An error has occured.")
     sys.exit(1)
@@ -67,22 +68,22 @@ def get_version():
     return pkg_resources.get_distribution('ansible_builder').version
 
 
-def parse_args(args=sys.argv[1:]):
-    parser = argparse.ArgumentParser(
-        prog='ansible-builder',
-        description=(
-            'Tooling to help build container images for running Ansible content. '
-            'Get started by looking at the help text for one of the subcommands.'
-        )
-    )
-    parser.add_argument(
-        '--version', action='version', version=get_version(),
-        help='Print ansible-builder version and exit.'
-    )
-    subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
-    subparsers.required = True  # This can be a kwarg in python 3.7+
+def set_default_command_type(args):
+    """
+    For backward compatibility of the CLI, if no command type is supplied, assume 'container'.
+    """
+    if not len(args):
+        return
 
-    create_command_parser = subparsers.add_parser(
+    if args[0] not in ('-h', '--help', '--version') and 'container' not in args:
+        args.insert(0, 'container')
+
+
+def add_container_options(parser):
+    """
+    Add sub-commands and options relevant to containers.
+    """
+    create_command_parser = parser.add_parser(
         'create',
         help='Creates a build context, which can be used by podman to build an image.',
         description=(
@@ -91,7 +92,7 @@ def parse_args(args=sys.argv[1:]):
         )
     )
 
-    build_command_parser = subparsers.add_parser(
+    build_command_parser = parser.add_parser(
         'build',
         help='Builds a container image.',
         description=(
@@ -103,22 +104,25 @@ def parse_args(args=sys.argv[1:]):
         )
     )
 
-    build_command_parser.add_argument('-t', '--tag',
-                                      default=constants.default_tag,
-                                      help='The name for the container image being built (default: %(default)s)')
+    build_command_parser.add_argument(
+        '-t', '--tag',
+        default=constants.default_tag,
+        help='The name for the container image being built (default: %(default)s)')
 
-    build_command_parser.add_argument('--container-runtime',
-                                      choices=list(constants.runtime_files.keys()),
-                                      default=constants.default_container_runtime,
-                                      help='Specifies which container runtime to use (default: %(default)s)')
+    build_command_parser.add_argument(
+        '--container-runtime',
+        choices=list(constants.runtime_files.keys()),
+        default=constants.default_container_runtime,
+        help='Specifies which container runtime to use (default: %(default)s)')
 
-    build_command_parser.add_argument('--build-arg',
-                                      action=BuildArgAction,
-                                      default={},
-                                      dest='build_args',
-                                      help='Build-time variables to pass to any podman or docker calls. '
-                                           'Internally ansible-builder makes use of {0}.'.format(
-                                           ', '.join(constants.build_arg_defaults.keys())))
+    build_command_parser.add_argument(
+        '--build-arg',
+        action=BuildArgAction,
+        default={},
+        dest='build_args',
+        help='Build-time variables to pass to any podman or docker calls. '
+             'Internally ansible-builder makes use of {0}.'.format(
+             ', '.join(constants.build_arg_defaults.keys())))
 
     for p in [create_command_parser, build_command_parser]:
 
@@ -140,7 +144,7 @@ def parse_args(args=sys.argv[1:]):
                                 ' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()]))
                        )
 
-    introspect_parser = subparsers.add_parser(
+    introspect_parser = parser.add_parser(
         'introspect',
         help='Introspects collections in folder.',
         description=(
@@ -149,9 +153,10 @@ def parse_args(args=sys.argv[1:]):
             'This is targeted toward collection authors and maintainers.'
         )
     )
-    introspect_parser.add_argument('--sanitize', action='store_true', help=('Sanitize and de-duplicate requirements. '
-                                                                            'This is normally done separately from the introspect script, but this '
-                                                                            'option is given to more accurately test collection content.'))
+    introspect_parser.add_argument('--sanitize', action='store_true',
+                                   help=('Sanitize and de-duplicate requirements. '
+                                         'This is normally done separately from the introspect script, but this '
+                                         'option is given to more accurately test collection content.'))
     introspect_parser.add_argument(
         'folder', default=base_collections_path, nargs='?',
         help=(
@@ -190,8 +195,33 @@ def parse_args(args=sys.argv[1:]):
                             '(invoked via "--verbosity" or "-v" followed by an integer ranging '
                             'in value from 0 to 3) (default: %(default)s)')
 
-    args = parser.parse_args(args)
 
+def parse_args(args=sys.argv[1:]):
+
+    set_default_command_type(args)
+
+    parser = argparse.ArgumentParser(
+        prog='ansible-builder',
+        description=(
+            'Tooling to help build container images for running Ansible content. '
+            'Get started by looking at the help text for one of the subcommands.'
+        )
+    )
+    parser.add_argument(
+        '--version', action='version', version=get_version(),
+        help='Print ansible-builder version and exit.'
+    )
+
+    type_parser = parser.add_subparsers(dest='command_type')
+    type_parser.required = True
+
+    # container commands
+    container = type_parser.add_parser('container', help='Container specific commands')
+    container_parser = container.add_subparsers(metavar='CONTAINER_ACTION', dest='action')
+    container_parser.required = True
+    add_container_options(container_parser)
+
+    args = parser.parse_args(args)
     return args
 
 
