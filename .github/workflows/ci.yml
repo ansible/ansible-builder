@@ -12,7 +12,7 @@ jobs:
     name: ${{ matrix.test.name }}
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/ansible/ansible-buidler-test-container:1.0.0
+      image: quay.io/ansible/ansible-builder-test-container:1.0.0
       env:
         PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
 
