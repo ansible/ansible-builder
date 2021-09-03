@@ -5,7 +5,7 @@
         # - ansible-builder-tox-integration
         - ansible-tox-docs:
             vars:
-                sphinx_build_dir: docs/build
+              sphinx_build_dir: docs/build
         - ansible-builder-build-container-image
         - github-workflows:
             files:
@@ -16,7 +16,7 @@
         # - ansible-builder-tox-integration
         - ansible-tox-docs:
             vars:
-                sphinx_build_dir: docs/build
+              sphinx_build_dir: docs/build
         - ansible-builder-build-container-image
         - github-workflows:
             files:
