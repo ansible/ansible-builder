@@ -12,15 +12,39 @@ If you have questions about this document or anything not covered here, come cha
 
 ## Setting Up Your Development Environment
 
-Inside of a virtual environment, simply run:
+Install `tox` if it is not already installed on your system. This can be done with `pip` or your system package manager.
 
 ```bash
-(ansible-builder) $ pip install -e . -r test/requirements.txt -c test/constraints.txt
+pip install tox -c test/constraints.txt
 ```
 
-## Linting and Unit Tests
+Setup a test virtual environment and activate it:
 
-`tox` is used to run linters (`flake8` and `yamllint`) and unit tests.
+```
+tox -e dev
+source .tox/dev/bin/activate
+```
+
+When done making changes, run:
+
+```
+deactivate
+```
+
+To reactivate the virtual environment:
+
+```
+source .tox/dev/bin/activate
+```
+
+## Testing
+
+`tox` is used to run tests. To run the default set of tests, just run `tox`.
+
+To list all available test targets, run `tox -a`.
+
+Run a specific test with `tox -e [target]`
+
 
 
 ## Gating and Merging
