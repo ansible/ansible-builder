@@ -1,0 +1,9 @@
+coverage
+flake8
+pylint
+pytest
+pytest-cov
+pytest-mock
+pytest-xdist
+tox
+yamllint
