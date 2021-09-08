@@ -15,14 +15,14 @@ If you have questions about this document or anything not covered here, come cha
 Inside of a virtual environment, simply run:
 
 ```bash
-(ansible-builder) $ pip install -e .
+(ansible-builder) $ pip install -e . -r test/requirements.txt -c test/constraints.txt
 ```
 
 ## Linting and Unit Tests
 
-`tox` is used to run linters (`flake8` and `yamllint`) and unit tests on both Python 2 and 3.
+`tox` is used to run linters (`flake8` and `yamllint`) and unit tests.
 
 
 ## Gating and Merging
 
-We require at least one approval on a pull request before it can be merged.  Merges are done through CI, via the `gate` label.
+We require at least one approval on a pull request before it can be merged. Merges are done through CI, via the `gate` label.
