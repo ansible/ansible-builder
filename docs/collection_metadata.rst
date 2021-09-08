@@ -16,9 +16,13 @@ If any of these files are in the ``build_ignore`` of the collection, it
 will not work correctly.
 
 Collection maintainers can verify that ``ansible-builder`` recognizes
-the requirements they expect by using the introspect command. Example:
+the requirements they expect by using the ``introspect`` command. Example:
 
 ::
+
+    ansible-builder container introspect --sanitize ~/.ansible/collections/
+
+The short-hand form of the command is also supported::
 
     ansible-builder introspect --sanitize ~/.ansible/collections/
 
