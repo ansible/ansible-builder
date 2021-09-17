@@ -26,6 +26,7 @@
     parent: ansible-build-container-image
     description: Build ansible-builder container image
     provides: ansible-builder-container-image
+    pre-run: .zuul.d/playbooks/ansible-builder-build-container-image/pre.yaml
     requires:
       - python-base-container-image
       - python-builder-container-image
