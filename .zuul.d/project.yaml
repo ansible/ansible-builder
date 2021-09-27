@@ -2,26 +2,16 @@
 - project:
     check:
       jobs:
-        # - ansible-builder-tox-integration
-        - ansible-tox-docs:
-            vars:
-                sphinx_build_dir: docs/build
         - ansible-builder-build-container-image
         - github-workflows:
             files:
               - .github/workflows/.*
-        - ansible-tox-py38
     gate:
       jobs:
-        # - ansible-builder-tox-integration
-        - ansible-tox-docs:
-            vars:
-                sphinx_build_dir: docs/build
         - ansible-builder-build-container-image
         - github-workflows:
             files:
               - .github/workflows/.*
-        - ansible-tox-py38
     post:
       jobs:
         - ansible-builder-upload-container-image:
