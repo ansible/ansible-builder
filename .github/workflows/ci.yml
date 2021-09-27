@@ -1,13 +1,13 @@
----
-
 name: CI
 
 on:
   pull_request:
-    branches: [devel]
+    branches:
+      - devel
 
   push:
-    branches: [devel]
+    branches:
+      - devel
 
 jobs:
   integration:
@@ -28,3 +28,63 @@ jobs:
       - name: Run integration tests
         run: |
           tox -e integration
+
+  sanity:
+    name: ${{ matrix.test.name }}
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      env:
+        PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: Lint
+            env: linters
+
+          - name: Docs
+            env: docs
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup test environment
+        run: tox -e ${{ matrix.test.env }} --notest
+
+      - name: Run tests
+        run: tox -e ${{ matrix.test.env }}
+
+  unit:
+    name: ${{ matrix.test.name }} - ${{ matrix.py_version.name}}
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      env:
+        PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: Unit
+            env: unit
+
+        py_version:
+          - name: 3.8
+            tox: py38
+
+          - name: 3.9
+            tox: py39
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup test environment
+        run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}} --notest
+
+      - name: Run tests
+        run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}}
