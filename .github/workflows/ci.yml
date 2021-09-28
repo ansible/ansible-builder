@@ -57,6 +57,14 @@ jobs:
       - name: Run tests
         run: tox -e ${{ matrix.test.env }}
 
+      - name: Save docs
+        uses: actions/upload-artifact@v2
+        if: ${{ success() && matrix.test.name == 'Docs' }}
+        with:
+          name: docs
+          path: docs/build/html
+          retention-days: 3
+
   unit:
     name: ${{ matrix.test.name }} - ${{ matrix.py_version.name}}
     runs-on: ubuntu-20.04
