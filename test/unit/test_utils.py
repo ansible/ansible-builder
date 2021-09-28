@@ -61,37 +61,36 @@ def test_copy_touched_file(dest_file, source_file):
 
 
 @pytest.mark.run_command
-def test_failed_command():
-    """This is regression coverage for a bug where run_command exited before
-    subprocess finished, which was flaky, or possibly resource-dependent.
-    The bug tended to fail on iteration number 3 to 6, thus the loop.
-    We would prefer not to do the loop, but we prefer
-    deterministic testing even more.
-    """
-    for i in range(10):
-        rc = 'not-set'
-        print(f'test_failed_command iteration {i}')
-        with pytest.raises(SystemExit):
-            rc, _ = run_command(['sleep', 'invalidargument'])
-        assert rc == 'not-set'
-
-
-@pytest.mark.run_command
-def test_failed_command_with_allow_error():
-    for i in range(10):
-        rc, _ = run_command(
-            ['sleep', 'invalidargument'],
-            allow_error=True
-        )
-        assert rc == 1, f'Failed on iteration {i}'
-
-
-@pytest.mark.run_command
-def test_invalid_non_docker_command(caplog):
+def test_failed_command(mocker):
+    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
     with pytest.raises(SystemExit):
-        run_command(['thisisnotacommand'], capture_output=True)
+        run_command(['sleep', '--invalidargument'])
+
+
+@pytest.mark.run_command
+def test_failed_command_with_allow_error(mocker):
+    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+
+    rc, out = run_command(
+        ['sleep', '--invalidargument'],
+        allow_error=True,
+    )
+
+    assert rc == 1
+    assert out == []
+
+
+@pytest.mark.run_command
+def test_invalid_non_docker_command(caplog, mocker):
+    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+
+    command = 'thisisnotacommand'
+    with pytest.raises(SystemExit):
+        run_command([command], capture_output=True)
+
     record = caplog.records[-1]  # final log message emitted
-    assert 'You do not have thisisnotacommand installed' in record.msg
+
+    assert f'You do not have {command} installed' in record.msg
     assert 'container-runtime' not in record.msg
 
 
@@ -99,6 +98,11 @@ def test_invalid_non_docker_command(caplog):
 def test_invalid_docker_command(caplog, mocker):
     mocker.patch('ansible_builder.utils.subprocess.Popen', side_effect=FileNotFoundError)
     mocker.patch('ansible_builder.utils.shutil.which', return_value=False)
+
+    with pytest.raises(SystemExit):
+        run_command(['docker', 'history', 'quay.io/foo/fooooo'], capture_output=True)
+
     record = caplog.records[-1]  # final log message emitted
+
     assert 'You do not have docker installed' in record.msg
     assert 'podman: not installed, docker: not installed' in record.msg
