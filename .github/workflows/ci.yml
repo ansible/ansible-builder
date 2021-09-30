@@ -49,6 +49,7 @@ jobs:
   integration:
     runs-on: ubuntu-20.04
     name: Integration - ${{ matrix.py_version.name }}
+    needs: images
 
     strategy:
       fail-fast: false
@@ -69,15 +70,15 @@ jobs:
         with:
           python-version: ${{ matrix.py_version.name }}
 
-      - name: Install dependencies
+      - name: Setup test environment
         run: |
-          python -m pip install --upgrade pip
-          pip install tox
+          ${{ format('python{0}', matrix.py_version.name) }} -m pip install --upgrade pip
+          ${{ format('python{0}', matrix.py_version.name) }} -m pip install tox
+          tox -e integration-${{ matrix.py_version.tox }} --notest
 
       - name: Run integration tests
         run: |
           tox -e integration-${{ matrix.py_version.tox }}
-
 
   unit:
     name: ${{ matrix.test.name }} - ${{ matrix.py_version.name}}
@@ -112,7 +113,7 @@ jobs:
         run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}}
 
   images:
-    name: Container Build - ${{ matrix.runtime }}
+    name: Build Image - ${{ matrix.runtime }}
     runs-on: ubuntu-20.04
 
     strategy:
