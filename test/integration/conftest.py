@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 import tempfile
@@ -78,9 +79,10 @@ def delete_image(container_runtime, image_name):
         return
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
+    regexp = re.compile(r'(no such image)|(image not known)|(image is in use by a container)', re.IGNORECASE)
     r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
     if r.rc != 0:
-        if 'no such image' in r.stdout or 'no such image' in r.stderr or 'image not known' in r.stdout or 'image not known' in r.stderr:
+        if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
         else:
             raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
