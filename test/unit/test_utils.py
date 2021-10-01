@@ -1,5 +1,5 @@
 import os
-import time
+import shutil
 from pathlib import Path
 
 import pytest
@@ -31,12 +31,9 @@ def source_file(tmpdir):
 
 @pytest.fixture
 def dest_file(tmpdir, source_file):
-    '''Returns a file that has been copied from source file
-    Use of fixture partially tests the copy_file functionality
-    '''
+    '''Returns a file that has been copied from source file'''
     dest = os.path.join(tmpdir, 'foo.txt')
-    assert copy_file(source_file, dest)
-    assert not copy_file(source_file, dest)
+    shutil.copy2(source_file, dest)
     return dest
 
 
@@ -50,11 +47,10 @@ def test_copy_file(dest_file, source_file):
 
 
 def test_copy_touched_file(dest_file, source_file):
-    # sleep for a miniscule amount of time, otherwise getmtime could be the same float value
-    time.sleep(0.002)
-
-    # touch does not change contents but updates modification time
-    Path(source_file).touch()
+    stat = Path(source_file).stat()
+    new_atime = stat.st_atime + 1
+    new_mtime = stat.st_mtime + 1
+    os.utime(source_file, (new_atime, new_mtime))
 
     assert copy_file(source_file, dest_file)
     assert not copy_file(source_file, dest_file)
