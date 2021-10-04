@@ -9,6 +9,9 @@ on:
     branches:
       - devel
 
+  schedule:
+    - cron: '00 04 * * *'
+
 jobs:
   sanity:
     name: ${{ matrix.test.name }}
