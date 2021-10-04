@@ -12,6 +12,7 @@ on:
   schedule:
     - cron: '00 04 * * *'
 
+
 jobs:
   sanity:
     name: ${{ matrix.test.name }}
@@ -20,41 +21,47 @@ jobs:
       image: quay.io/ansible/ansible-builder-test-container:1.0.0
       env:
         PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+        TOXENV: ${{ matrix.test.tox_env }}
 
     strategy:
       fail-fast: false
       matrix:
         test:
           - name: Lint
-            env: linters
+            tox_env: linters
 
           - name: Docs
-            env: docs
+            tox_env: docs
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup test environment
-        run: tox -e ${{ matrix.test.env }} --notest
+      - name: Create tox environment
+        run: tox --notest
 
       - name: Run tests
-        run: tox -e ${{ matrix.test.env }}
+        run: tox
+
 
   integration:
     runs-on: ubuntu-20.04
     name: Integration - ${{ matrix.py_version.name }}
     needs: images
 
+    env:
+      TOXENV: ${{ matrix.py_version.tox_env }}
+
     strategy:
       fail-fast: false
       matrix:
         py_version:
           - name: 3.8
-            tox: py38
+            tox_env: py38
 
           - name: 3.9
-            tox: py39
+            tox_env: py39
+
 
     steps:
       - name: Checkout
@@ -67,13 +74,14 @@ jobs:
 
       - name: Setup test environment
         run: |
-          ${{ format('python{0}', matrix.py_version.name) }} -m pip install --upgrade pip
-          ${{ format('python{0}', matrix.py_version.name) }} -m pip install tox
-          tox -e integration-${{ matrix.py_version.tox }} --notest
+          ${{ format('python{0}', matrix.py_version) }} -m pip install --upgrade pip
+          ${{ format('python{0}', matrix.py_version) }} -m pip install tox
+          tox --notest
 
       - name: Run integration tests
         run: |
-          tox -e integration-${{ matrix.py_version.tox }}
+          tox
+
 
   unit:
     name: ${{ matrix.test.name }} - ${{ matrix.py_version.name}}
@@ -82,6 +90,7 @@ jobs:
       image: quay.io/ansible/ansible-builder-test-container:1.0.0
       env:
         PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+        TOXENV: ${{ matrix.py_version.tox_env }}
 
     strategy:
       fail-fast: false
@@ -92,20 +101,21 @@ jobs:
 
         py_version:
           - name: 3.8
-            tox: py38
+            tox_env: py38
 
           - name: 3.9
-            tox: py39
+            tox_env: py39
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup test environment
-        run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}} --notest
+      - name: Create tox environment
+        run: tox --notest
 
       - name: Run tests
-        run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}}
+        run: tox
+
 
   images:
     name: Build Image - ${{ matrix.runtime }}
