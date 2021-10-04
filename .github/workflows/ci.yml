@@ -72,10 +72,13 @@ jobs:
         with:
           python-version: ${{ matrix.py_version.name }}
 
-      - name: Setup test environment
+      - name: Install tox
         run: |
-          ${{ format('python{0}', matrix.py_version) }} -m pip install --upgrade pip
-          ${{ format('python{0}', matrix.py_version) }} -m pip install tox
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tox
+
+      - name: Create tox environment
+        run: |
           tox --notest
 
       - name: Run integration tests
