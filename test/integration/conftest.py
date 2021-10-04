@@ -1,12 +1,10 @@
+import logging
 import os
 import re
 import subprocess
-
-import tempfile
 import uuid
 
 import pytest
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -15,14 +13,14 @@ KEEP_IMAGES = bool(os.environ.get('KEEP_IMAGES', False))
 
 
 @pytest.fixture
-def build_dir_and_ee_yml():
+def build_dir_and_ee_yml(tmp_path):
     """Fixture to return temporary file maker."""
 
     def tmp_dir_and_file(ee_contents):
-        tmpdir = tempfile.mkdtemp(prefix="ansible-builder-test-")
-        with tempfile.NamedTemporaryFile(delete=False, dir=tmpdir) as tempf:
-            tempf.write(bytes(ee_contents, "UTF-8"))
-        return tmpdir, tempf.name
+        tmp_file = tmp_path / 'ee.txt'
+        tmp_file.write_text(ee_contents)
+
+        return tmp_path, tmp_file
 
     return tmp_dir_and_file
 

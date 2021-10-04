@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 import pytest
 import yaml
@@ -18,14 +18,16 @@ def do_not_run_commands(request, mocker):
 
 @pytest.fixture(scope='session')
 def data_dir():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+    return Path(Path(__file__).parent).joinpath('data')
 
 
 @pytest.fixture
-def exec_env_definition_file(tmpdir):
+def exec_env_definition_file(tmp_path):
 
     def _write_file(content=None):
-        path = tmpdir.mkdir('aee').join('execution-env.yml')
+        path = tmp_path / 'aee'
+        path.mkdir()
+        path = path / 'execution-env.yml'
 
         write_str = {}
         if isinstance(content, dict):
@@ -33,8 +35,7 @@ def exec_env_definition_file(tmpdir):
         elif isinstance(content, str):
             write_str = content
 
-        with open(path, 'w') as outfile:
-            outfile.write(write_str)
+        path.write_text(write_str)
 
         return path
 
@@ -45,22 +46,26 @@ good_content = {'version': 1}
 
 
 @pytest.fixture
-def good_exec_env_definition_path(tmpdir):
-    path = tmpdir.mkdir('aee').join('execution-env.yml')
+def good_exec_env_definition_path(tmp_path):
+    path = tmp_path / 'aee'
+    path.mkdir()
+    path = path / 'execution-env.yml'
 
-    with open(path, 'w') as outfile:
+    with path.open('w') as outfile:
         yaml.dump(good_content, outfile)
 
-    return str(path)
+    return path
 
 
 @pytest.fixture
-def galaxy_requirements_file(tmpdir):
+def galaxy_requirements_file(tmp_path):
 
     def _write_file(content={}):
-        path = tmpdir.mkdir('galaxy').join('requirements.yml')
+        path = tmp_path / 'galaxy'
+        path.mkdir()
+        path = path / 'requirements.yml'
 
-        with open(path, 'w') as outfile:
+        with path.open('w') as outfile:
             yaml.dump(content, outfile)
 
         return path

@@ -7,8 +7,8 @@ import pytest
 from ansible_builder.utils import write_file, copy_file, run_command
 
 
-def test_write_file(tmpdir):
-    path = os.path.join(tmpdir, 'foo.txt')
+def test_write_file(tmp_path):
+    path = tmp_path / 'foo.txt'
     text = [
         'foo  # from some collection',
         'bar',
@@ -22,25 +22,24 @@ def test_write_file(tmpdir):
 
 
 @pytest.fixture
-def source_file(tmpdir):
-    source = os.path.join(tmpdir, 'bar.txt')
+def source_file(tmp_path):
+    source = tmp_path / 'bar.txt'
     with open(source, 'w') as f:
         f.write('foo\nbar\n')
     return source
 
 
 @pytest.fixture
-def dest_file(tmpdir, source_file):
+def dest_file(tmp_path, source_file):
     '''Returns a file that has been copied from source file'''
-    dest = os.path.join(tmpdir, 'foo.txt')
+    dest = tmp_path / 'foo.txt'
     shutil.copy2(source_file, dest)
     return dest
 
 
 def test_copy_file(dest_file, source_file):
     # modify source file, which should trigger a re-copy
-    with open(source_file, 'w') as f:
-        f.write('foo\nbar\nzoo')
+    source_file.write_text('foo\nbar\nzoo')
 
     assert copy_file(source_file, dest_file)
     assert not copy_file(source_file, dest_file)

@@ -2,13 +2,13 @@ import pytest
 import os
 
 
-def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
+def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmp_path, data_dir):
     """Test that when a build fails, the ansible-builder exits with non-zero exit code.
 
     Example: https://github.com/ansible/ansible-builder/issues/51
     """
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'build_fail', 'execution-environment.yml')
+    bc = tmp_path
+    ee_def = data_dir / 'build_fail' / 'execution-environment.yml'
     r = cli(
         f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v3",
         allow_error=True
@@ -18,10 +18,10 @@ def test_build_fail_exitcode(cli, container_runtime, ee_tag, tmpdir, data_dir):
     assert 'thisisnotacommand: command not found' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
 
-def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):
+def test_blank_execution_environment(cli, container_runtime, ee_tag, tmp_path, data_dir):
     """Just makes sure that the buld process does not require any particular input"""
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'blank', 'execution-environment.yml')
+    bc = tmp_path
+    ee_def = data_dir / 'blank' / 'execution-environment.yml'
     cli(
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     )
@@ -29,9 +29,9 @@ def test_blank_execution_environment(cli, container_runtime, ee_tag, tmpdir, dat
     assert 'This is a simple test' in result.stdout, result.stdout
 
 
-def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'subversion', 'execution-environment.yml')
+def test_user_system_requirement(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'subversion' / 'execution-environment.yml'
     command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     cli(command)
     result = cli(
@@ -40,9 +40,9 @@ def test_user_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
     assert 'Subversion is a tool for version control' in result.stdout, result.stdout
 
 
-def test_collection_system_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'ansible.posix.at', 'execution-environment.yml')
+def test_collection_system_requirement(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
     cli(
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v3'
     )
@@ -52,9 +52,9 @@ def test_collection_system_requirement(cli, container_runtime, ee_tag, tmpdir, d
     assert 'at version' in result.stderr, result.stderr
 
 
-def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'pip', 'execution-environment.yml')
+def test_user_python_requirement(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'pip' / 'execution-environment.yml'
     command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     cli(command)
     result = cli(
@@ -68,21 +68,21 @@ def test_user_python_requirement(cli, container_runtime, ee_tag, tmpdir, data_di
         assert result.rc != 0, py_library
 
 
-def test_python_git_requirement(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'needs_git', 'execution-environment.yml')
+def test_python_git_requirement(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'needs_git' / 'execution-environment.yml'
     command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     cli(command)
     result = cli(f'{container_runtime} run --rm {ee_tag} pip3 freeze')
     assert 'flask' in result.stdout.lower(), result.stdout
 
 
-def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
+def test_prepended_steps(cli, container_runtime, ee_tag, tmp_path, data_dir):
     """
     Tests that prepended steps are in final stage
     """
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'prepend_steps', 'execution-environment.yml')
+    bc = tmp_path
+    ee_def = data_dir / 'prepend_steps' / 'execution-environment.yml'
     cli(
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime}'
     )
@@ -95,21 +95,21 @@ def test_prepended_steps(cli, container_runtime, ee_tag, tmpdir, data_dir):
     assert 'RUN whoami' in stages_content[-1]
 
 
-def test_build_args_basic(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'build_args', 'execution-environment.yml')
+def test_build_args_basic(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'build_args' / 'execution-environment.yml'
     result = cli(
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} --build-arg FOO=bar -v3'
     )
     assert 'FOO=bar' in result.stdout
 
 
-def test_build_args_from_environment(cli, container_runtime, ee_tag, tmpdir, data_dir):
+def test_build_args_from_environment(cli, container_runtime, ee_tag, tmp_path, data_dir):
     if container_runtime == 'podman':
         pytest.skip('Skipped. Podman does not support this')
 
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'build_args', 'execution-environment.yml')
+    bc = tmp_path
+    ee_def = data_dir / 'build_args' / 'execution-environment.yml'
     os.environ['FOO'] = 'secretsecret'
     result = cli(
         f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} --build-arg FOO -v3'
@@ -117,9 +117,9 @@ def test_build_args_from_environment(cli, container_runtime, ee_tag, tmpdir, dat
     assert 'secretsecret' in result.stdout
 
 
-def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
-    bc = str(tmpdir)
-    ee_def = os.path.join(data_dir, 'build_args', 'base-image.yml')
+def test_base_image_build_arg(cli, container_runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'build_args' / 'base-image.yml'
     os.environ['FOO'] = 'secretsecret'
 
     # Build with custom image tag, then use that as input to --build-arg EE_BASE_IMAGE
@@ -135,7 +135,7 @@ class TestPytz:
     @pytest.fixture(scope='class')
     def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmp_path_factory):
         bc_folder = str(tmp_path_factory.mktemp('bc'))
-        ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
+        ee_def = data_dir / 'pytz' / 'execution-environment.yml'
         r = cli_class(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime} -v 3'
         )
@@ -150,7 +150,7 @@ class TestPytz:
 
     def test_build_layer_reuse(self, cli, container_runtime, data_dir, pytz):
         ee_tag, bc_folder = pytz
-        ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
+        ee_def = data_dir / 'pytz' / 'execution-environment.yml'
         r = cli(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {container_runtime} -v 3'
         )
