@@ -218,7 +218,7 @@ class UserDefinition(BaseDefinition):
                 {ALLOWED_KEYS}
                 """)
             )
-        
+
         if self.raw.get('dependencies') is not None:
             dependencies_keys = set(self.raw.get('dependencies'))
             invalid_dependencies_keys = dependencies_keys - set(CONTEXT_FILES.keys())

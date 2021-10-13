@@ -4,7 +4,7 @@ default_file = 'execution-environment.yml'
 default_tag = 'ansible-execution-env:latest'
 default_build_context = 'context'
 default_verbosity = 2
-runtime_files={
+runtime_files = {
     'podman': 'Containerfile',
     'docker': 'Dockerfile'
 }
