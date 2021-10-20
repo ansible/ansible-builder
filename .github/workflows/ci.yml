@@ -57,10 +57,10 @@ jobs:
       matrix:
         py_version:
           - name: 3.8
-            tox_env: py38
+            tox_env: integration-py38
 
           - name: 3.9
-            tox_env: py39
+            tox_env: integration-py39
 
 
     steps:
@@ -87,7 +87,7 @@ jobs:
 
 
   unit:
-    name: ${{ matrix.test.name }} - ${{ matrix.py_version.name}}
+    name: Unit - ${{ matrix.py_version.name}}
     runs-on: ubuntu-20.04
     container:
       image: quay.io/ansible/ansible-builder-test-container:1.0.0
@@ -98,16 +98,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test:
-          - name: Unit
-            env: unit
-
         py_version:
           - name: 3.8
-            tox_env: py38
+            tox_env: unit-py38
 
           - name: 3.9
-            tox_env: py39
+            tox_env: unit-py39
 
     steps:
       - name: Checkout
