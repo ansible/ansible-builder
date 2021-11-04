@@ -1,6 +1,5 @@
 ---
 - project:
-    merge-mode: squash-merge
     check:
       jobs:
         - ansible-builder-build-container-image
