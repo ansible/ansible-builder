@@ -133,8 +133,8 @@ def test_base_image_build_arg(cli, container_runtime, ee_tag, tmpdir, data_dir):
 class TestPytz:
 
     @pytest.fixture(scope='class')
-    def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmpdir_factory):
-        bc_folder = str(tmpdir_factory.mktemp('bc'))
+    def pytz(self, cli_class, container_runtime, ee_tag_class, data_dir, tmp_path_factory):
+        bc_folder = str(tmp_path_factory.mktemp('bc'))
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
         r = cli_class(
             f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {container_runtime} -v 3'
