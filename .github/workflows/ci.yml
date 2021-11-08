@@ -12,13 +12,26 @@ on:
 jobs:
   integration:
     runs-on: ubuntu-20.04
-    name: Integration
-    steps:
-      - uses: actions/checkout@v2
+    name: Integration - ${{ matrix.py_version.name }}
 
-      - uses: actions/setup-python@v2
+    strategy:
+      fail-fast: false
+      matrix:
+        py_version:
+          - name: 3.8
+            tox: py38
+
+          - name: 3.9
+            tox: py39
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Python ${{ matrix.py_version.name }}
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: ${{ matrix.py_version.name }}
 
       - name: Install dependencies
         run: |
@@ -27,7 +40,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          tox -e integration
+          tox -e integration-${{ matrix.py_version.tox }}
 
   sanity:
     name: ${{ matrix.test.name }}
@@ -96,3 +109,21 @@ jobs:
 
       - name: Run tests
         run: tox -e ${{ matrix.test.env }}-${{ matrix.py_version.tox}}
+
+  images:
+    name: Container Build - ${{ matrix.runtime }}
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - docker
+          - podman
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build Container Image
+        run: ${{ matrix.runtime }} build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
