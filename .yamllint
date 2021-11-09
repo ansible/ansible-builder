@@ -1,5 +1,30 @@
----
+extends: default
+
 ignore: |
   .tox
   test/data/definition_files/bad.yml
   test/data/definition_files/invalid.yml
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  line-length: disable
+  document-start: disable
+  truthy:
+    allowed-values:
+      - 'True'
+      - 'true'
+      - 'Yes'
+      - 'yes'
+      - 'On'
+      - 'on'
+      - 'False'
+      - 'false'
+      - 'No'
+      - 'no'
+      - 'Off'
+      - 'off'
