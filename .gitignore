@@ -1,22 +1,35 @@
-__pycache__
-*~
-\#*\#
-.#*
-*.egg-info/
-setup-to-compare.py
-
-/.pytest_cache/
-/context/
-
-# pip
-.cache/
-
-# testing and examples
-/test/data/bc/
-artifacts/
-/docs/_build/
-/.eggs/
-/AUTHORS
-/ChangeLog
-/dist/
+# Test artifacts
+*.py,cover
+.pytest_cache/
+docs/_build/
 docs/build/
+pytestdebug.log
+test/coverage/
+
+# Byte-complied files
+*.py[cod]
+__pycache__/
+
+# Distribution / packaging
+*.egg
+*.egg-info/
+.eggs/
+AUTHORS
+Changelog
+build/
+deb-build/
+dist/
+eggs/
+rpm-build/
+
+# Environments
+.env
+.python-version
+.tox/
+.venv
+env/
+venv/
+
+# Demo files
+/demo/artifacts
+/demo/daemon.log

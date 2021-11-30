@@ -1,0 +1,19 @@
+[run]
+branch = True
+data_file = test/coverage/data/coverage
+source =
+    ansible_builder
+    test
+
+[report]
+skip_covered = True
+skip_empty = True
+
+[html]
+directory = test/coverage/reports/html
+
+[xml]
+output = test/coverage/reports/coverage.xml
+
+[json]
+output = test/coverage/reports/coverage.json
