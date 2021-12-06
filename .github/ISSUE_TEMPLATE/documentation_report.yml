@@ -1,0 +1,24 @@
+name: Documentation Report
+description: Report an issue with documentation
+labels:
+  - needs_triage
+  - docs
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Thank you reporting an issue with Ansible Builder documentation.**
+
+        If you are looking for community support, please reach out on IRC:
+
+          [#ansible](https://web.libera.chat/#ansible)
+          [#ansible-builder](https://web.libera.chat/#ansible-builder)
+
+
+  - type:
+    attributes:
+      label: Summary
+      description: Describe the problem or suggestion with the documentation
+      validations:
+        required: true
