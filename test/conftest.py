@@ -1,19 +1,19 @@
-import yaml
-from unittest import mock
-import pytest
 import os
+
+import pytest
+import yaml
 
 
 @pytest.fixture(autouse=True)
-def do_not_run_commands(request):
+def do_not_run_commands(request, mocker):
     if 'run_command' in request.keywords:
         yield
         return
-    cmd_mock = mock.MagicMock(return_value=[1, [
+    cmd_mock = mocker.MagicMock(return_value=[1, [
         'python:', '  foo: []', 'system: {}',
     ]])
-    with mock.patch('ansible_builder.main.run_command', new=cmd_mock):
-        yield cmd_mock
+    mocker.patch('ansible_builder.main.run_command', new=cmd_mock)
+    yield cmd_mock
 
 
 @pytest.fixture(scope='session')
