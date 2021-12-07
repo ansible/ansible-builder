@@ -16,7 +16,7 @@ body:
           [#ansible-builder](https://web.libera.chat/#ansible-builder)
 
 
-  - type:
+  - type: textarea
     attributes:
       label: Summary
       description: Describe the problem or suggestion with the documentation
