@@ -1,6 +1,6 @@
 import os
+import pathlib
 import shutil
-from pathlib import Path
 
 import pytest
 
@@ -46,7 +46,7 @@ def test_copy_file(dest_file, source_file):
 
 
 def test_copy_touched_file(dest_file, source_file):
-    stat = Path(source_file).stat()
+    stat = pathlib.Path(source_file).stat()
     new_atime = stat.st_atime + 1
     new_mtime = stat.st_mtime + 1
     os.utime(source_file, (new_atime, new_mtime))

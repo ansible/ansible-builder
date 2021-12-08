@@ -1,4 +1,4 @@
-from pathlib import Path
+import pathlib
 
 import pytest
 import yaml
@@ -18,7 +18,7 @@ def do_not_run_commands(request, mocker):
 
 @pytest.fixture(scope='session')
 def data_dir():
-    return Path(Path(__file__).parent).joinpath('data')
+    return pathlib.Path(pathlib.Path(__file__).parent).joinpath('data')
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import os
-import pytest
+import pathlib
 
-from pathlib import Path
+import pytest
 
 from ansible_builder import constants
 from ansible_builder.exceptions import DefinitionError
@@ -116,7 +116,7 @@ def test_nested_galaxy_file(data_dir, tmp_path):
     req_in_bc = tmp_path.joinpath(constants.user_content_subfolder, 'requirements.yml')
     assert req_in_bc.exists()
 
-    req_original = Path('test/data/foo/requirements.yml')
+    req_original = pathlib.Path('test/data/foo/requirements.yml')
     assert req_in_bc.read_text() == req_original.read_text()
 
 
