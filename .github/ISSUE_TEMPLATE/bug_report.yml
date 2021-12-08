@@ -15,32 +15,36 @@ body:
           [#ansible-builder](https://web.libera.chat/#ansible-builder)
 
   - type: input
-    label: Ansible Builder version
-    description: Output from `ansible-builder --version`
-    render: console
+    attributes:
+      label: Ansible Builder version
+      description: Output from `ansible-builder --version`
+      render: console
     validations:
       required: true
 
   - type: textarea
-    label: Python version
-    description: Output from `python -VV`
-    render: console
+    attributes:
+      label: Python version
+      description: Output from `python -VV`
+      render: console
     validations:
       required: true
 
   - type: textarea
-    label: Operating System and Environment
-    description: Provide relevant information about the operating system and environment
-    render: console
-    placeholder: RHEL 8, Debian 10, output from `/etc/os-release`, any other relevant information
+    attributes:
+      label: Operating System and Environment
+      description: Provide relevant information about the operating system and environment
+      render: console
+      placeholder: RHEL 8, Debian 10, output from `/etc/os-release`, any other relevant information
     validations:
       required: true
 
   - type: input
-    label: Container Runtime
-    description: Output from `podman|docker --version`
-    render: console
-    placeholder: podman --version
+    attributes:
+      label: Container Runtime
+      description: Output from `podman|docker --version`
+      render: console
+      placeholder: podman --version
     validations:
       required: true
 
@@ -75,5 +79,3 @@ body:
       description: What actually happened when running the steps above
     validations:
       required: true
-
-
