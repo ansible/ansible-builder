@@ -1,11 +1,10 @@
+import logging
 import os
+import re
 import subprocess
-
-import tempfile
 import uuid
 
 import pytest
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +13,14 @@ KEEP_IMAGES = bool(os.environ.get('KEEP_IMAGES', False))
 
 
 @pytest.fixture
-def build_dir_and_ee_yml():
+def build_dir_and_ee_yml(tmp_path):
     """Fixture to return temporary file maker."""
 
     def tmp_dir_and_file(ee_contents):
-        tmpdir = tempfile.mkdtemp(prefix="ansible-builder-test-")
-        with tempfile.NamedTemporaryFile(delete=False, dir=tmpdir) as tempf:
-            tempf.write(bytes(ee_contents, "UTF-8"))
-        return tmpdir, tempf.name
+        tmp_file = tmp_path / 'ee.txt'
+        tmp_file.write_text(ee_contents)
+
+        return tmp_path, tmp_file
 
     return tmp_dir_and_file
 
@@ -78,9 +77,10 @@ def delete_image(container_runtime, image_name):
         return
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
+    regexp = re.compile(r'(no such image)|(image not known)|(image is in use by a container)', re.IGNORECASE)
     r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
     if r.rc != 0:
-        if 'no such image' in r.stdout or 'no such image' in r.stderr or 'image not known' in r.stdout or 'image not known' in r.stderr:
+        if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
         else:
             raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')

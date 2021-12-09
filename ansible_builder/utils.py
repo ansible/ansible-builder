@@ -155,7 +155,7 @@ def copy_file(source: str, dest: str) -> bool:
         should_copy = True
 
     if should_copy:
-        shutil.copy(source, dest)
+        shutil.copy2(source, dest)
     else:
         logger.debug("File {0} is already up-to-date.".format(dest))
 
