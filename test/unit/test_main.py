@@ -1,4 +1,6 @@
 import os
+import pathlib
+
 import pytest
 
 from ansible_builder import constants
@@ -23,7 +25,7 @@ def test_definition_version_missing(exec_env_definition_file):
 
 
 @pytest.mark.parametrize('path_spec', ('absolute', 'relative'))
-def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file, path_spec, tmpdir):
+def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file, path_spec, tmp_path):
     galaxy_requirements_content = {
         'collections': [
             {'name': 'geerlingguy.php_roles', 'version': '0.9.3', 'source': 'https://galaxy.ansible.com'}
@@ -41,7 +43,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
 
     exec_env_path = exec_env_definition_file(content=exec_env_content)
 
-    aee = AnsibleBuilder(filename=exec_env_path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=exec_env_path, build_context=str(tmp_path / 'bc'))
     aee.build()
 
     with open(aee.containerfile.path) as f:
@@ -50,10 +52,10 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     assert f'ADD {constants.user_content_subfolder} /build' in content
 
 
-def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
+def test_base_image_via_build_args(exec_env_definition_file, tmp_path):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=path, build_context=tmp_path.joinpath('bc').as_posix())
     aee.build()
 
     with open(aee.containerfile.path) as f:
@@ -63,7 +65,7 @@ def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
 
     aee = AnsibleBuilder(
         filename=path, build_args={'EE_BASE_IMAGE': 'my-custom-image'},
-        build_context=tmpdir.mkdir('bc2')
+        build_context=tmp_path.joinpath('bc2')
     )
     aee.build()
 
@@ -73,7 +75,7 @@ def test_base_image_via_build_args(exec_env_definition_file, tmpdir):
     assert 'EE_BASE_IMAGE' in content  # TODO: should we make user value default?
 
 
-def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpdir):
+def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmp_path):
     content = {
         'version': 1,
         'build_arg_defaults': {
@@ -81,7 +83,7 @@ def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmpd
         }
     }
     path = exec_env_definition_file(content=content)
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=path, build_context=tmp_path.joinpath('bc'))
     aee.build()
 
     with open(aee.containerfile.path) as f:
@@ -105,23 +107,20 @@ def test_build_command(exec_env_definition_file):
     assert 'foo/bar/path/Dockerfile' in " ".join(command)
 
 
-def test_nested_galaxy_file(data_dir, tmpdir):
+def test_nested_galaxy_file(data_dir, tmp_path):
     if not os.path.exists('test/data/nested-galaxy.yml'):
         pytest.skip('Test is only valid when ran from ansible-builder root')
 
-    bc_folder = str(tmpdir)
-    AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=bc_folder).build()
+    AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=tmp_path).build()
 
-    req_in_bc = os.path.join(bc_folder, constants.user_content_subfolder, 'requirements.yml')
-    assert os.path.exists(req_in_bc)
+    req_in_bc = tmp_path.joinpath(constants.user_content_subfolder, 'requirements.yml')
+    assert req_in_bc.exists()
 
-    req_original = 'test/data/foo/requirements.yml'
-    with open(req_in_bc, 'r') as f_in_bc:
-        with open(req_original, 'r') as f_in_def:
-            assert f_in_bc.read() == f_in_def.read()
+    req_original = pathlib.Path('test/data/foo/requirements.yml')
+    assert req_in_bc.read_text() == req_original.read_text()
 
 
-def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
+def test_ansible_config_for_galaxy(exec_env_definition_file, tmp_path):
     if not os.path.exists('test/data/ansible-test.cfg'):
         pytest.skip('Test is only valid when ran from ansible-builder root')
 
@@ -131,7 +130,7 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
         'ansible_config': ansible_config_path
     }
     path = exec_env_definition_file(content=content)
-    aee = AnsibleBuilder(filename=path, build_context=tmpdir.mkdir('bc'))
+    aee = AnsibleBuilder(filename=path, build_context=tmp_path.joinpath('bc'))
     aee.build()
 
     with open(aee.containerfile.path) as f:
@@ -140,10 +139,10 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmpdir):
     assert f'ADD {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
 
 
-def test_use_dockerfile_with_podman(exec_env_definition_file, tmpdir):
+def test_use_dockerfile_with_podman(exec_env_definition_file, tmp_path):
     path = exec_env_definition_file(content={'version': 1})
     aee = AnsibleBuilder(
-        filename=path, build_context=tmpdir.mkdir('bc'),
+        filename=path, build_context=tmp_path.joinpath('bc'),
         container_runtime='podman', output_filename='Dockerfile'
     )
     aee.build()
@@ -210,7 +209,7 @@ class TestDefinitionErrors:
         if expect:
             assert expect in exc.value.args[0]
 
-    def test_file_not_found_error(good_exec_env_definition_path, tmpdir):
+    def test_file_not_found_error(self):
         path = "exec_env.txt"
 
         with pytest.raises(DefinitionError) as error:
