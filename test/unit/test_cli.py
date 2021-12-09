@@ -7,35 +7,35 @@ def prepare(args):
     return AnsibleBuilder(**vars(args))
 
 
-def test_custom_image(exec_env_definition_file, tmpdir):
+def test_custom_image(exec_env_definition_file, tmp_path):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
 
     # test with 'container' sub-command
-    aee = prepare(['container', 'build', '-f', path, '--build-arg', 'EE_BASE_IMAGE=my-custom-image', '-c', str(tmpdir)])
+    aee = prepare(['container', 'build', '-f', path, '--build-arg', 'EE_BASE_IMAGE=my-custom-image', '-c', str(tmp_path)])
     assert aee.build_args == {'EE_BASE_IMAGE': 'my-custom-image'}
 
     # test without 'container' sub-command (defaulting to 'container')
-    aee = prepare(['build', '-f', path, '--build-arg', 'EE_BASE_IMAGE=my-custom-image', '-c', str(tmpdir)])
+    aee = prepare(['build', '-f', path, '--build-arg', 'EE_BASE_IMAGE=my-custom-image', '-c', str(tmp_path)])
     assert aee.build_args == {'EE_BASE_IMAGE': 'my-custom-image'}
 
 
-def test_custom_ansible_galaxy_cli_collection_opts(exec_env_definition_file, tmpdir):
+def test_custom_ansible_galaxy_cli_collection_opts(exec_env_definition_file, tmp_path):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
 
     # test with 'container' sub-command
-    aee = prepare(['container', 'build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--pre', '-c', str(tmpdir)])
+    aee = prepare(['container', 'build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--pre', '-c', str(tmp_path)])
     assert aee.build_args == {'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': '--pre'}
 
     # test without 'container' sub-command (defaulting to 'container')
-    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--pre', '-c', str(tmpdir)])
+    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--pre', '-c', str(tmp_path)])
     assert aee.build_args == {'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': '--pre'}
 
 
-def test_build_context(good_exec_env_definition_path, tmpdir):
+def test_build_context(good_exec_env_definition_path, tmp_path):
     path = str(good_exec_env_definition_path)
-    build_context = str(tmpdir)
+    build_context = str(tmp_path)
 
     # test with 'container' sub-command
     aee = prepare(['container', 'build', '-f', path, '-c', build_context])
