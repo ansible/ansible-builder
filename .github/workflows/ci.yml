@@ -4,10 +4,12 @@ on:
   pull_request:
     branches:
       - devel
+      - release_*
 
   push:
     branches:
       - devel
+      - release_*
 
   schedule:
     - cron: '00 04 * * *'
