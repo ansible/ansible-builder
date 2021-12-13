@@ -1,6 +1,7 @@
 import pytest
 import os
 
+
 @pytest.mark.test_all_runtimes
 def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
     """Test that when a build fails, the ansible-builder exits with non-zero exit code.
@@ -149,12 +150,19 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
 
 
 @pytest.mark.test_all_runtimes
-@pytest.mark.skip("Concurrency issues plus output parsing is using the incorrect format")
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / 'pytz' / 'execution-environment.yml'
+
+    if runtime == 'docker':
+        # Prune the build cache. This command does not exist for podman.
+        cli(f'{runtime} builder prune --force')
+
     cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
     result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
-    stdout_no_whitespace = result.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
+
+    # Get the range of lines that contain the step we want to ensure used the cached layer
+    out_lines = result.stdout.splitlines()
+    test_index = [idx for idx, value in enumerate(out_lines) if 'RUN /output/install-from-bindep && rm -rf /output/wheels' in value][0]
 
     assert 'Collecting pytz' not in result.stdout, result.stdout
-    assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace
+    assert any('cache' in line.lower() for line in out_lines[test_index:])
