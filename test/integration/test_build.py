@@ -148,6 +148,7 @@ class TestPytz:
         r = cli(f'{container_runtime} run --rm {ee_tag} pip3 show pytz')
         assert 'World timezone definitions, modern and historical' in r.stdout, r.stdout
 
+    @pytest.mark.skip("Concurrency issues plus output parsing is using the incorrect format")
     def test_build_layer_reuse(self, cli, container_runtime, data_dir, pytz):
         ee_tag, bc_folder = pytz
         ee_def = os.path.join(data_dir, 'pytz', 'execution-environment.yml')
