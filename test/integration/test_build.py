@@ -139,34 +139,22 @@ def test_base_image_build_arg(cli, runtime, ee_tag, tmp_path, data_dir):
     assert f"{ee_tag}-custom" in result.stdout
 
 
-class TestPytz:
+@pytest.mark.test_all_runtimes
+def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
+    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
+    cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    result = cli(f'{runtime} run --rm {ee_tag} pip3 show pytz')
 
-    @pytest.fixture(scope='class')
-    @pytest.mark.test_all_runtimes
-    def pytz(self, cli_class, runtime, ee_tag_class, data_dir, tmp_path_factory):
-        bc_folder = str(tmp_path_factory.mktemp('bc'))
-        ee_def = data_dir / 'pytz' / 'execution-environment.yml'
-        r = cli_class(
-            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag_class} --container-runtime {runtime} -v 3'
-        )
-        # Because of test multi-processing, this may or may not use cache, so allow either
-        assert 'RUN /output/install-from-bindep && rm -rf /output/wheels' in r.stdout, r.stdout
-        return (ee_tag_class, bc_folder)
+    assert 'World timezone definitions, modern and historical' in result.stdout
 
-    @pytest.mark.test_all_runtimes
-    def test_has_pytz(self, cli, runtime, pytz):
-        ee_tag, bc_folder = pytz
-        r = cli(f'{runtime} run --rm {ee_tag} pip3 show pytz')
-        assert 'World timezone definitions, modern and historical' in r.stdout, r.stdout
 
-    @pytest.mark.test_all_runtimes
-    @pytest.mark.skip("Concurrency issues plus output parsing is using the incorrect format")
-    def test_build_layer_reuse(self, cli, runtime, data_dir, pytz):
-        ee_tag, bc_folder = pytz
-        ee_def = data_dir / 'pytz' / 'execution-environment.yml'
-        r = cli(
-            f'ansible-builder build -c {bc_folder} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3'
-        )
-        assert 'Collecting pytz' not in r.stdout, r.stdout
-        stdout_no_whitespace = r.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
-        assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace, r.stdout
+@pytest.mark.test_all_runtimes
+@pytest.mark.skip("Concurrency issues plus output parsing is using the incorrect format")
+def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
+    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
+    cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    stdout_no_whitespace = result.stdout.replace('--->', '-->').replace('\n', ' ').replace('   ', ' ').replace('  ', ' ')
+
+    assert 'Collecting pytz' not in result.stdout, result.stdout
+    assert 'RUN /output/install-from-bindep && rm -rf /output/wheels --> Using cache' in stdout_no_whitespace

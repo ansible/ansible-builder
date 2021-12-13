@@ -106,8 +106,3 @@ class CompletedProcessProxy(object):
 @pytest.fixture
 def cli():
     return run
-
-
-@pytest.fixture(scope='class')
-def cli_class():
-    return run
