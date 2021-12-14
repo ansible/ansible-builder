@@ -92,7 +92,8 @@ def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmp_
     assert 'EE_BASE_IMAGE=my-other-custom-image' in content
 
 
-def test_build_command(exec_env_definition_file):
+@pytest.mark.test_all_runtimes
+def test_build_command(exec_env_definition_file, runtime):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
@@ -100,7 +101,7 @@ def test_build_command(exec_env_definition_file):
     command = aee.build_command
     assert 'build' and 'my-custom-image' in command
 
-    aee = AnsibleBuilder(filename=path, build_context='foo/bar/path', container_runtime='docker')
+    aee = AnsibleBuilder(filename=path, build_context='foo/bar/path', container_runtime=runtime)
 
     command = aee.build_command
     assert 'foo/bar/path' in command
@@ -139,11 +140,12 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmp_path):
     assert f'ADD {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
 
 
-def test_use_dockerfile_with_podman(exec_env_definition_file, tmp_path):
+@pytest.mark.test_all_runtimes
+def test_use_dockerfile(exec_env_definition_file, tmp_path, runtime):
     path = exec_env_definition_file(content={'version': 1})
     aee = AnsibleBuilder(
         filename=path, build_context=tmp_path.joinpath('bc'),
-        container_runtime='podman', output_filename='Dockerfile'
+        container_runtime=runtime, output_filename='Dockerfile'
     )
     aee.build()
 
