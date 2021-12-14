@@ -72,13 +72,14 @@ def gen_image_name(request):
     ])
 
 
-def delete_image(container_runtime, image_name):
+@pytest.mark.test_all_runtimes
+def delete_image(runtime, image_name):
     if KEEP_IMAGES:
         return
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
     regexp = re.compile(r'(no such image)|(image not known)|(image is in use by a container)', re.IGNORECASE)
-    r = run(f'{container_runtime} rmi -f {image_name}', allow_error=True)
+    r = run(f'{runtime} rmi -f {image_name}', allow_error=True)
     if r.rc != 0:
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
@@ -86,18 +87,12 @@ def delete_image(container_runtime, image_name):
             raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
-@pytest.fixture()
-def ee_tag(request, container_runtime):
+@pytest.fixture
+@pytest.mark.test_all_runtimes
+def ee_tag(request, runtime):
     image_name = gen_image_name(request)
     yield image_name
-    delete_image(container_runtime, image_name)
-
-
-@pytest.fixture(scope='class')
-def ee_tag_class(request, container_runtime):
-    image_name = gen_image_name(request)
-    yield image_name
-    delete_image(container_runtime, image_name)
+    delete_image(runtime, image_name)
 
 
 class CompletedProcessProxy(object):
@@ -108,19 +103,6 @@ class CompletedProcessProxy(object):
         return getattr(self.result, attr)
 
 
-@pytest.fixture()
+@pytest.fixture
 def cli():
     return run
-
-
-@pytest.fixture(scope='class')
-def cli_class():
-    return run
-
-
-@pytest.fixture(params=['docker', 'podman'], ids=['docker', 'podman'], scope='session')
-def container_runtime(request):
-    if run(f'{request.param} --version', check=False).returncode == 0:
-        return request.param
-    else:
-        pytest.skip(f'{request.param} runtime not available')
