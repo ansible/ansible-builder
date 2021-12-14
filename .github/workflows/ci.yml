@@ -1,30 +1,127 @@
----
-
 name: CI
 
 on:
   pull_request:
-    branches: [devel]
-
   push:
-    branches: [devel]
+
 
 jobs:
+  sanity:
+    name: ${{ matrix.test.name }}
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      env:
+        PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+        TOXENV: ${{ matrix.test.tox_env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+          - name: Lint
+            tox_env: linters
+
+          - name: Docs
+            tox_env: docs
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create tox environment
+        run: tox --notest
+
+      - name: Run tests
+        run: tox
+
+
+  images:
+    name: Build Image - ${{ matrix.runtime }}
+    runs-on: ubuntu-20.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - docker
+          - podman
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build Container Image
+        run: ${{ matrix.runtime }} build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
+
+
   integration:
     runs-on: ubuntu-20.04
-    name: Integration
+    name: Integration - ${{ matrix.py_version.name }}
+    needs: images
+
+    env:
+      TOXENV: ${{ matrix.py_version.tox_env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        py_version:
+          - name: 3.8
+            tox_env: integration-py38
+
+          - name: 3.9
+            tox_env: integration-py39
+
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-      - uses: actions/setup-python@v2
+      - name: Install Python ${{ matrix.py_version.name }}
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: ${{ matrix.py_version.name }}
 
-      - name: Install dependencies
+      - name: Install tox
         run: |
-          python -m pip install --upgrade pip
-          pip install tox
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tox
+
+      - name: Create tox environment
+        run: |
+          tox --notest
 
       - name: Run integration tests
         run: |
-          tox -e integration
+          tox
+
+
+  unit:
+    name: Unit - ${{ matrix.py_version.name}}
+    runs-on: ubuntu-20.04
+    container:
+      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      env:
+        PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
+        TOXENV: ${{ matrix.py_version.tox_env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        py_version:
+          - name: 3.8
+            tox_env: unit-py38
+
+          - name: 3.9
+            tox_env: unit-py39
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create tox environment
+        run: tox --notest
+
+      - name: Run tests
+        run: tox
