@@ -141,6 +141,7 @@ def test_base_image_build_arg(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
+@pytest.mark.xfail(reason='Unreliable on podman')
 def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / 'pytz' / 'execution-environment.yml'
     cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
@@ -150,6 +151,7 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
 
 
 @pytest.mark.test_all_runtimes
+@pytest.mark.xfail(reason='Unreliable on podman')
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / 'pytz' / 'execution-environment.yml'
 
