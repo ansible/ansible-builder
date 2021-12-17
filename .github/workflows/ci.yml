@@ -10,7 +10,7 @@ jobs:
     name: ${{ matrix.test.name }}
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      image: quay.io/ansible/ansible-builder-test-container:2.0.0
       env:
         PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
         TOXENV: ${{ matrix.test.tox_env }}
@@ -67,11 +67,14 @@ jobs:
       fail-fast: false
       matrix:
         py_version:
-          - name: 3.8
+          - name: '3.8'
             tox_env: integration-py38
 
-          - name: 3.9
+          - name: '3.9'
             tox_env: integration-py39
+
+          - name: '3.10'
+            tox_env: integration-py310
 
 
     steps:
@@ -101,7 +104,7 @@ jobs:
     name: Unit - ${{ matrix.py_version.name}}
     runs-on: ubuntu-20.04
     container:
-      image: quay.io/ansible/ansible-builder-test-container:1.0.0
+      image: quay.io/ansible/ansible-builder-test-container:2.0.0
       env:
         PIP_CACHE_DIR: ${{ runner.temp }}/.cache/pip
         TOXENV: ${{ matrix.py_version.tox_env }}
@@ -110,11 +113,14 @@ jobs:
       fail-fast: false
       matrix:
         py_version:
-          - name: 3.8
+          - name: '3.8'
             tox_env: unit-py38
 
-          - name: 3.9
+          - name: '3.9'
             tox_env: unit-py39
+
+          - name: '3.10'
+            tox_env: unit-py310
 
     steps:
       - name: Checkout
