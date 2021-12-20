@@ -124,6 +124,12 @@ def add_container_options(parser):
              'Internally ansible-builder makes use of {0}.'.format(
              ', '.join(constants.build_arg_defaults.keys())))
 
+    build_command_parser.add_argument(
+        '--no-cache',
+        action='store_true',
+        help='Do not use cache when building the image',
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',

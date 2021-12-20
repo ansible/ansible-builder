@@ -44,3 +44,14 @@ def test_build_context(good_exec_env_definition_path, tmp_path):
     # test without 'container' sub-command (defaulting to 'container')
     aee = prepare(['build', '-f', path, '-c', build_context])
     assert aee.build_context == build_context
+
+
+def test_build_no_cache(good_exec_env_definition_path, tmp_path):
+    path = str(good_exec_env_definition_path)
+    build_context = str(tmp_path)
+
+    aee = prepare(['container', 'build', '-f', path, '-c', build_context])
+    aee_no_cache = prepare(['container', 'build', '-f', path, '-c', build_context, '--no-cache'])
+
+    assert '--no-cache' not in aee.build_command
+    assert '--no-cache' in aee_no_cache.build_command

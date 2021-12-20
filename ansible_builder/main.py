@@ -39,6 +39,7 @@ class AnsibleBuilder:
                  tag=constants.default_tag,
                  container_runtime=constants.default_container_runtime,
                  output_filename=None,
+                 no_cache=False,
                  verbosity=constants.default_verbosity):
         self.action = action
         self.definition = UserDefinition(filename=filename)
@@ -49,6 +50,7 @@ class AnsibleBuilder:
             build_context, constants.user_content_subfolder)
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
+        self.no_cache = no_cache
         self.containerfile = Containerfile(
             definition=self.definition,
             build_context=self.build_context,
@@ -110,6 +112,9 @@ class AnsibleBuilder:
             command.append(build_arg)
 
         command.append(self.build_context)
+
+        if self.no_cache:
+            command.append('--no-cache')
 
         return command
 
