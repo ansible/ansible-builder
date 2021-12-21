@@ -163,6 +163,7 @@ def add_container_options(parser):
                                    help=('Sanitize and de-duplicate requirements. '
                                          'This is normally done separately from the introspect script, but this '
                                          'option is given to more accurately test collection content.'))
+
     introspect_parser.add_argument(
         'folder', default=base_collections_path, nargs='?',
         help=(

@@ -18,9 +18,22 @@ EXCLUDE_REQUIREMENTS = frozenset((
 
 
 def sanitize_requirements(collection_py_reqs):
+    """
+    Cleanup Python requirements by removing duplicates and excluded packages.
+
+    The user requirements file will go through the deduplication process, but
+    skips the special package exclusion process.
+
+    :param dict collection_py_reqs: A dict of lists of Python requirements, keyed
+        by fully qualified collection name. The special key `user` holds requirements
+        from the user specified requirements file from the ``--user-pip`` CLI option.
+
+    :returns: A finalized list of sanitized Python requirements.
+    """
     # de-duplication
     consolidated = []
     seen_pkgs = set()
+
     for collection, lines in collection_py_reqs.items():
         try:
             for req in requirements.parse('\n'.join(lines)):
@@ -38,12 +51,13 @@ def sanitize_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            logger.warning('Warning: failed to parse requirments from {}, error: {}'.format(collection, e))
+            logger.warning('Warning: failed to parse requirements from {}, error: {}'.format(collection, e))
 
     # removal of unwanted packages
     sanitized = []
     for req in consolidated:
-        if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS:
+        # Exclude packages, unless it was present in the user supplied requirements.
+        if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
             logger.debug(f'# Excluding requirement {req.name} from {req.collections}')
             continue
         if req.name is None and req.vcs:

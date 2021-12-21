@@ -34,3 +34,25 @@ def test_skip_bad_formats():
         'bar'
     ], 'foo.bad': ['zizzer zazzer zuzz']  # not okay
     }) == ['foo  # from collection foo.bar', 'bar  # from collection foo.bar']
+
+
+def test_sanitize_requirements_do_not_exclude():
+    py_reqs = {
+        'foo.bar': [
+            'foo',
+            'ansible',   # should not appear
+            'bar',
+        ],
+        'user': [
+            'pytest',    # should appear
+            'bar',
+            'zoo'
+        ]
+    }
+
+    assert sanitize_requirements(py_reqs) == [
+        'foo  # from collection foo.bar',
+        'bar  # from collection foo.bar,user',
+        'pytest  # from collection user',
+        'zoo  # from collection user',
+    ]
