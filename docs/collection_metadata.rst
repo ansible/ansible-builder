@@ -52,6 +52,10 @@ not be included in the combined file. These include test packages and
 packages that provide Ansible itself. The full list can be found in
 ``EXCLUDE_REQUIREMENTS`` in the ``ansible_builder.requirements`` module.
 
+Any requirements supplied in the user requirements file, via the ``--user-pip``
+option to the ``introspect`` command, will not be processed against the list of
+excluded Python packages.
+
 System-level Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
