@@ -26,6 +26,16 @@ The short-hand form of the command is also supported::
 
     ansible-builder introspect --sanitize ~/.ansible/collections/
 
+The ``--sanitize`` option will go through all of the collection requirements and
+remove duplicates, as well as remove some Python requirements that should normally
+be excluded (see :ref:`python_deps` below).
+
+.. note::
+    Use the ``-v3`` option to ``introspect`` to see logging messages about requirements
+    that are being excluded.
+
+.. _python_deps:
+
 Python Dependencies
 ^^^^^^^^^^^^^^^^^^^
 
@@ -41,6 +51,10 @@ There are several package names which are specifically *ignored* by
 not be included in the combined file. These include test packages and
 packages that provide Ansible itself. The full list can be found in
 ``EXCLUDE_REQUIREMENTS`` in the ``ansible_builder.requirements`` module.
+
+Any requirements supplied in the user requirements file, via the ``--user-pip``
+option to the ``introspect`` command, will not be processed against the list of
+excluded Python packages.
 
 System-level Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
