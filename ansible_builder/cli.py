@@ -104,10 +104,15 @@ def add_container_options(parser):
         )
     )
 
+    # Because of the way argparse works, if we specify the default here, it would
+    # always be included in the value list if a tag value was supplied. We don't want
+    # that, so we must, instead, set the default AFTER the argparse.parse_args() call.
+    # See https://bugs.python.org/issue16399 for more info.
     build_command_parser.add_argument(
         '-t', '--tag',
-        default=constants.default_tag,
-        help='The name for the container image being built (default: %(default)s)')
+        action='extend',
+        nargs='+',
+        help=f'The name for the container image being built (default: {constants.default_tag}')
 
     build_command_parser.add_argument(
         '--container-runtime',
@@ -229,6 +234,11 @@ def parse_args(args=sys.argv[1:]):
     add_container_options(container_parser)
 
     args = parser.parse_args(args)
+
+    # Tag default must be handled differently. See comment for --tag option.
+    if not args.tag:
+        args.tag = [constants.default_tag]
+
     return args
 
 
