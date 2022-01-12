@@ -55,3 +55,12 @@ def test_build_no_cache(good_exec_env_definition_path, tmp_path):
 
     assert '--no-cache' not in aee.build_command
     assert '--no-cache' in aee_no_cache.build_command
+
+
+def test_build_multiple_tags(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+
+    # test with 'container' sub-command
+    aee = prepare(['container', 'build', '--tag', 'TAG1', '--tag', 'TAG2', '-f', path, '-c', str(tmp_path)])
+    assert aee.tags == ['TAG1', 'TAG2']

@@ -33,14 +33,14 @@ def test_container_help(cli):
 def test_container_build_help(cli):
     result = cli('ansible-builder container build --help', check=False)
     help_text = result.stdout
-    assert 'usage: ansible-builder container build [-h] [-t TAG]' in help_text
+    assert 'usage: ansible-builder container build [-h]' in help_text
     assert re.search(r'Creates a build context', help_text)
 
 
 def test_backward_compat_build_help(cli):
     result = cli('ansible-builder build --help', check=False)
     help_text = result.stdout
-    assert 'usage: ansible-builder container build [-h] [-t TAG]' in help_text
+    assert 'usage: ansible-builder container build [-h]' in help_text
     assert re.search(r'Creates a build context', help_text)
 
 

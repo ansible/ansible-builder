@@ -36,7 +36,7 @@ class AnsibleBuilder:
                  filename=constants.default_file,
                  build_args=None,
                  build_context=constants.default_build_context,
-                 tag=[constants.default_tag],
+                 tag=None,
                  container_runtime=constants.default_container_runtime,
                  output_filename=None,
                  no_cache=False,
@@ -44,7 +44,7 @@ class AnsibleBuilder:
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
-        self.tags = tag
+        self.tags = tag or []
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
             build_context, constants.user_content_subfolder)
@@ -120,7 +120,7 @@ class AnsibleBuilder:
         return command
 
     def build(self):
-        logger.debug(f'Ansible Builder is building your execution environment image, "{self.tags}".')
+        logger.debug(f'Ansible Builder is building your execution environment image. Tags: {", ".join(self.tags)}')
         self.write_containerfile()
         run_command(self.build_command)
         return True

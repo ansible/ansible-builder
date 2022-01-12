@@ -112,7 +112,7 @@ def add_container_options(parser):
         '-t', '--tag',
         action='extend',
         nargs='+',
-        help=f'The name for the container image being built (default: {constants.default_tag}')
+        help=f'The name(s) for the container image being built (default: {constants.default_tag})')
 
     build_command_parser.add_argument(
         '--container-runtime',
@@ -236,7 +236,7 @@ def parse_args(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     # Tag default must be handled differently. See comment for --tag option.
-    if not args.tag:
+    if 'tag' not in vars(args):
         args.tag = [constants.default_tag]
 
     return args
