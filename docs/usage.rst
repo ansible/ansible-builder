@@ -59,6 +59,11 @@ To customize the tagged name applied to the built image:
 
    $ ansible-builder container build --tag=my-custom-ee
 
+More recent versions of ``ansible-builder`` support multiple tags:
+
+.. code::
+
+   $ ansible-builder container build --tag=tag1 --tag=tag2
 
 ``--file``
 **********

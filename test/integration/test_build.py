@@ -1,6 +1,9 @@
 import pytest
 import os
 
+# Need to call this directly for multiple tag testing
+from test.integration.conftest import delete_image
+
 
 @pytest.mark.test_all_runtimes
 def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
@@ -21,7 +24,7 @@ def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
 
 @pytest.mark.test_all_runtimes
 def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
-    """Just makes sure that the buld process does not require any particular input"""
+    """Just makes sure that the build process does not require any particular input"""
     bc = tmp_path
     ee_def = data_dir / 'blank' / 'execution-environment.yml'
     cli(
@@ -29,6 +32,22 @@ def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     )
     result = cli(f'{runtime} run --rm {ee_tag} echo "This is a simple test"')
     assert 'This is a simple test' in result.stdout, result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_multiple_tags(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Make sure multiple tagging works"""
+    bc = tmp_path
+    ee_def = data_dir / 'blank' / 'execution-environment.yml'
+    cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} -t testmultitags --container-runtime {runtime}'
+    )
+    result = cli(f'{runtime} run --rm {ee_tag} echo "test: test_multiple_tags 1"')
+    assert 'test: test_multiple_tags 1' in result.stdout, result.stdout
+
+    result = cli(f'{runtime} run --rm testmultitags echo "test: test_multiple_tags 2"')
+    assert 'test: test_multiple_tags 2' in result.stdout, result.stdout
+    delete_image(runtime, 'testmultitags')
 
 
 @pytest.mark.test_all_runtimes

@@ -36,7 +36,7 @@ class AnsibleBuilder:
                  filename=constants.default_file,
                  build_args=None,
                  build_context=constants.default_build_context,
-                 tag=constants.default_tag,
+                 tag=None,
                  container_runtime=constants.default_container_runtime,
                  output_filename=None,
                  no_cache=False,
@@ -44,7 +44,7 @@ class AnsibleBuilder:
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
-        self.tag = tag
+        self.tags = tag or []
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
             build_context, constants.user_content_subfolder)
@@ -55,8 +55,7 @@ class AnsibleBuilder:
             definition=self.definition,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
-            output_filename=output_filename,
-            tag=self.tag)
+            output_filename=output_filename)
         self.verbosity = verbosity
 
     @property
@@ -99,9 +98,11 @@ class AnsibleBuilder:
     def build_command(self):
         command = [
             self.container_runtime, "build",
-            "-f", self.containerfile.path,
-            "-t", self.tag,
+            "-f", self.containerfile.path
         ]
+
+        for tag in self.tags:
+            command.extend(["-t", tag])
 
         for key, value in self.build_args.items():
             if value:
@@ -119,7 +120,7 @@ class AnsibleBuilder:
         return command
 
     def build(self):
-        logger.debug(f'Ansible Builder is building your execution environment image, "{self.tag}".')
+        logger.debug(f'Ansible Builder is building your execution environment image. Tags: {", ".join(self.tags)}')
         self.write_containerfile()
         run_command(self.build_command)
         return True
@@ -294,8 +295,7 @@ class Containerfile:
     def __init__(self, definition,
                  build_context=None,
                  container_runtime=None,
-                 output_filename=None,
-                 tag=None):
+                 output_filename=None):
 
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
@@ -307,7 +307,6 @@ class Containerfile:
             filename = output_filename
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
-        self.tag = tag
         # Build args all need to go at top of file to avoid errors
         self.steps = [
             "ARG EE_BASE_IMAGE={}".format(
