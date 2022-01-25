@@ -46,7 +46,7 @@ def sanitize_requirements(collection_py_reqs):
         if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS:
             logger.debug(f'# Excluding requirement {req.name} from {req.collections}')
             continue
-        if req.name is None and req.vcs:
+        if req.vcs:
             # A source control requirement like git+, return as-is
             new_line = req.line
         elif req.name:
