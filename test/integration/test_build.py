@@ -85,7 +85,7 @@ def test_user_python_requirement(cli, runtime, ee_tag, tmp_path, data_dir):
         f'{runtime} run --rm {ee_tag} pip3 show awxkit'
     )
     assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
-    for py_library in ('requirements-parser', 'voluptuous'):
+    for py_library in ('requirements-parser'):
         result = cli(
             f'{runtime} run --rm {ee_tag} pip3 show {py_library}', allow_error=True
         )
