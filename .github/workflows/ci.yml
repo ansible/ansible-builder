@@ -36,29 +36,9 @@ jobs:
         run: tox
 
 
-  images:
-    name: Build Image - ${{ matrix.runtime }}
-    runs-on: ubuntu-20.04
-
-    strategy:
-      fail-fast: false
-      matrix:
-        runtime:
-          - docker
-          - podman
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Build Container Image
-        run: ${{ matrix.runtime }} build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
-
-
   integration:
     runs-on: ubuntu-20.04
     name: Integration - ${{ matrix.py_version.name }}
-    needs: images
 
     env:
       TOXENV: ${{ matrix.py_version.tox_env }}
@@ -94,6 +74,8 @@ jobs:
 
       - name: Run integration tests
         run: |
+          docker build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
+          podman build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
           tox
 
       - name: Upload coverage report
