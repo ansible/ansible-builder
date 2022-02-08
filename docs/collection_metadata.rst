@@ -20,10 +20,6 @@ the requirements they expect by using the ``introspect`` command. Example:
 
 ::
 
-    ansible-builder container introspect --sanitize ~/.ansible/collections/
-
-The short-hand form of the command is also supported::
-
     ansible-builder introspect --sanitize ~/.ansible/collections/
 
 The ``--sanitize`` option will go through all of the collection requirements and

@@ -5,11 +5,11 @@ Once you have created a :ref:`definition<Definition:Execution Environment Defini
 your Execution Environment.
 
 
-Container ``build`` command
----------------------------
+The ``build`` command
+---------------------
 
-The ``ansible-builder container build`` command (or ``ansible-builder build``, for short)
-takes an execution environment definition as an input. It outputs the build context necessary for
+The ``ansible-builder build`` command takes an execution environment definition
+as an input. It outputs the build context necessary for
 building an execution environment image, and it builds that image. The
 image can be re-built with the build context elsewhere, and give the
 same result. By default, it looks for a file named ``execution-environment.yml``
@@ -39,7 +39,7 @@ To build an Execution Environment using the files above, run:
 
 .. code::
 
-   $ ansible-builder container build
+   $ ansible-builder build
    ...
    STEP 7: COMMIT my-awx-ee
    --> 09c930f5f6a
@@ -57,13 +57,13 @@ To customize the tagged name applied to the built image:
 
 .. code::
 
-   $ ansible-builder container build --tag=my-custom-ee
+   $ ansible-builder build --tag=my-custom-ee
 
 More recent versions of ``ansible-builder`` support multiple tags:
 
 .. code::
 
-   $ ansible-builder container build --tag=tag1 --tag=tag2
+   $ ansible-builder build --tag=tag1 --tag=tag2
 
 ``--file``
 **********
@@ -73,7 +73,7 @@ To use a definition file named something other than
 
 .. code::
 
-   $ ansible-builder container build --file=my-ee.yml
+   $ ansible-builder build --file=my-ee.yml
 
 
 ``--context``
@@ -84,7 +84,7 @@ directory. To specify another location:
 
 .. code::
 
-   $ ansible-builder container build --context=/path/to/dir
+   $ ansible-builder build --context=/path/to/dir
 
 
 ``--build-arg``
@@ -96,13 +96,13 @@ By default, the Containerfile / Dockerfile outputted by Ansible Builder contains
 
 .. code::
 
-   $ ansible-builder container build --build-arg FOO=bar
+   $ ansible-builder build --build-arg FOO=bar
 
 To use a custom base image:
 
 .. code::
 
-   $ ansible-builder container build --build-arg EE_BASE_IMAGE=registry.example.com/another-ee
+   $ ansible-builder build --build-arg EE_BASE_IMAGE=registry.example.com/another-ee
 
 
 ``--container-runtime``
@@ -112,7 +112,7 @@ Podman is used by default to build images. To use Docker:
 
 .. code::
 
-   $ ansible-builder container build --container-runtime=docker
+   $ ansible-builder build --container-runtime=docker
 
 
 ``--verbosity``
@@ -122,14 +122,14 @@ To customize the level of verbosity:
 
 .. code::
 
-   $ ansible-builder container build --verbosity 2
+   $ ansible-builder build --verbosity 2
 
 
-Container ``create`` command
-----------------------------
+The ``create`` command
+----------------------
 
-The ``ansible-builder container create`` command (or ``ansible-builder create``, for short)
-works similarly to the ``build`` command in that it takes an execution environment definition as an input
+The ``ansible-builder create`` command works similarly to the ``build`` command
+in that it takes an execution environment definition as an input
 and outputs the build context necessary for building an execution environment
 image. However, the ``create`` command *will not* build the execution environment
 image; this is useful for creating just the build context and a ``Containerfile``
