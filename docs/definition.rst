@@ -9,7 +9,7 @@ An example execution environment definition schema is as follows:
     version: 1
 
     build_arg_defaults:
-      EE_BASE_IMAGE: 'quay.io/ansible/ansible-runner:stable-2.10-devel'
+      EE_BASE_IMAGE: 'quay.io/ansible/ansible-runner:latest'
 
     ansible_config: 'ansible.cfg'
 
