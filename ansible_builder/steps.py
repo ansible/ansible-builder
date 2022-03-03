@@ -43,14 +43,19 @@ class BuildContextSteps(Steps):
 
 
 class GalaxyInstallSteps(Steps):
-    def __init__(self, requirements_naming):
+    def __init__(self, requirements_naming, keyring, disable_gpg_verify):
         """Assumes given requirements file name has been placed in the build context
         """
+
+        install_opts = f"-r {requirements_naming} --collections-path {constants.base_collections_path}"
+        if keyring:
+            install_opts += " --keyring ./keyring.gog"
+        if disable_gpg_verify:
+            install_opts += " --disable-gpg-verify"
+
         self.steps = [
-            "RUN ansible-galaxy role install -r {0} --roles-path {1}".format(
-                requirements_naming, constants.base_roles_path),
-            "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {0} --collections-path {1}".format(
-                requirements_naming, constants.base_collections_path),
+            f"RUN ansible-galaxy role install -r {requirements_naming} --roles-path {constants.base_roles_path}",
+            f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
         ]
 
 

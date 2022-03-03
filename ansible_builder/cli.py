@@ -80,6 +80,19 @@ def add_container_options(parser):
         )
     )
 
+    # Keyring option copied over from ansible-galaxy. Gets passed to the invocations of it verbatim.
+    create_command_parser.add_argument(
+        '--keyring',
+        help='The keyring used during signature verification when installing collections from a Galaxy server')
+    # Disable-gpg-verify option copied over from ansible-galaxy. Gets passed to the invocations of it verbatim.
+    create_command_parser.add_argument(
+        '--disable-gpg-verify',
+        dest='disable_gpg_verify',
+        action='store_true',
+        help='Disable GPG signature verification when installing collections from a Galaxy server')
+    # Would also have copied over the signature option from ansible-galaxy but since it can't be specified
+    # with requirements-file set (we set that in any case) it is left out.
+
     build_command_parser = parser.add_parser(
         'build',
         help='Builds a container image.',

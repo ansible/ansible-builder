@@ -39,7 +39,13 @@ class AnsibleBuilder:
                  container_runtime=constants.default_container_runtime,
                  output_filename=None,
                  no_cache=False,
-                 verbosity=constants.default_verbosity):
+                 verbosity=constants.default_verbosity,
+                 disable_gpg_verify=False,
+                 keyring=None):
+        """
+        :param bool disable_gpg_verify: Always disable signature verification of collections installed by ansible-galaxy.
+        :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        """
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
@@ -54,7 +60,9 @@ class AnsibleBuilder:
             definition=self.definition,
             build_context=self.build_context,
             container_runtime=self.container_runtime,
-            output_filename=output_filename)
+            output_filename=output_filename,
+            keyring=keyring,
+            disable_gpg_verify=disable_gpg_verify)
         self.verbosity = verbosity
 
     @property
@@ -294,8 +302,13 @@ class Containerfile:
     def __init__(self, definition,
                  build_context=None,
                  container_runtime=None,
-                 output_filename=None):
-
+                 output_filename=None,
+                 disable_gpg_verify=False,
+                 keyring=None):
+        """
+        :param bool disable_gpg_verify: Always disable signature verification of collections installed by ansible-galaxy.
+        :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        """
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
             build_context, constants.user_content_subfolder)
@@ -306,6 +319,9 @@ class Containerfile:
             filename = output_filename
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
+        self.keyring = keyring
+        self.disable_gpg_verify = disable_gpg_verify
+
         # Build args all need to go at top of file to avoid errors
         self.steps = [
             "ARG EE_BASE_IMAGE={}".format(
@@ -332,6 +348,9 @@ class Containerfile:
             dest = os.path.join(
                 self.build_context, constants.user_content_subfolder, new_name)
             copy_file(requirement_path, dest)
+
+        if self.keyring:
+            copy_file(self.keyring, os.path.join(self.build_outputs_dir, 'keyring.gpg'))
 
         if self.definition.ansible_config:
             copy_file(
@@ -371,7 +390,7 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy']))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring, self.disable_gpg_verify))
         return self.steps
 
     def prepare_introspect_assemble_steps(self):
