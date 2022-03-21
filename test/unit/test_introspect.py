@@ -13,7 +13,10 @@ def test_multiple_collection_metadata(data_dir):
     assert files == {'python': [
         'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
         'pytz  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile'
+        # python-dateutil should appear only once even though referenced in
+        # multiple places, once with a dash and another with an underscore in the name.
+        'python-dateutil>=2.8.2  # from collection test.reqfile',
+        'tacacs-plus  # from collection test.reqfile'
     ], 'system': [
         'subversion [platform:rpm]  # from collection test.bindep',
         'subversion [platform:dpkg]  # from collection test.bindep'
