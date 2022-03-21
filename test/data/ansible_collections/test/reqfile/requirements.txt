@@ -1,2 +1,3 @@
 pytz
+python-dateutil>=2.8.2    # intentional dash
 -r extra_req.txt
