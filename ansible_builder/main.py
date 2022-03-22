@@ -40,10 +40,8 @@ class AnsibleBuilder:
                  output_filename=None,
                  no_cache=False,
                  verbosity=constants.default_verbosity,
-                 disable_gpg_verify=False,
                  keyring=None):
         """
-        :param bool disable_gpg_verify: Always disable signature verification of collections installed by ansible-galaxy.
         :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
         """
         self.action = action
@@ -61,8 +59,7 @@ class AnsibleBuilder:
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             output_filename=output_filename,
-            keyring=keyring,
-            disable_gpg_verify=disable_gpg_verify)
+            keyring=keyring)
         self.verbosity = verbosity
 
     @property
@@ -303,10 +300,8 @@ class Containerfile:
                  build_context=None,
                  container_runtime=None,
                  output_filename=None,
-                 disable_gpg_verify=False,
                  keyring=None):
         """
-        :param bool disable_gpg_verify: Always disable signature verification of collections installed by ansible-galaxy.
         :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
         """
         self.build_context = build_context
@@ -320,7 +315,6 @@ class Containerfile:
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
         self.keyring = keyring
-        self.disable_gpg_verify = disable_gpg_verify
 
         # Build args all need to go at top of file to avoid errors
         self.steps = [
@@ -390,7 +384,7 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring, self.disable_gpg_verify))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring))
         return self.steps
 
     def prepare_introspect_assemble_steps(self):

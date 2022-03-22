@@ -43,14 +43,14 @@ class BuildContextSteps(Steps):
 
 
 class GalaxyInstallSteps(Steps):
-    def __init__(self, requirements_naming, keyring, disable_gpg_verify):
+    def __init__(self, requirements_naming, keyring):
         """Assumes given requirements file name has been placed in the build context
         """
 
         install_opts = f"-r {requirements_naming} --collections-path {constants.base_collections_path}"
         if keyring:
-            install_opts += " --keyring ./keyring.gog"
-        if disable_gpg_verify:
+            install_opts += " --keyring ./keyring.gpg"
+        else:
             install_opts += " --disable-gpg-verify"
 
         self.steps = [
