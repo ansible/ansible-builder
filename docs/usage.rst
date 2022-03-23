@@ -75,6 +75,21 @@ To use a definition file named something other than
 
    $ ansible-builder build --file=my-ee.yml
 
+``--keyring``
+*************
+
+With more recent versions of Ansible, it is possible to have the ``ansible-galaxy``
+utility verify collection signatures during installation. This requires a keyring to
+be provided (can be built with GnuPG tooling) to use during verification. Provide
+the path to this keyring with the ``--keyring`` option. If this option is not
+supplied, no signature verification will be performed. If it is provided, and the
+version of Ansible is not recent enough to support this feature, an error will
+occur during the image build process.
+
+.. code::
+
+   $ ansible-builder create --keyring=/path/to/pubring.kbx
+   $ ansible-builder build --keyring=/path/to/pubring.kbx
 
 ``--context``
 *************

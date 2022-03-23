@@ -187,3 +187,29 @@ def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
 
     assert 'Collecting pytz' not in result.stdout, result.stdout
     assert any('cache' in line.lower() for line in out_lines[test_index:])
+
+
+@pytest.mark.test_all_runtimes
+def test_collection_verification_off(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Test that, by default, collection verification is off via the env var.
+    """
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+    result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" in result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_collection_verification_on(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Test that collection verification is on when given a keyring.
+    """
+    keyring = tmp_path / "mykeyring.gpg"
+    keyring.touch()
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+
+    # ansible-galaxy might error (older Ansible), but that should be ok
+    result = cli(f'ansible-builder build --keyring {keyring} -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3', allow_error=True)
+
+    assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" not in result.stdout
+    assert "--keyring ./keyring.gpg" in result.stdout
