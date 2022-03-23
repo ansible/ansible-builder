@@ -47,20 +47,22 @@ class GalaxyInstallSteps(Steps):
         """Assumes given requirements file name has been placed in the build context
         """
 
-        self.steps = []
+        env = ""
         install_opts = f"-r {requirements_naming} --collections-path {constants.base_collections_path}"
         if keyring:
             install_opts += " --keyring ./keyring.gpg"
         else:
             # We have to use the environment variable to disable signature
             # verification because older versions (<2.13) of ansible-galaxy do
-            # not support the --disable-gpg-verify option.
-            self.steps.extend(["ENV ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1"])
+            # not support the --disable-gpg-verify option. We don't use ENV in
+            # the Containerfile since we need it only during the build and not
+            # in the final image.
+            env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
 
-        self.steps.extend([
+        self.steps = [
             f"RUN ansible-galaxy role install -r {requirements_naming} --roles-path {constants.base_roles_path}",
-            f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
-        ])
+            f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
+        ]
 
 
 class GalaxyCopySteps(Steps):
