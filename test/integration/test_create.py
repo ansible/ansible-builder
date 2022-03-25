@@ -1,5 +1,7 @@
 import os
 
+from ansible_builder import constants
+
 
 def test_definition_syntax_error(cli, data_dir):
     ee_def = os.path.join(data_dir, 'definition_files', 'invalid.yml')
@@ -96,5 +98,9 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
     containerfile = tmpdir / "Containerfile"
     assert containerfile.exists()
     text = containerfile.read_text()
+
+    keyring_copy = tmpdir / constants.user_content_subfolder / constants.default_keyring_name
+    assert keyring_copy.exists()
+
     assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" not in text
-    assert "--keyring ./keyring.gpg" in text
+    assert f"--keyring {constants.default_keyring_name}" in text

@@ -31,11 +31,11 @@ def test_galaxy_install_steps():
 
 
 def test_galaxy_install_steps_with_keyring():
-    steps = list(GalaxyInstallSteps("requirements.txt", "mykeyring.gpg"))
+    steps = list(GalaxyInstallSteps("requirements.txt", constants.default_keyring_name))
     expected = [
         f"RUN ansible-galaxy role install -r requirements.txt --roles-path {constants.base_roles_path}",
 
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r requirements.txt "
-        f"--collections-path {constants.base_collections_path} --keyring ./keyring.gpg"
+        f"--collections-path {constants.base_collections_path} --keyring {constants.default_keyring_name}"
     ]
     assert steps == expected

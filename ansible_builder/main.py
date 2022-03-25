@@ -314,7 +314,8 @@ class Containerfile:
             filename = output_filename
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
-        self.keyring = keyring
+        self.original_keyring = keyring
+        self.keyring_copy = None
 
         # Build args all need to go at top of file to avoid errors
         self.steps = [
@@ -343,8 +344,9 @@ class Containerfile:
                 self.build_context, constants.user_content_subfolder, new_name)
             copy_file(requirement_path, dest)
 
-        if self.keyring:
-            copy_file(self.keyring, os.path.join(self.build_outputs_dir, 'keyring.gpg'))
+        if self.original_keyring:
+            self.keyring_copy = constants.default_keyring_name
+            copy_file(self.original_keyring, os.path.join(self.build_outputs_dir, self.keyring_copy))
 
         if self.definition.ansible_config:
             copy_file(
@@ -384,7 +386,7 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring_copy))
         return self.steps
 
     def prepare_introspect_assemble_steps(self):

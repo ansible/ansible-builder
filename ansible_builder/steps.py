@@ -44,13 +44,13 @@ class BuildContextSteps(Steps):
 
 class GalaxyInstallSteps(Steps):
     def __init__(self, requirements_naming, keyring):
-        """Assumes given requirements file name has been placed in the build context
+        """Assumes given requirements file name and keyring has been placed in the build context
         """
 
         env = ""
         install_opts = f"-r {requirements_naming} --collections-path {constants.base_collections_path}"
         if keyring:
-            install_opts += " --keyring ./keyring.gpg"
+            install_opts += f" --keyring {keyring}"
         else:
             # We have to use the environment variable to disable signature
             # verification because older versions (<2.13) of ansible-galaxy do

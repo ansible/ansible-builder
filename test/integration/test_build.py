@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from ansible_builder import constants
+
 # Need to call this directly for multiple tag testing
 from test.integration.conftest import delete_image
 
@@ -211,5 +213,8 @@ def test_collection_verification_on(cli, runtime, data_dir, ee_tag, tmp_path):
     # ansible-galaxy might error (older Ansible), but that should be ok
     result = cli(f'ansible-builder build --keyring {keyring} -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3', allow_error=True)
 
+    keyring_copy = tmp_path / constants.user_content_subfolder / constants.default_keyring_name
+    assert keyring_copy.exists()
+
     assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" not in result.stdout
-    assert "--keyring ./keyring.gpg" in result.stdout
+    assert f"--keyring {constants.default_keyring_name}" in result.stdout

@@ -24,3 +24,5 @@ if shutil.which('podman'):
     default_container_runtime = 'podman'
 else:
     default_container_runtime = 'docker'
+
+default_keyring_name = 'keyring.gpg'
