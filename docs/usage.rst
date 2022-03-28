@@ -75,21 +75,46 @@ To use a definition file named something other than
 
    $ ansible-builder build --file=my-ee.yml
 
-``--keyring``
-*************
+``--galaxy-keyring``
+********************
 
 With more recent versions of Ansible, it is possible to have the ``ansible-galaxy``
 utility verify collection signatures during installation. This requires a keyring to
 be provided (can be built with GnuPG tooling) to use during verification. Provide
-the path to this keyring with the ``--keyring`` option. If this option is not
+the path to this keyring with the ``--galaxy-keyring`` option. If this option is not
 supplied, no signature verification will be performed. If it is provided, and the
 version of Ansible is not recent enough to support this feature, an error will
 occur during the image build process.
 
 .. code::
 
-   $ ansible-builder create --keyring=/path/to/pubring.kbx
-   $ ansible-builder build --keyring=/path/to/pubring.kbx
+   $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx
+   $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx
+
+``--galaxy-ignore-signature-status-code``
+*****************************************
+
+With ``--galaxy-keyring`` set it is possible to ignore certain errors that may occur while verifying collections.
+It is passed unmodified to ``ansible-galaxy`` calls via the option ``--ignore-signature-status-code``.
+See the ``ansible-galaxy`` documentation for more information.
+
+.. code::
+
+   $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx --galaxy-ignore-signature-status-code 500
+   $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx --galaxy-ignore-signature-status-code 500
+
+``--galaxy-required-valid-signature-count``
+*******************************************
+
+When ``--galaxy-keyring`` is set, the number of required valid collection signatures can be overridden. 
+The value is passed unmodified to ``ansible-galaxy`` calls via the option ``--required-valid-signature-count``.
+See the ``ansible-galaxy`` documentation for more information.
+
+.. code::
+
+   $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx --galaxy-required-valid-signature-count 3
+   $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx --galaxy-required-valid-signature-count 3
+
 
 ``--context``
 *************

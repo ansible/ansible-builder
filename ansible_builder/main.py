@@ -40,10 +40,18 @@ class AnsibleBuilder:
                  output_filename=None,
                  no_cache=False,
                  verbosity=constants.default_verbosity,
-                 keyring=None):
+                 galaxy_keyring=None,
+                 galaxy_required_valid_signature_count=None,
+                 galaxy_ignore_signature_status_codes=()):
         """
-        :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig( required for ansible-galaxy to accept collections.
+        :param str galaxy_ignore_signature_status_codes: GPG Status code to ignore when validating galaxy collections.
         """
+
+        if not galaxy_keyring and (galaxy_required_valid_signature_count or galaxy_ignore_signature_status_codes):
+            raise ValueError("--galaxy-required-valid-signature-count and --galaxy-ignore-signature-status-code may not be set without --galaxy-keyring")
+
         self.action = action
         self.definition = UserDefinition(filename=filename)
 
@@ -59,7 +67,9 @@ class AnsibleBuilder:
             build_context=self.build_context,
             container_runtime=self.container_runtime,
             output_filename=output_filename,
-            keyring=keyring)
+            galaxy_keyring=galaxy_keyring,
+            galaxy_required_valid_signature_count=galaxy_required_valid_signature_count,
+            galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
         self.verbosity = verbosity
 
     @property
@@ -300,10 +310,16 @@ class Containerfile:
                  build_context=None,
                  container_runtime=None,
                  output_filename=None,
-                 keyring=None):
+                 keyring=None,
+                 galaxy_keyring=None,
+                 galaxy_required_valid_signature_count=None,
+                 galaxy_ignore_signature_status_codes=()):
         """
-        :param str keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required for ansible-galaxy to accept collections.
+        :param str galaxy_ignore_signature_status_codes: GPG Status codes to ignore when validating galaxy collections.
         """
+
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
             build_context, constants.user_content_subfolder)
@@ -314,8 +330,10 @@ class Containerfile:
             filename = output_filename
         self.path = os.path.join(self.build_context, filename)
         self.container_runtime = container_runtime
-        self.original_keyring = keyring
-        self.keyring_copy = None
+        self.original_galaxy_keyring = galaxy_keyring
+        self.copied_galaxy_keyring = None
+        self.galaxy_required_valid_signature_count = galaxy_required_valid_signature_count
+        self.galaxy_ignore_signature_status_codes = galaxy_ignore_signature_status_codes
 
         # Build args all need to go at top of file to avoid errors
         self.steps = [
@@ -344,9 +362,9 @@ class Containerfile:
                 self.build_context, constants.user_content_subfolder, new_name)
             copy_file(requirement_path, dest)
 
-        if self.original_keyring:
-            self.keyring_copy = constants.default_keyring_name
-            copy_file(self.original_keyring, os.path.join(self.build_outputs_dir, self.keyring_copy))
+        if self.original_galaxy_keyring:
+            self.copied_galaxy_keyring = constants.default_keyring_name
+            copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, self.copied_galaxy_keyring))
 
         if self.definition.ansible_config:
             copy_file(
@@ -386,7 +404,11 @@ class Containerfile:
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'], self.keyring_copy))
+            self.steps.extend(GalaxyInstallSteps(CONTEXT_FILES['galaxy'],
+                                                 self.copied_galaxy_keyring,
+                                                 self.galaxy_ignore_signature_status_codes,
+                                                 self.galaxy_required_valid_signature_count))
+
         return self.steps
 
     def prepare_introspect_assemble_steps(self):

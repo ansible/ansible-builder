@@ -93,7 +93,7 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
     reqyml.write_text("\n".join(req))
     keyring = tmpdir / "mykeyring.gpg"
     keyring.touch()
-    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile --keyring {keyring}')
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile --galaxy-keyring {keyring}')
 
     containerfile = tmpdir / "Containerfile"
     assert containerfile.exists()
@@ -103,4 +103,32 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
     assert keyring_copy.exists()
 
     assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" not in text
-    assert f"--keyring {constants.default_keyring_name}" in text
+    assert f"--keyring \"{constants.default_keyring_name}\"" in text
+
+
+def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
+    """
+    Test that all extr asigning args for gpg are passed into the container file.
+    """
+    ee = [
+        'dependencies:',
+        '  galaxy: requirements.yml',
+    ]
+    req = [
+        'collections:',
+        '  - name: community.general',
+    ]
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    reqyml = tmpdir / "requirements.yml"
+    reqyml.write_text("\n".join(req))
+    keyring = tmpdir / "mykeyring.gpg"
+    keyring.touch()
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile --galaxy-keyring {keyring} '
+        '--galaxy-ignore-signature-status-code 500 --galaxy-required-valid-signature-count 3')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "--ignore-signature-status-code 500" in text
+    assert "--required-valid-signature-count 3" in text
