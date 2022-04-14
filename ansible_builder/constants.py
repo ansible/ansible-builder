@@ -33,4 +33,3 @@ CONTEXT_FILES = {
     'python': 'requirements.txt',
     'system': 'bindep.txt',
 }
-
