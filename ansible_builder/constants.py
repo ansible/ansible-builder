@@ -26,3 +26,11 @@ else:
     default_container_runtime = 'docker'
 
 default_keyring_name = 'keyring.gpg'
+
+# Files that need to be moved into the build context, and their naming inside the context
+CONTEXT_FILES = {
+    'galaxy': 'requirements.yml',
+    'python': 'requirements.txt',
+    'system': 'bindep.txt',
+}
+
