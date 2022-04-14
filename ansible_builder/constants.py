@@ -24,3 +24,10 @@ if shutil.which('podman'):
     default_container_runtime = 'podman'
 else:
     default_container_runtime = 'docker'
+
+# Files that need to be moved into the build context, and their naming inside the context
+CONTEXT_FILES = {
+    'galaxy': 'requirements.yml',
+    'python': 'requirements.txt',
+    'system': 'bindep.txt',
+}
