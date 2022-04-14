@@ -1,6 +1,8 @@
 import pytest
 import os
 
+from ansible_builder import constants
+
 # Need to call this directly for multiple tag testing
 from test.integration.conftest import delete_image
 
@@ -187,3 +189,52 @@ def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
 
     assert 'Collecting pytz' not in result.stdout, result.stdout
     assert any('cache' in line.lower() for line in out_lines[test_index:])
+
+
+@pytest.mark.test_all_runtimes
+def test_collection_verification_off(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Test that, by default, collection verification is off via the env var.
+    """
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+    result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" in result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_collection_verification_on(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Test that collection verification is on when given a keyring.
+    """
+    keyring = tmp_path / "mykeyring.gpg"
+    keyring.touch()
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+
+    # ansible-galaxy might error (older Ansible), but that should be ok
+    result = cli(f'ansible-builder build --galaxy-keyring {keyring} -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3', allow_error=True)
+
+    keyring_copy = tmp_path / constants.user_content_subfolder / constants.default_keyring_name
+    assert keyring_copy.exists()
+
+    assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" not in result.stdout
+    assert f"--keyring \"{constants.default_keyring_name}\"" in result.stdout
+
+
+@pytest.mark.xfail(reason="Needs ansible 2.13")
+@pytest.mark.test_all_runtimes
+def test_galaxy_signing_extra_args(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Test that all extr asigning args for gpg are passed into the container file.
+    """
+    pytest.xfail("failing configuration (but should work)")
+
+    keyring = tmp_path / "mykeyring.gpg"
+    keyring.touch()
+    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+
+    result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3 '
+                 f'--galaxy-keyring {keyring} --galaxy-ignore-signature-status-code 500 '
+                 f'--galaxy-required-valid-signature-count 3', allow_error=True)
+
+    assert "--galaxy-ignore-signature-status-code 500" in result.stdout
+    assert "--galaxy-required-valid-signature-count 3" in result.stdout

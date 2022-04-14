@@ -43,14 +43,37 @@ class BuildContextSteps(Steps):
 
 
 class GalaxyInstallSteps(Steps):
-    def __init__(self, requirements_naming):
-        """Assumes given requirements file name has been placed in the build context
+    def __init__(self, requirements_naming, galaxy_keyring, galaxy_ignore_signature_status_codes, galaxy_required_valid_signature_count):
+        """Assumes given requirements file name and keyring has been placed in the build context.
+
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
+        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required for ansible-galaxy to accept collections.
+        :param str galaxy_ignore_signature_status_codes: GPG Status codes to ignore when validating galaxy collections.
         """
+
+        env = ""
+        install_opts = f"-r {requirements_naming} --collections-path \"{constants.base_collections_path}\""
+
+        if galaxy_ignore_signature_status_codes:
+            for code in galaxy_ignore_signature_status_codes:
+                install_opts += f" --ignore-signature-status-code {code}"
+
+        if galaxy_required_valid_signature_count:
+            install_opts += f" --required-valid-signature-count {galaxy_required_valid_signature_count}"
+
+        if galaxy_keyring:
+            install_opts += f" --keyring \"{galaxy_keyring}\""
+        else:
+            # We have to use the environment variable to disable signature
+            # verification because older versions (<2.13) of ansible-galaxy do
+            # not support the --disable-gpg-verify option. We don't use ENV in
+            # the Containerfile since we need it only during the build and not
+            # in the final image.
+            env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
+
         self.steps = [
-            "RUN ansible-galaxy role install -r {0} --roles-path {1}".format(
-                requirements_naming, constants.base_roles_path),
-            "RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {0} --collections-path {1}".format(
-                requirements_naming, constants.base_collections_path),
+            f"RUN ansible-galaxy role install -r {requirements_naming} --roles-path \"{constants.base_roles_path}\"",
+            f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
         ]
 
 
