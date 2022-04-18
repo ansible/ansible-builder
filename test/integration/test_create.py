@@ -28,7 +28,7 @@ def test_missing_galaxy_requirements_file(cli, data_dir):
 
 def test_create_streams_output_with_verbosity_on(cli, build_dir_and_ee_yml):
     """Test that 'ansible-builder build' streams build output."""
-    tmpdir, eeyml = build_dir_and_ee_yml("")
+    tmpdir, eeyml = build_dir_and_ee_yml("version: 1")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml} -v 3")
     assert 'Ansible Builder is generating your execution environment build context.' in result.stdout
     assert f'The build context can be found at: {tmpdir}' in result.stdout
@@ -38,7 +38,7 @@ def test_create_streams_output_with_verbosity_off(cli, build_dir_and_ee_yml):
     """
     Like the test_create_streams_output_with_verbosity_on test but making sure less output is shown with default verbosity level of 2.
     """
-    tmpdir, eeyml = build_dir_and_ee_yml("")
+    tmpdir, eeyml = build_dir_and_ee_yml("version: 1")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml}")
     assert 'Ansible Builder is generating your execution environment build context.' not in result.stdout
     assert f'The build context can be found at: {tmpdir}' in result.stdout
@@ -48,7 +48,7 @@ def test_create_streams_output_with_invalid_verbosity(cli, build_dir_and_ee_yml)
     """
     Like the test_create_streams_output_with_verbosity_off test but making sure it errors out correctly with invalid verbosity level.
     """
-    tmpdir, eeyml = build_dir_and_ee_yml("")
+    tmpdir, eeyml = build_dir_and_ee_yml("version: 1")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml} -v 6", allow_error=True)
     assert result.rc != 0
     assert 'invalid choice: 6 (choose from 0, 1, 2, 3)' in (result.stdout + result.stderr)
@@ -59,6 +59,7 @@ def test_collection_verification_off(cli, build_dir_and_ee_yml):
     Test that, by default, collection verification is off via the env var.
     """
     ee = [
+        'version: 1',
         'dependencies:',
         '  galaxy: requirements.yml',
     ]
@@ -81,6 +82,7 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
     Test that collection verification is on when given a keyring.
     """
     ee = [
+        'version: 1',
         'dependencies:',
         '  galaxy: requirements.yml',
     ]
@@ -111,6 +113,7 @@ def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
     Test that all extr asigning args for gpg are passed into the container file.
     """
     ee = [
+        'version: 1',
         'dependencies:',
         '  galaxy: requirements.yml',
     ]

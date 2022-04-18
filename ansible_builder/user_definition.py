@@ -6,12 +6,16 @@ from . import constants
 from .exceptions import DefinitionError
 
 
-ALLOWED_KEYS = [
+ALLOWED_KEYS_V1 = [
     'version',
     'build_arg_defaults',
     'dependencies',
     'ansible_config',
     'additional_build_steps',
+]
+
+ALLOWED_KEYS_V2 = [
+    'images',
 ]
 
 
@@ -38,33 +42,20 @@ class UserDefinition:
                 data = yaml.safe_load(ee_file)
                 self.raw = data if data else {}
         except FileNotFoundError:
-            raise DefinitionError(textwrap.dedent(f"""
-            Could not detect '{filename}' file in this directory.
-            Use -f to specify a different location.
-            """))
+            raise DefinitionError(textwrap.dedent(
+                f"""
+                Could not detect '{filename}' file in this directory.
+                Use -f to specify a different location.
+                """))
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
             raise DefinitionError(f"An error occurred while parsing the definition file:\n{str(exc)}")
 
         if not isinstance(self.raw, dict):
             raise DefinitionError(f"Definition must be a dictionary, not {type(self.raw).__name__}")
 
-        if self.raw.get('dependencies') is not None:
-            if not isinstance(self.raw.get('dependencies'), dict):
-                raise DefinitionError(textwrap.dedent(
-                    f"""
-                    Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
-                    Allowed options are:
-                    {list(constants.CONTEXT_FILES.keys())}
-                    """)
-                )
-
-        # Populate build arg defaults, which are customizable in definition
-        self.build_arg_defaults = {}
-        user_build_arg_defaults = self.raw.get('build_arg_defaults', {})
-        if not isinstance(user_build_arg_defaults, dict):
-            user_build_arg_defaults = {}  # so that validate method can throw error
-        for key, default_value in constants.build_arg_defaults.items():
-            self.build_arg_defaults[key] = user_build_arg_defaults.get(key, default_value)
+        # Set default values for the build arguments. User supplied values
+        # are set later during validation.
+        self.build_arg_defaults = constants.build_arg_defaults.copy()
 
     @property
     def version(self):
@@ -103,24 +94,60 @@ class UserDefinition:
 
         return os.path.join(self.reference_path, req_file)
 
-    def validate(self):
+    def _validate_root_keys(self):
         """
-        Check that all specified keys in the definition file are valid.
-        """
+        Identify any invalid top-level keys in the execution environment file.
 
+        :raises: DefinitionError exception if any invalid keys are identified.
+        """
         def_file_dict = self.raw
         yaml_keys = set(def_file_dict.keys())
-        invalid_keys = yaml_keys - set(ALLOWED_KEYS)
+
+        valid_keys = set(ALLOWED_KEYS_V1)
+        if self.version == '2':
+            valid_keys = valid_keys.union(set(ALLOWED_KEYS_V2))
+
+        invalid_keys = yaml_keys - valid_keys
+
         if invalid_keys:
             raise DefinitionError(textwrap.dedent(
                 f"""
                 Error: Unknown yaml key(s), {invalid_keys}, found in the definition file.\n
                 Allowed options are:
-                {ALLOWED_KEYS}
+                {valid_keys}
                 """)
             )
 
+    def _validate_v2(self):
+        """
+        Validate all execution environment file, version 2, keys.
+
+        :raises: DefinitionError exception if any errors are found.
+        """
+
+        if self.version == "1":
+            pass
+
+        if self.raw.get('images') is not None:
+            pass
+
+    def _validate_v1(self):
+        """
+        Validate all execution environment file, version 1, keys.
+
+        :raises: DefinitionError exception if any errors are found.
+        """
+
         if self.raw.get('dependencies') is not None:
+            if not isinstance(self.raw.get('dependencies'), dict):
+                raise DefinitionError(textwrap.dedent(
+                    f"""
+                    Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
+                    Allowed options are:
+                    {list(constants.CONTEXT_FILES.keys())}
+                    """)
+                )
+
             dependencies_keys = set(self.raw.get('dependencies'))
             invalid_dependencies_keys = dependencies_keys - set(constants.CONTEXT_FILES.keys())
             if invalid_dependencies_keys:
@@ -138,6 +165,7 @@ class UserDefinition:
                 if not os.path.exists(requirement_path):
                     raise DefinitionError(f"Dependency file {requirement_path} does not exist.")
 
+        # Validate and set any user-specified build arguments
         build_arg_defaults = self.raw.get('build_arg_defaults')
         if build_arg_defaults:
             if not isinstance(build_arg_defaults, dict):
@@ -145,18 +173,18 @@ class UserDefinition:
                     f"Error: Unknown type {type(build_arg_defaults)} found for build_arg_defaults; "
                     f"must be a dict."
                 )
-            unexpected_keys = set(build_arg_defaults.keys()) - set(constants.build_arg_defaults)
+            unexpected_keys = set(build_arg_defaults) - set(constants.build_arg_defaults)
             if unexpected_keys:
                 raise DefinitionError(
                     f"Keys {unexpected_keys} are not allowed in 'build_arg_defaults'."
                 )
-            for key in constants.build_arg_defaults:
-                user_value = build_arg_defaults.get(key)
+            for key, user_value in build_arg_defaults.items():
                 if user_value and not isinstance(user_value, str):
                     raise DefinitionError(
                         f"Expected build_arg_defaults.{key} to be a string; "
                         f"Found a {type(user_value)} instead."
                     )
+                self.build_arg_defaults[key] = user_value
 
         additional_cmds = self.get_additional_commands()
         if additional_cmds:
@@ -167,7 +195,7 @@ class UserDefinition:
                     """).format(type(additional_cmds).__name__))
 
             expected_keys = frozenset(('append', 'prepend'))
-            unexpected_keys = set(additional_cmds.keys()) - expected_keys
+            unexpected_keys = set(additional_cmds) - expected_keys
             if unexpected_keys:
                 raise DefinitionError(
                     f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
@@ -180,3 +208,14 @@ class UserDefinition:
                     Expected 'ansible_config' in the provided definition file to
                     be a string; found a {type(ansible_config_path).__name__} instead.
                     """))
+
+    def validate(self):
+        """
+        Check that all specified keys in the definition file are valid.
+
+        :raises: DefinitionError exception if any errors are found.
+        """
+
+        self._validate_root_keys()
+        self._validate_v1()
+        self._validate_v2()

@@ -45,12 +45,17 @@ class TestUserDefinition:
             "be a string; found a list instead."
         ),
         (
-            "{'version': 1, 'foo': 'bar'}",
+            "{'version': 1, 'images': 'bar'}",
+            "Error: Unknown yaml key(s), {'images'}, found in the definition file."
+        ),
+        (
+            "{'version': 2, 'foo': 'bar'}",
             "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
         ),
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
-        'build_args_value_type', 'unexpected_build_arg', 'config_type', 'unknown_key'
+        'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
+        'v2_unknown_key'
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
@@ -72,7 +77,7 @@ class TestUserDefinition:
         """
         Expect the EE file to be validated early during AnsibleBuilder instantiation.
         """
-        path = exec_env_definition_file("{'bad_key': 1}")
+        path = exec_env_definition_file("{'version': 1, 'bad_key': 1}")
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "Error: Unknown yaml key(s), {'bad_key'}, found in the definition file." in str(error.value.args[0])
