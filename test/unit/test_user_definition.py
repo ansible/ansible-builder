@@ -14,7 +14,7 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
 
-        assert 'An error occured while parsing the definition file:' in str(error.value.args[0])
+        assert 'An error occurred while parsing the definition file:' in str(error.value.args[0])
 
     @pytest.mark.parametrize('yaml_text,expect', [
         ('1', 'Definition must be a dictionary, not int'),  # integer

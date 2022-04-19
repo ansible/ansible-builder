@@ -5,7 +5,7 @@ def test_definition_syntax_error(cli, data_dir):
     ee_def = os.path.join(data_dir, 'definition_files', 'invalid.yml')
     r = cli(f'ansible-builder create -f {ee_def}', allow_error=True)
     assert r.rc != 0
-    assert 'An error occured while parsing the definition file' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+    assert 'An error occurred while parsing the definition file' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
 
 def test_missing_python_requirements_file(cli, data_dir):
