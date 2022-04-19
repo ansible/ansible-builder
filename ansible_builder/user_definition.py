@@ -15,53 +15,38 @@ ALLOWED_KEYS = [
 ]
 
 
-class BaseDefinition:
-    """Subclasses should populate these properties in the __init__ method
-    self.raw - a dict that basically is the definition
-    self.reference_path - the folder which dependencies are specified relative to
+class UserDefinition:
+    """
+    Class representing the Execution Environment file.
     """
 
-    @property
-    def version(self):
-        version = self.raw.get('version')
-
-        if not version:
-            raise ValueError("Expected top-level 'version' key to be present.")
-
-        return str(version)
-
-    @property
-    def ansible_config(self):
-        ansible_config = self.raw.get('ansible_config')
-
-        if not ansible_config:
-            pass
-        else:
-            return str(ansible_config)
-
-
-class UserDefinition(BaseDefinition):
     def __init__(self, filename):
+        """
+        Initialize the UserDefinition object.
+
+        :param str filename: Path to the EE file.
+        """
         self.filename = filename
+
+        # A dict that is the raw representation of the EE file.
+        self.raw = {}
+        # The folder which dependencies are specified relative to.
         self.reference_path = os.path.dirname(filename)
 
         try:
-            with open(filename, 'r') as f:
-                y = yaml.safe_load(f)
-                self.raw = y if y else {}
+            with open(filename, 'r') as ee_file:
+                data = yaml.safe_load(ee_file)
+                self.raw = data if data else {}
         except FileNotFoundError:
-            raise DefinitionError(textwrap.dedent("""
-            Could not detect '{0}' file in this directory.
+            raise DefinitionError(textwrap.dedent(f"""
+            Could not detect '{filename}' file in this directory.
             Use -f to specify a different location.
-            """).format(filename))
-        except (yaml.parser.ParserError, yaml.scanner.ScannerError) as e:
-            raise DefinitionError(textwrap.dedent("""
-            An error occured while parsing the definition file:
-            {0}
-            """).format(str(e)))
+            """))
+        except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
+            raise DefinitionError(f"An error occurred while parsing the definition file:\n{str(exc)}")
 
         if not isinstance(self.raw, dict):
-            raise DefinitionError("Definition must be a dictionary, not {0}".format(type(self.raw).__name__))
+            raise DefinitionError(f"Definition must be a dictionary, not {type(self.raw).__name__}")
 
         if self.raw.get('dependencies') is not None:
             if not isinstance(self.raw.get('dependencies'), dict):
@@ -80,6 +65,22 @@ class UserDefinition(BaseDefinition):
             user_build_arg_defaults = {}  # so that validate method can throw error
         for key, default_value in constants.build_arg_defaults.items():
             self.build_arg_defaults[key] = user_build_arg_defaults.get(key, default_value)
+
+    @property
+    def version(self):
+        """ Version of the EE file """
+        version = self.raw.get('version')
+        if not version:
+            raise ValueError("Expected top-level 'version' key to be present.")
+        return str(version)
+
+    @property
+    def ansible_config(self):
+        """ Path to the user specified ansible.cfg file """
+        ansible_config = self.raw.get('ansible_config')
+        if not ansible_config:
+            return None
+        return str(ansible_config)
 
     def get_additional_commands(self):
         """Gets additional commands from the exec env file, if any are specified.
@@ -103,7 +104,10 @@ class UserDefinition(BaseDefinition):
         return os.path.join(self.reference_path, req_file)
 
     def validate(self):
-        # Check that all specified keys in the definition file are valid.
+        """
+        Check that all specified keys in the definition file are valid.
+        """
+
         def_file_dict = self.raw
         yaml_keys = set(def_file_dict.keys())
         invalid_keys = yaml_keys - set(ALLOWED_KEYS)
@@ -132,7 +136,7 @@ class UserDefinition(BaseDefinition):
             requirement_path = self.get_dep_abs_path(item)
             if requirement_path:
                 if not os.path.exists(requirement_path):
-                    raise DefinitionError("Dependency file {0} does not exist.".format(requirement_path))
+                    raise DefinitionError(f"Dependency file {requirement_path} does not exist.")
 
         build_arg_defaults = self.raw.get('build_arg_defaults')
         if build_arg_defaults:
@@ -146,7 +150,7 @@ class UserDefinition(BaseDefinition):
                 raise DefinitionError(
                     f"Keys {unexpected_keys} are not allowed in 'build_arg_defaults'."
                 )
-            for key, value in constants.build_arg_defaults.items():
+            for key in constants.build_arg_defaults:
                 user_value = build_arg_defaults.get(key)
                 if user_value and not isinstance(user_value, str):
                     raise DefinitionError(
@@ -172,7 +176,7 @@ class UserDefinition(BaseDefinition):
         ansible_config_path = self.raw.get('ansible_config')
         if ansible_config_path:
             if not isinstance(ansible_config_path, str):
-                raise DefinitionError(textwrap.dedent("""
+                raise DefinitionError(textwrap.dedent(f"""
                     Expected 'ansible_config' in the provided definition file to
-                    be a string; found a {0} instead.
-                    """).format(type(ansible_config_path).__name__))
+                    be a string; found a {type(ansible_config_path).__name__} instead.
+                    """))
