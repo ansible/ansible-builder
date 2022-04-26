@@ -22,6 +22,7 @@ class AnsibleBuilder:
                  container_runtime=constants.default_container_runtime,
                  output_filename=None,
                  no_cache=False,
+                 prune_images=False,
                  verbosity=constants.default_verbosity,
                  galaxy_keyring=None,
                  galaxy_required_valid_signature_count=None,
@@ -48,6 +49,7 @@ class AnsibleBuilder:
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
         self.no_cache = no_cache
+        self.prune_images = prune_images
         self.containerfile = Containerfile(
             definition=self.definition,
             build_context=self.build_context,
@@ -95,6 +97,14 @@ class AnsibleBuilder:
         return self.containerfile.write()
 
     @property
+    def prune_image_command(self):
+        command = [
+            self.container_runtime, "image",
+            "prune", "--force"
+        ]
+        return command
+
+    @property
     def build_command(self):
         command = [
             self.container_runtime, "build",
@@ -123,6 +133,9 @@ class AnsibleBuilder:
         logger.debug(f'Ansible Builder is building your execution environment image. Tags: {", ".join(self.tags)}')
         self.write_containerfile()
         run_command(self.build_command)
+        if self.prune_images:
+            logger.debug('Removing all dangling images')
+            run_command(self.prune_image_command)
         return True
 
 

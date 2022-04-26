@@ -165,6 +165,21 @@ To customize the level of verbosity:
    $ ansible-builder build --verbosity 2
 
 
+``--prune-images``
+******************
+
+To remove unused images created after the build process:
+
+.. code::
+
+   $ ansible-builder build --prune-images
+
+.. note::
+
+   This flag essentially removes all the dangling images on the given machine whether they
+   already exists or created by ansible-builder build process.
+
+
 The ``create`` command
 ----------------------
 

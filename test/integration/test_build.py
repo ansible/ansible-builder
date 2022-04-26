@@ -238,3 +238,15 @@ def test_galaxy_signing_extra_args(cli, runtime, data_dir, ee_tag, tmp_path):
 
     assert "--galaxy-ignore-signature-status-code 500" in result.stdout
     assert "--galaxy-required-valid-signature-count 3" in result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_prune_images(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that the prune-images flag works"""
+    bc = tmp_path
+    ee_def = data_dir / 'blank' / 'execution-environment.yml'
+    result = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} '
+        f'--container-runtime {runtime} --prune-images --verbosity 3'
+    )
+    assert 'Removing all dangling images' in result.stdout
