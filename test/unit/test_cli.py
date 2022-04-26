@@ -49,3 +49,15 @@ def test_build_multiple_tags(exec_env_definition_file, tmp_path):
     # test with 'container' sub-command
     aee = prepare(['build', '--tag', 'TAG1', '--tag', 'TAG2', '-f', path, '-c', str(tmp_path)])
     assert aee.tags == ['TAG1', 'TAG2']
+
+
+def test_build_prune_images(good_exec_env_definition_path, tmp_path):
+    path = str(good_exec_env_definition_path)
+    build_context = str(tmp_path)
+
+    aee_prune_images = prepare(['build', '-f', path, '-c', build_context, '--prune-images'])
+    aee_no_prune_images = prepare(['build', '-f', path, '-c', build_context])
+
+    assert aee_prune_images.prune_images
+    assert 'prune' in aee_prune_images.prune_image_command
+    assert not aee_no_prune_images.prune_images

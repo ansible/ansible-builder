@@ -123,6 +123,12 @@ def add_container_options(parser):
         help='Do not use cache when building the image',
     )
 
+    build_command_parser.add_argument(
+        '--prune-images',
+        action='store_true',
+        help='Remove all dangling images after building the image',
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
