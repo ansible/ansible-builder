@@ -1,0 +1,12 @@
+---
+# Version
+version: 1
+
+# Base Execution Environment name with tag
+build_arg_defaults:
+  EE_BASE_IMAGE: 'quay.io/ansible/ansible-runner:latest'
+
+# Dependencies that needs to be installed
+dependencies:
+  galaxy: requirements.yml
+  python: requirements.txt

@@ -1,0 +1,3 @@
+# Ansible Galaxy dependencies
+collections:
+    - community.general
