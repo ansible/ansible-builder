@@ -15,8 +15,8 @@ def test_definition_version(exec_env_definition_file):
 
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
-    with pytest.raises(ValueError, match="Expected top-level 'version' key to be present."):
-        AnsibleBuilder(filename=path)
+    aee = AnsibleBuilder(filename=path)
+    assert aee.version == '1'
 
 
 @pytest.mark.parametrize('path_spec', ('absolute', 'relative'))

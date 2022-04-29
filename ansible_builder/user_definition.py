@@ -59,10 +59,12 @@ class UserDefinition:
 
     @property
     def version(self):
-        """ Version of the EE file """
-        version = self.raw.get('version')
-        if not version:
-            raise ValueError("Expected top-level 'version' key to be present.")
+        """
+        Version of the EE file.
+
+        If no version is specified, assume version 1 (for backward compat).
+        """
+        version = self.raw.get('version', 1)
         return str(version)
 
     @property
