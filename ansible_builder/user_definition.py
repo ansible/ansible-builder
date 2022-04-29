@@ -41,14 +41,14 @@ class UserDefinition:
             with open(filename, 'r') as ee_file:
                 data = yaml.safe_load(ee_file)
                 self.raw = data if data else {}
-        except FileNotFoundError:
+        except FileNotFoundError as exc:
             raise DefinitionError(textwrap.dedent(
                 f"""
                 Could not detect '{filename}' file in this directory.
                 Use -f to specify a different location.
-                """))
+                """)) from exc
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
-            raise DefinitionError(f"An error occurred while parsing the definition file:\n{str(exc)}")
+            raise DefinitionError(f"An error occurred while parsing the definition file:\n{str(exc)}") from exc
 
         if not isinstance(self.raw, dict):
             raise DefinitionError(f"Definition must be a dictionary, not {type(self.raw).__name__}")
