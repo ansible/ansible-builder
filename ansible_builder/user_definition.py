@@ -19,6 +19,40 @@ ALLOWED_KEYS_V2 = [
 ]
 
 
+class ImageDescription:
+    """
+    Class to describe a container image from the EE file.
+
+    For the currently supported 'exactReference' type, this class is dead
+    simple. If we deem that we need to support more types, this class may
+    become more complex.
+    """
+
+    def __init__(self, ee_images, image_key):
+        """
+        Create an object based on the 'images' portion of the EE definition file.
+
+        :param dict ee_images: The 'images' portion of the EE file.
+        :param str image_key: The section (one of 'base_image' or 'builder_image')
+            of the 'images' dict to parse.
+
+        :raises: ValueError for an invalid image_key value (programmer error),
+            or DefinitionError for invalid EE syntax.
+        """
+        self.name = None
+        self.signature_original_name = None
+
+        if image_key not in ('base_image', 'builder_image'):
+            raise ValueError(f"Invalid image key used for initialization: {image_key}")
+
+        image = ee_images.get(image_key)
+        if image:
+            self.name = image.get('name')
+            if not self.name:
+                raise DefinitionError(f"'name' is a required field for '{image_key}'")
+            self.signature_original_name = image.get('signature_original_name')
+
+
 class UserDefinition:
     """
     Class representing the Execution Environment file.
@@ -56,6 +90,11 @@ class UserDefinition:
         # Set default values for the build arguments. User supplied values
         # are set later during validation.
         self.build_arg_defaults = constants.build_arg_defaults.copy()
+
+        # Attributes used for creating podman container policies. These will be None
+        # if no 'images' section is present in the EE, or an ImageDescription object otherwise.
+        self.base_image = None
+        self.builder_image = None
 
     @property
     def version(self):
@@ -130,8 +169,10 @@ class UserDefinition:
         if self.version == "1":
             pass
 
-        if self.raw.get('images') is not None:
-            pass
+        images = self.raw.get('images', {})
+        if images:
+            self.base_image = ImageDescription(images, 'base_image')
+            self.builder_image = ImageDescription(images, 'builder_image')
 
     def _validate_v1(self):
         """

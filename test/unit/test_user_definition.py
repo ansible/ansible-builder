@@ -3,7 +3,7 @@ import pytest
 
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder
-from ansible_builder.user_definition import UserDefinition
+from ansible_builder.user_definition import UserDefinition, ImageDescription
 
 
 class TestUserDefinition:
@@ -81,3 +81,24 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "Error: Unknown yaml key(s), {'bad_key'}, found in the definition file." in str(error.value.args[0])
+
+    def test_ee_missing_image_name(self, exec_env_definition_file):
+        path = exec_env_definition_file("{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}")
+        with pytest.raises(DefinitionError) as error:
+            AnsibleBuilder(filename=path)
+        assert "'name' is a required field for 'base_image'" in str(error.value.args[0])
+
+
+class TestImageDescription:
+
+    def test_bad_programmer(self):
+        with pytest.raises(ValueError) as error:
+            ImageDescription({}, 'invalid_image_key')
+        assert "Invalid image key used for initialization: invalid_image_key" in str(error)
+
+    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
+    def test_missing_name(self, key):
+        ee_section = {key: {'signature_original_name': ''}}
+        with pytest.raises(DefinitionError) as error:
+            ImageDescription(ee_section, key)
+        assert f"'name' is a required field for '{key}'" in str(error.value.args[0])
