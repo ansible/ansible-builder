@@ -77,20 +77,20 @@ class AnsibleBuilder:
         self.containerfile.create_folder_copy_files()
 
         # First stage, galaxy
-        self.containerfile.prepare_galaxy_stage_steps()
-        self.containerfile.prepare_ansible_config_file()
-        self.containerfile.prepare_build_context()
-        self.containerfile.prepare_galaxy_install_steps()
+        # self.containerfile.prepare_ansible_config_file()
 
         # Second stage, builder
         self.containerfile.prepare_build_stage_steps()
-        self.containerfile.prepare_galaxy_copy_steps()
+        self.containerfile.prepare_build_context()
+        self.containerfile.prepare_galaxy_install_steps()
+        # self.containerfile.prepare_galaxy_install_steps()
+        # self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.prepare_introspect_assemble_steps()
 
         # Second stage
         self.containerfile.prepare_final_stage_steps()
         self.containerfile.prepare_prepended_steps()
-        self.containerfile.prepare_galaxy_copy_steps()
+        # self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.prepare_system_runtime_deps_steps()
         self.containerfile.prepare_appended_steps()
         logger.debug('Rewriting Containerfile to capture collection requirements')
@@ -252,6 +252,7 @@ class Containerfile:
             requirements_file_exists = os.path.exists(os.path.join(
                 self.build_outputs_dir, constants.CONTEXT_FILES['python']
             ))
+
             if requirements_file_exists:
                 relative_requirements_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['python'])
                 self.steps.append(f"ADD {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
@@ -278,23 +279,11 @@ class Containerfile:
 
         return self.steps
 
-    def prepare_galaxy_stage_steps(self):
-        self.steps.extend([
-            "",
-            "FROM $EE_BASE_IMAGE as galaxy",
-            "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
-                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
-            ),
-            "USER root",
-            ""
-        ])
-
-        return self.steps
-
     def prepare_build_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BUILDER_IMAGE as builder"
+            "FROM $EE_BUILDER_IMAGE as builder",
+            "USER root"
             "",
         ])
 

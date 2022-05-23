@@ -72,6 +72,7 @@ class GalaxyInstallSteps(Steps):
             env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
 
         self.steps = [
+            "RUN dnf install ansible-core",
             f"RUN ansible-galaxy role install -r {requirements_naming} --roles-path \"{constants.base_roles_path}\"",
             f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
         ]
