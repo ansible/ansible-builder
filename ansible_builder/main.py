@@ -2,6 +2,7 @@ import logging
 import os
 
 from . import constants
+from .policies import PolicyChoices
 from .steps import (
     AdditionalBuildSteps, BuildContextSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
@@ -26,11 +27,13 @@ class AnsibleBuilder:
                  verbosity=constants.default_verbosity,
                  galaxy_keyring=None,
                  galaxy_required_valid_signature_count=None,
-                 galaxy_ignore_signature_status_codes=()):
+                 galaxy_ignore_signature_status_codes=(),
+                 container_policy=None):
         """
         :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
         :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig( required for ansible-galaxy to accept collections.
         :param str galaxy_ignore_signature_status_codes: GPG Status code to ignore when validating galaxy collections.
+        :param str container_policy: The container validation policy. A valid string value from the PolicyChoices enum.
         """
 
         if not galaxy_keyring and (galaxy_required_valid_signature_count or galaxy_ignore_signature_status_codes):
@@ -59,6 +62,8 @@ class AnsibleBuilder:
             galaxy_required_valid_signature_count=galaxy_required_valid_signature_count,
             galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
         self.verbosity = verbosity
+        if container_policy:
+            self.container_policy = PolicyChoices(container_policy)
 
     @property
     def version(self):

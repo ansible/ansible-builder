@@ -10,6 +10,7 @@ from . import constants
 from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
+from .policies import PolicyChoices
 from .introspect import process, simple_combine, base_collections_path
 from .requirements import sanitize_requirements
 from .utils import configure_logger, write_file
@@ -127,6 +128,13 @@ def add_container_options(parser):
         '--prune-images',
         action='store_true',
         help='Remove all dangling images after building the image',
+    )
+
+    build_command_parser.add_argument(
+        '--container-policy',
+        choices=[p.value for p in PolicyChoices],
+        default=PolicyChoices.SYSTEM.value,
+        help='Container image validation policy.',
     )
 
     for p in [create_command_parser, build_command_parser]:

@@ -1,6 +1,7 @@
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.cli import parse_args
+from ansible_builder.policies import PolicyChoices
 
 
 def prepare(args):
@@ -79,3 +80,17 @@ def test_build_prune_images(good_exec_env_definition_path, tmp_path):
     assert aee_prune_images.prune_images
     assert 'prune' in aee_prune_images.prune_image_command
     assert not aee_no_prune_images.prune_images
+
+
+def test_container_policy_default(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
+    assert aee.container_policy == PolicyChoices.SYSTEM
+
+
+def test_container_policy(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path), '--container-policy', 'signature_required'])
+    assert aee.container_policy == PolicyChoices.SIG_REQ
