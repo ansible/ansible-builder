@@ -130,7 +130,7 @@ class AnsibleBuilder:
         return command
 
     def build(self):
-        logger.debug(f'Ansible Builder is building your execution environment image. Tags: {", ".join(self.tags)}')
+        logger.debug('Ansible Builder is building your execution environment image. Tags: %s', ", ".join(self.tags))
         self.write_containerfile()
         run_command(self.build_command)
         if self.prune_images:
