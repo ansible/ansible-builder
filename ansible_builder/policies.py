@@ -22,61 +22,85 @@ class PolicyChoices(Enum):
     CUSTOM = 'custom_policy'
 
 
-class IdentityType(Enum):
+class SignedIdentityType(Enum):
     """
     Signature identity types as defined in:
     https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md
     """
     REJECT_ALL = 'reject'
+    IGNORE_ALL = 'insecureAcceptAnything'
     EXACT_REFERENCE = 'exactReference'
     # NOTE: more types might be supported in the future
 
 
 class BaseImagePolicy(ABC):
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, keypath=None):
         self.name = name
+        self.keypath = keypath
 
     @property
     @abstractmethod
     def identity_type(self):
-        pass
+        '''
+        Returns the signed identity type enum. Use `value` attribute to get
+        the string representation.
+        '''
 
     @abstractmethod
     def generate_policy(self):
-        pass
+        '''
+        Generates the podman policy data.
+
+        :returns: A dict representing the policy file data.
+        '''
 
 
-class RejectAll(BaseImagePolicy):
+class IgnoreAll(BaseImagePolicy):
 
     @property
     def identity_type(self):
-        return IdentityType.REJECT_ALL
+        return SignedIdentityType.IGNORE_ALL
 
     def generate_policy(self):
         return {
             'default': [
-                {'type': self.identity_type}
+                {'type': self.identity_type.value}
             ]
         }
 
 
 class ExactReference(BaseImagePolicy):
 
-    def __init__(self, name, sig_orig_name=None):
-        super().__init__(name)
+    def __init__(self, name, keypath, sig_orig_name=None):
+        super().__init__(name=name, keypath=keypath)
         self.sig_orig_name = sig_orig_name
 
     @property
     def identity_type(self):
-        return IdentityType.EXACT_REFERENCE
+        return SignedIdentityType.EXACT_REFERENCE
 
     def generate_policy(self):
+        signedIdType = {
+            'type': self.identity_type.value
+        }
+        if self.sig_orig_name:
+            signedIdType['dockerReference'] = self.sig_orig_name
+
         return {
             'default': [
-                {'type': IdentityType.REJECT_ALL}
+                {'type': SignedIdentityType.REJECT_ALL.value}
             ],
             'transports': {
-                'docker': {},
+                'docker': {
+                    self.name: [
+                        {
+                            'type': 'signedBy',
+                            'keyType': 'GPGKeys',
+                            'keyPath': self.keypath,
+                            'signedIdentity': signedIdType,
+                        }
+                    ]
+                },
             }
         }
