@@ -1,5 +1,8 @@
+import json
+
 from abc import ABC, abstractmethod
 from enum import Enum
+from pathlib import Path
 
 
 class PolicyChoices(Enum):
@@ -35,10 +38,6 @@ class SignedIdentityType(Enum):
 
 class BaseImagePolicy(ABC):
 
-    def __init__(self, name=None, keypath=None):
-        self.name = name
-        self.keypath = keypath
-
     @property
     @abstractmethod
     def identity_type(self):
@@ -55,8 +54,22 @@ class BaseImagePolicy(ABC):
         :returns: A dict representing the policy file data.
         '''
 
+    def write_policy(self, policy_file):
+        '''
+        Write the podman policy file.
+
+        :param str policy_file: Path to the policy file.
+        '''
+        policy_data = self.generate_policy()
+        policy_json = json.dumps(policy_data)
+        path = Path(policy_file)
+        path.write_text(policy_json, encoding='utf8')
+
 
 class IgnoreAll(BaseImagePolicy):
+    """
+    Class used to generate a podman image validation policy that accepts any image.
+    """
 
     @property
     def identity_type(self):
@@ -71,36 +84,67 @@ class IgnoreAll(BaseImagePolicy):
 
 
 class ExactReference(BaseImagePolicy):
+    """
+    Class used to generate a podman image validation policy using the
+    'exactReference' signature identity type.
 
-    def __init__(self, name, keypath, sig_orig_name=None):
-        super().__init__(name=name, keypath=keypath)
-        self.sig_orig_name = sig_orig_name
+    Example usage::
+
+        ref = ExactReference('/path/to/keyring.gpg')
+        ref.add_image('registry.redhat.io/aap-21/some-image:latest')
+        policy_data = ref.generate_policy()
+    """
+
+    def __init__(self, keypath):
+        '''
+        Initializes the ExactReference object.
+
+        :param str keypath: Path to the GPG keyring used to validate all images.
+        '''
+        # We support only a single key for all images
+        self._keypath = keypath
+        self._images = []
 
     @property
     def identity_type(self):
         return SignedIdentityType.EXACT_REFERENCE
 
+    def add_image(self, name, sig_orig_name=None):
+        '''
+        Add a new image signature name (and optional, original, non-mirrored
+        name) for this policy type.
+
+        :param str name: Complete image name to use in the policy file.
+        :param str sig_orig_name: If an image is mirrored, this is the complete
+            original image name from the location being mirrored.
+        '''
+        self._images.append((name, sig_orig_name))
+
     def generate_policy(self):
-        signedIdType = {
-            'type': self.identity_type.value
-        }
-        if self.sig_orig_name:
-            signedIdType['dockerReference'] = self.sig_orig_name
+        images_def = {}
+
+        # Build each image definition
+        for name, sig_orig_name in self._images:
+            signedIdType = {
+                'type': self.identity_type.value
+            }
+            if sig_orig_name:
+                signedIdType['dockerReference'] = sig_orig_name
+
+            definition = {
+                'type': 'signedBy',
+                'keyType': 'GPGKeys',
+                'keyPath': self._keypath,
+                'signedIdentity': signedIdType,
+            }
+
+            images_def[name] = [definition]
 
         return {
             'default': [
                 {'type': SignedIdentityType.REJECT_ALL.value}
             ],
             'transports': {
-                'docker': {
-                    self.name: [
-                        {
-                            'type': 'signedBy',
-                            'keyType': 'GPGKeys',
-                            'keyPath': self.keypath,
-                            'signedIdentity': signedIdType,
-                        }
-                    ]
-                },
+                'docker': images_def,
             }
         }

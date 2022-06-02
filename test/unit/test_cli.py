@@ -1,3 +1,6 @@
+import os
+import pytest
+
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.cli import parse_args
@@ -86,11 +89,49 @@ def test_container_policy_default(exec_env_definition_file, tmp_path):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
-    assert aee.container_policy == PolicyChoices.SYSTEM
+    assert aee.container_policy is None
+    assert '--signature-policy=' not in aee.build_command
+    assert '--pull=always' not in aee.build_command
 
 
-def test_container_policy(exec_env_definition_file, tmp_path):
+def test_container_policy_signature_required(exec_env_definition_file, tmp_path):
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
-    aee = prepare(['build', '-f', path, '-c', str(tmp_path), '--container-policy', 'signature_required'])
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-policy', 'signature_required',
+                   '--container-runtime', 'podman',
+                   ])
     assert aee.container_policy == PolicyChoices.SIG_REQ
+    policy_path = os.path.join(str(tmp_path), constants.default_policy_file_name)
+    assert f'--signature-policy={policy_path}' in aee.build_command
+    assert '--pull=always' in aee.build_command
+
+
+def test_container_policy_system(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-policy', 'system',
+                   '--container-runtime', 'podman',
+                   ])
+    assert aee.container_policy == PolicyChoices.SYSTEM
+    assert '--signature-policy=' not in aee.build_command
+    assert '--pull=always' in aee.build_command
+
+
+def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
+    '''Test --container-policy usage fails with non-podman runtime'''
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+
+    with pytest.raises(ValueError, match='--container-policy is only valid with the podman runtime'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'docker',
+                 ])

@@ -2,7 +2,7 @@ import logging
 import os
 
 from . import constants
-from .policies import PolicyChoices
+from .policies import PolicyChoices, IgnoreAll, ExactReference
 from .steps import (
     AdditionalBuildSteps, BuildContextSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
 )
@@ -63,7 +63,11 @@ class AnsibleBuilder:
             galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
         self.verbosity = verbosity
         if container_policy:
+            if self.container_runtime != 'podman':
+                raise ValueError('--container-policy is only valid with the podman runtime')
             self.container_policy = PolicyChoices(container_policy)
+        else:
+            self.container_policy = None
 
     @property
     def version(self):
@@ -128,10 +132,38 @@ class AnsibleBuilder:
 
             command.append(build_arg)
 
-        command.append(self.build_context)
-
         if self.no_cache:
             command.append('--no-cache')
+
+        if self.container_policy:
+            logger.debug('Container policy is %s', PolicyChoices(self.container_policy).value)
+
+            if self.container_policy == PolicyChoices.IGNORE:
+                policy = IgnoreAll()
+            elif self.container_policy == PolicyChoices.SIG_REQ:
+                policy = ExactReference('')
+                if self.definition.base_image:
+                    policy.add_image(self.definition.base_image.name,
+                                     self.definition.base_image.signature_original_name)
+                if self.definition.builder_image:
+                    policy.add_image(self.definition.builder_image.name,
+                                     self.definition.builder_image.signature_original_name)
+            elif self.container_policy == PolicyChoices.CUSTOM:
+                # TODO: Handle this
+                pass
+
+            # SYSTEM is just a no-op for writing the policy file, but we still
+            # need to use the --pull=always option so that the system policy
+            # files work correctly if they require validating signatures.
+            if self.container_policy != PolicyChoices.SYSTEM:
+                policy_file_path = os.path.join(self.build_context, constants.default_policy_file_name)
+                logger.debug('Writing podman policy file %s', policy_file_path)
+                policy.write_policy(policy_file_path)
+                command.append(f'--signature-policy={policy_file_path}')
+
+            command.append('--pull=always')
+
+        command.append(self.build_context)
 
         return command
 

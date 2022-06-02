@@ -133,7 +133,7 @@ def add_container_options(parser):
     build_command_parser.add_argument(
         '--container-policy',
         choices=[p.value for p in PolicyChoices],
-        default=PolicyChoices.SYSTEM.value,
+        default=None,
         help='Container image validation policy.',
     )
 
