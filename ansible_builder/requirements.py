@@ -54,14 +54,14 @@ def sanitize_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            logger.warning('Warning: failed to parse requirements from {}, error: {}'.format(collection, e))
+            logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
 
     # removal of unwanted packages
     sanitized = []
     for req in consolidated:
         # Exclude packages, unless it was present in the user supplied requirements.
         if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
-            logger.debug(f'# Excluding requirement {req.name} from {req.collections}')
+            logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
             continue
         if req.vcs or req.uri:
             # Requirement like git+ or http return as-is

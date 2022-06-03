@@ -63,7 +63,7 @@ def configure_logger(verbosity):
 
 def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
-    logger.info('  {0}'.format(' '.join(command)))
+    logger.info('  %s', ' '.join(command))
     try:
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
@@ -102,7 +102,7 @@ def run_command(command, capture_output=False, allow_error=False):
         main_logger = logging.getLogger('ansible_builder')
         if main_logger.level > logging.INFO:
             logger.error('Command that had error:')
-            logger.error('  {0}'.format(' '.join(command)))
+            logger.error('  %s', ' '.join(command))
         if main_logger.level > logging.DEBUG:
             if capture_output:
                 for line in output:
@@ -114,7 +114,7 @@ def run_command(command, capture_output=False, allow_error=False):
                 for line in trailing_output:
                     logger.error(line)
                 logger.error('')
-        logger.error(f"An error occured (rc={rc}), see output line(s) above for details.")
+        logger.error("An error occured (rc=%s), see output line(s) above for details.", rc)
         sys.exit(1)
 
     return (rc, output)
@@ -123,16 +123,16 @@ def run_command(command, capture_output=False, allow_error=False):
 def write_file(filename: str, lines: list) -> bool:
     parent_dir = os.path.dirname(filename)
     if parent_dir and not os.path.exists(parent_dir):
-        logger.warning('Creating parent directory for {0}'.format(filename))
+        logger.warning('Creating parent directory for %s', filename)
         os.makedirs(parent_dir)
     new_text = '\n'.join(lines)
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             if f.read() == new_text:
-                logger.debug("File {0} is already up-to-date.".format(filename))
+                logger.debug("File %s is already up-to-date.", filename)
                 return False
             else:
-                logger.warning('File {0} had modifications and will be rewritten'.format(filename))
+                logger.warning('File %s had modifications and will be rewritten', filename)
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
@@ -142,21 +142,21 @@ def copy_file(source: str, dest: str) -> bool:
     should_copy = False
 
     if os.path.abspath(source) == os.path.abspath(dest):
-        logger.info("File {0} was placed in build context by user, leaving unmodified.".format(dest))
+        logger.info("File %s was placed in build context by user, leaving unmodified.", dest)
         return False
     elif not os.path.exists(dest):
-        logger.debug("File {0} will be created.".format(dest))
+        logger.debug("File %s will be created.", dest)
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):
-        logger.warning('File {0} had modifications and will be rewritten'.format(dest))
+        logger.warning('File %s had modifications and will be rewritten', dest)
         should_copy = True
     elif os.path.getmtime(source) > os.path.getmtime(dest):
-        logger.warning('File {0} updated time increased and will be rewritten'.format(dest))
+        logger.warning('File %s updated time increased and will be rewritten', dest)
         should_copy = True
 
     if should_copy:
         shutil.copy2(source, dest)
     else:
-        logger.debug("File {0} is already up-to-date.".format(dest))
+        logger.debug("File %s is already up-to-date.", dest)
 
     return should_copy
