@@ -146,7 +146,6 @@ class Containerfile:
                  build_context=None,
                  container_runtime=None,
                  output_filename=None,
-                 keyring=None,
                  galaxy_keyring=None,
                  galaxy_required_valid_signature_count=None,
                  galaxy_ignore_signature_status_codes=()):
