@@ -39,12 +39,12 @@ def run():
     elif args.action == 'introspect':
         data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
         if args.sanitize:
-            logger.info('# Sanitized dependencies for {0}'.format(args.folder))
+            logger.info('# Sanitized dependencies for %s', args.folder)
             data_for_write = data
             data['python'] = sanitize_requirements(data['python'])
             data['system'] = simple_combine(data['system'])
         else:
-            logger.info('# Dependency data for {0}'.format(args.folder))
+            logger.info('# Dependency data for %s', args.folder)
             data_for_write = data.copy()
             data_for_write['python'] = simple_combine(data['python'])
             data_for_write['system'] = simple_combine(data['system'])
