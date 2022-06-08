@@ -86,6 +86,11 @@ def test_build_prune_images(good_exec_env_definition_path, tmp_path):
 
 
 def test_container_policy_default(exec_env_definition_file, tmp_path):
+    '''
+    Test default policy file behavior.
+
+    Do not expect a policy file or forced pulls.
+    '''
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
@@ -95,6 +100,11 @@ def test_container_policy_default(exec_env_definition_file, tmp_path):
 
 
 def test_container_policy_signature_required(exec_env_definition_file, tmp_path):
+    '''
+    Test signature_required policy.
+
+    Expect a policy file to be specified, and forced pulls.
+    '''
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
@@ -110,6 +120,11 @@ def test_container_policy_signature_required(exec_env_definition_file, tmp_path)
 
 
 def test_container_policy_system(exec_env_definition_file, tmp_path):
+    '''
+    Test system policy.
+
+    Do NOT expect a policy file, but do expect forced pulls.
+    '''
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',

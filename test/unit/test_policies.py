@@ -1,3 +1,7 @@
+import json
+from pathlib import Path
+
+from ansible_builder import constants
 from ansible_builder.policies import SignedIdentityType, IgnoreAll, ExactReference
 
 
@@ -15,6 +19,17 @@ class TestIgnoreAll:
         ref = IgnoreAll()
         assert ref.identity_type == SignedIdentityType.IGNORE_ALL
         assert ref.generate_policy() == expected
+
+    def test_write_policy(self, tmp_path):
+        ''' Test write_policy() writes a JSON file with correct data. '''
+        expected = {'default': [{'type': 'insecureAcceptAnything'}]}
+        policy_file = str(tmp_path / constants.default_policy_file_name)
+        ref = IgnoreAll()
+        ref.write_policy(policy_file)
+        output = Path(policy_file)
+        assert output.exists()
+        assert output.is_file()
+        assert expected == json.loads(output.read_text(encoding='utf8'))
 
 
 class TestExactReference:
@@ -89,3 +104,32 @@ class TestExactReference:
         ref.add_image(MIRRORED_NAME_2, ORIGINAL_NAME_2)
         assert ref.identity_type == SignedIdentityType.EXACT_REFERENCE
         assert ref.generate_policy() == expected
+
+    def test_write_policy(self, tmp_path):
+        ''' Test write_policy() writes a JSON file with correct data. '''
+        expected = {
+            'default': [{'type': 'reject'}],
+            'transports': {
+                'docker': {
+                    ORIGINAL_NAME_1: [
+                        {
+                            'type': 'signedBy',
+                            'keyType': 'GPGKeys',
+                            'keyPath': KEY_PATH,
+                            'signedIdentity': {
+                                'type': 'exactReference',
+                            }
+                        }
+                    ],
+                },
+            }
+        }
+
+        policy_file = str(tmp_path / constants.default_policy_file_name)
+        ref = ExactReference(KEY_PATH)
+        ref.add_image(ORIGINAL_NAME_1)
+        ref.write_policy(policy_file)
+        output = Path(policy_file)
+        assert output.exists()
+        assert output.is_file()
+        assert expected == json.loads(output.read_text(encoding='utf8'))
