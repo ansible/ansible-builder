@@ -137,6 +137,11 @@ def add_container_options(parser):
         help='Container image validation policy.',
     )
 
+    build_command_parser.add_argument(
+        '--container-keyring',
+        help='GPG keyring for container image validation.',
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',

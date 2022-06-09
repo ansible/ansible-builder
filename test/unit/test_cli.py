@@ -107,11 +107,16 @@ def test_container_policy_signature_required(exec_env_definition_file, tmp_path)
     '''
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
+
+    keyring = tmp_path / 'keyring.gpg'
+    keyring.touch()
+
     aee = prepare(['build',
                    '-f', path,
                    '-c', str(tmp_path),
                    '--container-policy', 'signature_required',
                    '--container-runtime', 'podman',
+                   '--container-keyring', str(keyring),
                    ])
     assert aee.container_policy == PolicyChoices.SIG_REQ
     policy_path = os.path.join(str(tmp_path), constants.default_policy_file_name)
@@ -149,4 +154,33 @@ def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
                  '-c', str(tmp_path),
                  '--container-policy', 'signature_required',
                  '--container-runtime', 'docker',
+                 '--container-keyring', 'TBD',
+                 ])
+
+
+def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
+    '''Test that a container policy that requires a keyring fails when it is missing.'''
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match='--container-policy=signature_required requires --container-keyring'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'podman',
+                 ])
+
+
+@pytest.mark.parametrize('policy', ('system', 'ignore_all'))
+def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path, policy):
+    '''Test that a container policy that doesn't require a keyring fails when it is supplied.'''
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match=f'--container-keyring is not valid with --container-policy={policy}'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', policy,
+                 '--container-runtime', 'podman',
+                 '--container-keyring', 'TBD',
                  ])

@@ -28,7 +28,9 @@ class AnsibleBuilder:
                  galaxy_keyring=None,
                  galaxy_required_valid_signature_count=None,
                  galaxy_ignore_signature_status_codes=(),
-                 container_policy=None):
+                 container_policy=None,
+                 container_keyring=None,
+                 ):
         """
         :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
         :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig( required for ansible-galaxy to accept collections.
@@ -62,12 +64,54 @@ class AnsibleBuilder:
             galaxy_required_valid_signature_count=galaxy_required_valid_signature_count,
             galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
         self.verbosity = verbosity
-        if container_policy:
+        self.container_policy, self.container_keyring = self._handle_image_validation_opts(container_policy, container_keyring)
+
+    def _handle_image_validation_opts(self, policy, keyring):
+        """
+        Process the container_policy and container_keyring arguments.
+
+        :param str policy: The container_policy value.
+        :param str keyring: The container_keyring value.
+
+        The container_policy and container_keyring arguments come from the CLI
+        and work together to help build or use a podman policy.json file used
+        do image validation. Depending on the policy being used, the keyring
+        may or may not be necessary.
+
+        The keyring, if required, must be a valid path, and will be transformed
+        to an absolute path to be used in the policy.json file.
+
+        :returns: A tuple of a PolicyChoices enum and abs path to the keyring.
+        """
+        resolved_policy = None
+        resolved_keyring = None
+
+        if policy is not None:
+            # Require podman runtime
             if self.container_runtime != 'podman':
                 raise ValueError('--container-policy is only valid with the podman runtime')
-            self.container_policy = PolicyChoices(container_policy)
-        else:
-            self.container_policy = None
+
+            resolved_policy = PolicyChoices(policy)
+
+            # Require keyring if we write a policy file
+            if resolved_policy == PolicyChoices.SIG_REQ and keyring is None:
+                raise ValueError(f'--container-policy={resolved_policy.value} requires --container-keyring')
+
+        if keyring is not None:
+            # Require the correct policy to be specified
+            if resolved_policy is None:
+                raise ValueError('--container-keyring requires --container-policy')
+            elif resolved_policy != PolicyChoices.SIG_REQ:
+                raise ValueError(f'--container-keyring is not valid with --container-policy={resolved_policy.value}')
+
+            # Set the keyring to an absolute path to be referenced in the policy file.
+            if not os.path.exists(keyring):
+                raise ValueError('--container-keyring error: file does not exist')
+            if not os.path.isfile(keyring):
+                raise ValueError('--container-keyring error: not a file')
+            resolved_keyring = os.path.abspath(keyring)
+
+        return (resolved_policy, resolved_keyring)
 
     @property
     def version(self):
@@ -141,7 +185,8 @@ class AnsibleBuilder:
             if self.container_policy == PolicyChoices.IGNORE:
                 policy = IgnoreAll()
             elif self.container_policy == PolicyChoices.SIG_REQ:
-                policy = ExactReference('')
+                logger.debug('Container validation keyring: %s', self.container_keyring)
+                policy = ExactReference(self.container_keyring)
                 if self.definition.base_image:
                     policy.add_image(self.definition.base_image.name,
                                      self.definition.base_image.signature_original_name)
