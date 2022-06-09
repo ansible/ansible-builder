@@ -19,11 +19,6 @@ class PolicyChoices(Enum):
     # EE definition as necessary.
     SIG_REQ = 'signature_required'
 
-    # CUSTOM: run podman with `--pull-always` and a user-supplied policy file
-    # from --container-policy-file, no additional keyring or match overrides are
-    # possible.
-    CUSTOM = 'custom_policy'
-
 
 class SignedIdentityType(Enum):
     """

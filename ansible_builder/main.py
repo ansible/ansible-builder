@@ -193,9 +193,6 @@ class AnsibleBuilder:
                 if self.definition.builder_image:
                     policy.add_image(self.definition.builder_image.name,
                                      self.definition.builder_image.signature_original_name)
-            elif self.container_policy == PolicyChoices.CUSTOM:
-                # TODO: Handle this
-                pass
 
             # SYSTEM is just a no-op for writing the policy file, but we still
             # need to use the --pull=always option so that the system policy
