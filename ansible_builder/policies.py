@@ -56,7 +56,7 @@ class BaseImagePolicy(ABC):
         :param str policy_file: Path to the policy file.
         '''
         policy_data = self.generate_policy()
-        policy_json = json.dumps(policy_data)
+        policy_json = json.dumps(policy_data, indent=2)
         path = Path(policy_file)
         path.write_text(policy_json, encoding='utf8')
 
