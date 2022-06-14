@@ -174,6 +174,10 @@ class UserDefinition:
             self.base_image = ImageDescription(images, 'base_image')
             self.builder_image = ImageDescription(images, 'builder_image')
 
+            # Must set these values so that Containerfile uses the proper images
+            self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
+            self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
+
     def _validate_v1(self):
         """
         Validate all execution environment file, version 1, keys.
