@@ -96,7 +96,7 @@ def test_container_policy_default(exec_env_definition_file, tmp_path):
     aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
     assert aee.container_policy is None
     assert '--signature-policy=' not in aee.build_command
-    assert '--pull=always' not in aee.build_command
+    assert '--pull-always' not in aee.build_command
 
 
 def test_container_policy_signature_required(exec_env_definition_file, tmp_path):
@@ -121,7 +121,7 @@ def test_container_policy_signature_required(exec_env_definition_file, tmp_path)
     assert aee.container_policy == PolicyChoices.SIG_REQ
     policy_path = os.path.join(str(tmp_path), constants.default_policy_file_name)
     assert f'--signature-policy={policy_path}' in aee.build_command
-    assert '--pull=always' in aee.build_command
+    assert '--pull-always' in aee.build_command
 
 
 def test_container_policy_system(exec_env_definition_file, tmp_path):
@@ -140,7 +140,7 @@ def test_container_policy_system(exec_env_definition_file, tmp_path):
                    ])
     assert aee.container_policy == PolicyChoices.SYSTEM
     assert '--signature-policy=' not in aee.build_command
-    assert '--pull=always' in aee.build_command
+    assert '--pull-always' in aee.build_command
 
 
 def test_container_policy_not_podman(exec_env_definition_file, tmp_path):

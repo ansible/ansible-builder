@@ -195,7 +195,7 @@ class AnsibleBuilder:
                                      self.definition.builder_image.signature_original_name)
 
             # SYSTEM is just a no-op for writing the policy file, but we still
-            # need to use the --pull=always option so that the system policy
+            # need to use the --pull-always option so that the system policy
             # files work correctly if they require validating signatures.
             if self.container_policy != PolicyChoices.SYSTEM:
                 policy_file_path = os.path.join(self.build_context, constants.default_policy_file_name)
@@ -203,7 +203,7 @@ class AnsibleBuilder:
                 policy.write_policy(policy_file_path)
                 command.append(f'--signature-policy={policy_file_path}')
 
-            command.append('--pull=always')
+            command.append('--pull-always')
 
         command.append(self.build_context)
 
