@@ -46,6 +46,7 @@ class TestExactReference:
                             'keyPath': KEY_PATH,
                             'signedIdentity': {
                                 'type': 'exactReference',
+                                'dockerReference': ORIGINAL_NAME_1,
                             }
                         }
                     ],
@@ -56,6 +57,7 @@ class TestExactReference:
                             'keyPath': KEY_PATH,
                             'signedIdentity': {
                                 'type': 'exactReference',
+                                'dockerReference': ORIGINAL_NAME_2,
                             }
                         }
                     ],
@@ -118,6 +120,7 @@ class TestExactReference:
                             'keyPath': KEY_PATH,
                             'signedIdentity': {
                                 'type': 'exactReference',
+                                'dockerReference': ORIGINAL_NAME_1,
                             }
                         }
                     ],

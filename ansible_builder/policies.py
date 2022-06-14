@@ -125,6 +125,8 @@ class ExactReference(BaseImagePolicy):
             }
             if sig_orig_name:
                 signedIdType['dockerReference'] = sig_orig_name
+            else:
+                signedIdType['dockerReference'] = name
 
             definition = {
                 'type': 'signedBy',
