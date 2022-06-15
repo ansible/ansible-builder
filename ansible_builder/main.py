@@ -284,6 +284,9 @@ class Containerfile:
             "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
                 self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
             ),
+            "ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS={}".format(
+                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS']
+            ),
             "USER root",
             ""
         ])
