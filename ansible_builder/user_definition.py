@@ -170,6 +170,13 @@ class UserDefinition:
             pass
 
         images = self.raw.get('images', {})
+
+        # The base and builder images MUST be defined in the 'images' section only.
+        bad = self.raw.get('build_arg_defaults')
+        if bad:
+            if 'EE_BASE_IMAGE' in bad or 'EE_BUILDER_IMAGE' in bad:
+                raise DefinitionError("Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'")
+
         if images:
             self.base_image = ImageDescription(images, 'base_image')
             self.builder_image = ImageDescription(images, 'builder_image')
