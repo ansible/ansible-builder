@@ -55,11 +55,11 @@ class TestUserDefinition:
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BASE_IMAGE': 'foo'}, 'images': {}}",
             "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
-        ), # v1 base image defined in v2 file
+        ),  # v1 base image defined in v2 file
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
             "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
-        ), # v1 builder image defined in v2 file
+        ),  # v1 builder image defined in v2 file
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',

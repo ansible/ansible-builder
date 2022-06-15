@@ -167,7 +167,7 @@ class UserDefinition:
         """
 
         if self.version == "1":
-            pass
+            return
 
         images = self.raw.get('images', {})
 
