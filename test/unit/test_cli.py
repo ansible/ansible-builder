@@ -1,3 +1,4 @@
+from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.cli import parse_args
 
@@ -49,6 +50,15 @@ def test_build_multiple_tags(exec_env_definition_file, tmp_path):
     # test with 'container' sub-command
     aee = prepare(['build', '--tag', 'TAG1', '--tag', 'TAG2', '-f', path, '-c', str(tmp_path)])
     assert aee.tags == ['TAG1', 'TAG2']
+
+
+def test_default_tag(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+
+    # test with 'container' sub-command
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
+    assert aee.tags == [constants.default_tag]
 
 
 def test_build_prune_images(good_exec_env_definition_path, tmp_path):
