@@ -106,7 +106,7 @@ See the ``ansible-galaxy`` documentation for more information.
 ``--galaxy-required-valid-signature-count``
 *******************************************
 
-When ``--galaxy-keyring`` is set, the number of required valid collection signatures can be overridden. 
+When ``--galaxy-keyring`` is set, the number of required valid collection signatures can be overridden.
 The value is passed unmodified to ``ansible-galaxy`` calls via the option ``--required-valid-signature-count``.
 See the ``ansible-galaxy`` documentation for more information.
 
@@ -115,6 +115,8 @@ See the ``ansible-galaxy`` documentation for more information.
    $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx --galaxy-required-valid-signature-count 3
    $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx --galaxy-required-valid-signature-count 3
 
+
+.. _context:
 
 ``--context``
 *************
@@ -145,6 +147,8 @@ To use a custom base image:
    $ ansible-builder build --build-arg EE_BASE_IMAGE=registry.example.com/another-ee
 
 
+.. _container-runtime:
+
 ``--container-runtime``
 ***********************
 
@@ -153,6 +157,35 @@ Podman is used by default to build images. To use Docker:
 .. code::
 
    $ ansible-builder build --container-runtime=docker
+
+
+.. _container-policy:
+
+``--container-policy``
+**********************
+
+.. note:: Added in version 1.2
+
+Specifies the container image validation policy to use. This is valid only when
+:ref:`container-runtime` is ``podman``. Valid values are one of:
+
+* ``system``: Relies on podman's consumption of system policy/signature with
+  inline keyring paths. No builder-specific overrides are possible.
+* ``ignore_all``: Run podman with generated policy that ignores all signatures.
+* ``signature_required``: Run podman with ``--pull-always`` and a generated
+   policy that rejects all by default, with generated identity requirements for
+   referenced container images, using an explicitly-provided keyring (specified
+   with the :ref:`container-keyring` CLI option).
+
+.. _container-keyring:
+
+``--container-keyring``
+***********************
+
+.. note:: Added in version 1.2
+
+Specifies the path to a GPG keyring file to use for validating container
+image signatures.
 
 
 ``--verbosity``
