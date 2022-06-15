@@ -23,6 +23,14 @@ def test_custom_ansible_galaxy_cli_collection_opts(exec_env_definition_file, tmp
     assert aee.build_args == {'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': '--pre'}
 
 
+def test_custom_ansible_galaxy_cli_role_opts(exec_env_definition_file, tmp_path):
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-errors', '-c', str(tmp_path)])
+    assert aee.build_args == {'ANSIBLE_GALAXY_CLI_ROLE_OPTS': '--ignore-errors'}
+
+
 def test_build_context(good_exec_env_definition_path, tmp_path):
     path = str(good_exec_env_definition_path)
     build_context = str(tmp_path)
