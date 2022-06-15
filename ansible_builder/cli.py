@@ -235,7 +235,7 @@ def parse_args(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     # Tag default must be handled differently. See comment for --tag option.
-    if 'tag' not in vars(args):
+    if 'tag' not in vars(args) or not args.tag:
         args.tag = [constants.default_tag]
 
     return args
