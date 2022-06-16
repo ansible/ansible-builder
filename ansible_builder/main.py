@@ -93,6 +93,7 @@ class AnsibleBuilder:
         self.containerfile.prepare_galaxy_copy_steps()
         self.containerfile.prepare_system_runtime_deps_steps()
         self.containerfile.prepare_appended_steps()
+        self.containerfile.prepare_label_steps()
         logger.debug('Rewriting Containerfile to capture collection requirements')
         return self.containerfile.write()
 
@@ -228,6 +229,13 @@ class Containerfile:
                 return self.steps.extend(AdditionalBuildSteps(appended_steps))
 
         return False
+
+    def prepare_label_steps(self):
+        self.steps.extend([
+            "LABEL ansible-execution-environment=true",
+        ])
+
+        return self.steps
 
     def prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
