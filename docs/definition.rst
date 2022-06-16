@@ -140,7 +140,7 @@ the following changes:
 1. A new ``images`` key is added that supports more complex definitions of the
    base and builder images.
 2. Defining ``EE_BASE_IMAGE`` or ``EE_BUILDER_IMAGE`` in the ``build_args_defaults``
-   section is no longer allowed.
+   section, or with the :ref:`build-arg` CLI option, is no longer allowed.
 
 An example version 2 execution environment definition schema is as follows:
 

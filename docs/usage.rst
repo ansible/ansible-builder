@@ -129,6 +129,8 @@ directory. To specify another location:
    $ ansible-builder build --context=/path/to/dir
 
 
+.. _build-arg:
+
 ``--build-arg``
 ***************
 

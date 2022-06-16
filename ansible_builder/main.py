@@ -87,6 +87,9 @@ class AnsibleBuilder:
         resolved_keyring = None
 
         if policy is not None:
+            if self.version != "2":
+                raise ValueError(f'--container-policy not valid with version {self.version} format')
+
             # Require podman runtime
             if self.container_runtime != 'podman':
                 raise ValueError('--container-policy is only valid with the podman runtime')
@@ -96,6 +99,12 @@ class AnsibleBuilder:
             # Require keyring if we write a policy file
             if resolved_policy == PolicyChoices.SIG_REQ and keyring is None:
                 raise ValueError(f'--container-policy={resolved_policy.value} requires --container-keyring')
+
+            # Do not allow images to be defined with --build-arg CLI option if
+            # any sig policy is defined.
+            for key, _ in self.build_args.items():
+                if key in ('EE_BASE_IMAGE', 'EE_BUILDER_IMAGE'):
+                    raise ValueError(f'{key} not allowed in --build-arg option with --container-policy={resolved_policy.value}')
 
         if keyring is not None:
             # Require the correct policy to be specified
