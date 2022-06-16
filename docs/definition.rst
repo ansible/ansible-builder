@@ -43,7 +43,7 @@ An example version 1 execution environment definition schema is as follows:
         - RUN ls -la /etc
 
 
-The following keys are supported in this version of the EE file.
+The following keys are supported in this version of the EE file:
 
 version
 ^^^^^^^
@@ -173,19 +173,21 @@ This section is a dictionary that is used to define the base and builder images.
 How this data is used for container image signature validation depends on the
 value of the :ref:`container-policy` CLI option.
 
-  * With the ``ignore_all`` policy, no signature validation is performed. This
+  * ``ignore_all`` policy: No signature validation is performed. This
     duplicates the functionality under the :ref:`version 1 format<version-1>`.
 
-  * With the ``system`` policy, signature validation is performed using pre-existing
-    Podman `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
+  * ``system`` policy: Signature validation is performed using pre-existing Podman
+    `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
     files in standard system locations. ``ansible-builder`` assumes no responsibility
     for the content within these files, and the user has complete control over the content.
 
-  * With the ``signature_required`` policy, ``ansible-builder`` will use the
-    container image definitions here to generate a Podman
+  * ``signature_required`` policy: ``ansible-builder`` will use the container
+    image definitions here to generate a Podman
     `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
-    file in the build :ref:`context directory <context>` which will be used during
+    file in the build :ref:`context directory <context>` and will be used during
     the build to validate the images.
+
+Valid keys for this section are:
 
 ``base_image``
   A dictionary defining the parent image for the execution environment. A ``name``
