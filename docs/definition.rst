@@ -170,22 +170,25 @@ images
 ^^^^^^
 
 This section is a dictionary that is used to define the base and builder images.
-How this data is used for container image signature validation depends on the
-value of the :ref:`container-policy` CLI option.
+How this data is used in relation to a Podman
+`policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
+file for container image signature validation depends on the value of the
+:ref:`container-policy` CLI option.
 
-  * ``ignore_all`` policy: No signature validation is performed. This
-    duplicates the functionality under the :ref:`version 1 format<version-1>`.
+  * ``ignore_all`` policy: Generate a `policy.json` file in the build
+    :ref:`context directory <context>` where no signature validation is
+    performed. This duplicates the functionality under the
+    :ref:`version 1 format<version-1>`.
 
-  * ``system`` policy: Signature validation is performed using pre-existing Podman
-    `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
-    files in standard system locations. ``ansible-builder`` assumes no responsibility
-    for the content within these files, and the user has complete control over the content.
+  * ``system`` policy: Signature validation is performed using pre-existing
+    `policy.json` files in standard system locations. ``ansible-builder`` assumes
+    no responsibility for the content within these files, and the user has complete
+    control over the content.
 
   * ``signature_required`` policy: ``ansible-builder`` will use the container
-    image definitions here to generate a Podman
-    `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
-    file in the build :ref:`context directory <context>` and will be used during
-    the build to validate the images.
+    image definitions here to generate a `policy.json` file in the build
+    :ref:`context directory <context>` that will be used during the build to
+    validate the images.
 
 Valid keys for this section are:
 

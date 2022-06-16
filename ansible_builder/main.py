@@ -203,7 +203,8 @@ class AnsibleBuilder:
                 policy.write_policy(policy_file_path)
                 command.append(f'--signature-policy={policy_file_path}')
 
-            command.append('--pull-always')
+            if self.container_policy != PolicyChoices.IGNORE:
+                command.append('--pull-always')
 
         command.append(self.build_context)
 

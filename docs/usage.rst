@@ -169,9 +169,9 @@ Podman is used by default to build images. To use Docker:
 Specifies the container image validation policy to use. This is valid only when
 :ref:`container-runtime` is ``podman``. Valid values are one of:
 
+* ``ignore_all``: Run podman with generated policy that ignores all signatures.
 * ``system``: Relies on podman's consumption of system policy/signature with
   inline keyring paths. No builder-specific overrides are possible.
-* ``ignore_all``: Run podman with generated policy that ignores all signatures.
 * ``signature_required``: Run podman with ``--pull-always`` and a generated
    policy that rejects all by default, with generated identity requirements for
    referenced container images, using an explicitly-provided keyring (specified
