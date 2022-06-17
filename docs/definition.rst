@@ -196,10 +196,10 @@ Valid keys for this section are:
   A dictionary defining the parent image for the execution environment. A ``name``
   key must be supplied with the container image to use. Use the ``signature_original_name``
   key if the image is mirrored within your repository, but signed with the original
-  image's signature key.
+  image's signature key. Image names *MUST* contain a tag, such as ``:latest``.
 
 ``builder_image``
   A dictionary defining the image used for compiling type tasks.  A ``name``
   key must be supplied with the container image to use. Use the ``signature_original_name``
   key if the image is mirrored within your repository, but signed with the original
-  image's signature key.
+  image's signature key. Image names *MUST* contain a tag, such as ``:latest``.

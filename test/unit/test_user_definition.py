@@ -110,3 +110,29 @@ class TestImageDescription:
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"'name' is a required field for '{key}'" in str(error.value.args[0])
+
+    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
+    @pytest.mark.parametrize('image', ['registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8',
+                                       'registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:'
+                                       ])
+    def test_missing_name_tag(self, key, image):
+        """
+        Test that image.name fails when it doesn't have a tag.
+        """
+        ee_section = {key: {'name': image}}
+        with pytest.raises(DefinitionError) as error:
+            ImageDescription(ee_section, key)
+        assert f"Container image requires a tag: {image}" in str(error.value.args[0])
+
+    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
+    @pytest.mark.parametrize('image', ['registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8',
+                                       'registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:'
+                                       ])
+    def test_missing_orig_name_tag(self, key, image):
+        """
+        Test that image.signature_original_name fails when it doesn't have a tag.
+        """
+        ee_section = {key: {'name': 'my-mirror/aap/ee:latest', 'signature_original_name': image}}
+        with pytest.raises(DefinitionError) as error:
+            ImageDescription(ee_section, key)
+        assert f"Container image requires a tag: {image}" in str(error.value.args[0])

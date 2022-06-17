@@ -37,7 +37,7 @@ class ImageDescription:
             of the 'images' dict to parse.
 
         :raises: ValueError for an invalid image_key value (programmer error),
-            or DefinitionError for invalid EE syntax.
+            or DefinitionError for invalid EE syntax or missing image tag.
         """
         self.name = None
         self.signature_original_name = None
@@ -51,6 +51,13 @@ class ImageDescription:
             if not self.name:
                 raise DefinitionError(f"'name' is a required field for '{image_key}'")
             self.signature_original_name = image.get('signature_original_name')
+
+        # Validate that the images look like they have a tag.
+        for image in (self.name, self.signature_original_name):
+            if image:
+                data = image.split(':', maxsplit=1)
+                if len(data) != 2 or not data[1]:
+                    raise DefinitionError(f"Container image requires a tag: {image}")
 
 
 class UserDefinition:
