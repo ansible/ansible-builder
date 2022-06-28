@@ -134,6 +134,14 @@ a base and builder container image whose signature must be validated before
 builder will build the resulting image, based on the value of the
 :ref:`container-policy` CLI option.
 
+.. note::
+
+    Although builder will create a `policy.json` file (see below) to control Podman image
+    validation, it is up to the user to properly configure the Podman runtime to
+    talk to the registries needed. This may include defining the sigstore for each
+    registry, using secure connections (or not), etc. Such configuration is beyond
+    the scope of this document.
+
 This format is identical to the :ref:`version 1 format <version-1>`, except for
 the following changes:
 
