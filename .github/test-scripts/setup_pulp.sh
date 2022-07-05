@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 #
 # This script sets up a pulp all-in-one container (per the instructions at
@@ -6,7 +6,7 @@
 # then use as an image repository that supports image signatures.
 #
 
-set -ex
+set -eux
 
 ##############################################################################
 # Add sigstore configurations for the images we wish to mirror.
@@ -58,12 +58,13 @@ podman run --detach \
 
 set +e
 iter=0
-httpcode=$(curl -o /dev/null -s -w "%{http_code}\n" localhost:8080/pulp/api/v3/status/)
+httpcode=""
 
 until [ "$httpcode" = "200" ]
 do
   iter=$((iter+1))
   if [ $iter == 20 ]; then
+    echo "Reached max iterations waiting for pulp container"
     exit 1
   fi
   sleep 10

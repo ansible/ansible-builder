@@ -57,7 +57,7 @@ jobs:
       - name: Install Python ${{ matrix.py_version.name }}
         uses: actions/setup-python@v2
         with:
-          py-version: ${{ matrix.py_version.name }}
+          python-version: ${{ matrix.py_version.name }}
 
       - name: Install tox
         run: |
@@ -72,7 +72,7 @@ jobs:
         env:
           BUILDER_RH_REGISTRY: ${{ secrets.RH_REGISTRY }}
         run: |
-          ./setup_pulp.sh "$BUILDER_RH_REGISTRY"
+          ./.github/test-scripts/setup_pulp.sh "$BUILDER_RH_REGISTRY"
 
       - name: Create tox environment
         run: |
