@@ -70,9 +70,10 @@ jobs:
 
       - name: Setup pulp
         env:
-          BUILDER_RH_REGISTRY: ${{ secrets.RH_REGISTRY }}
+          BUILDER_RH_REGISTRY_USR: ${{ secrets.RH_REGISTRY_USER }}
+          BUILDER_RH_REGISTRY_PWD: ${{ secrets.RH_REGISTRY_PASSWORD }}
         run: |
-          ./.github/test-scripts/setup_pulp.sh "$BUILDER_RH_REGISTRY"
+          ./.github/test-scripts/setup_pulp.sh "$BUILDER_RH_REGISTRY_USR" "$BUILDER_RH_REGISTRY_PWD"
 
       - name: Create tox environment
         run: |

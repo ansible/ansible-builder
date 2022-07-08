@@ -9,12 +9,12 @@
 set -eux
 
 ##############################################################################
-# Password for the RH registry account must be given and not be empty.
+# Credentials for the RH registry account must be given and not be empty.
 ##############################################################################
 
-if [ -z "$1" ]
+if [ -z "$1" ] || [ -z "$2" ]
 then
-  echo "Usage: $0 <password>"
+  echo "Usage: $0 <username> <password>"
   exit 1
 fi
 
@@ -97,11 +97,11 @@ pulp container repository create --name testrepo
 
 ##############################################################################
 # Log in to the local and remote registries and copy the images we wish to
-# mirror from remote to local repo. The remote login uses the password passed
-# in to this script ($1). It is a Github repo secret. We are using a remote
-# that requires authentication because we need a `builder` image (because
-# builder requires builder, yuck) and no signed builder image is available
-# in any open access repository, at this time.
+# mirror from remote to local repo. Remote login uses the username/password
+# passed in to this script ($1 and $2). They are Github repo secrets. We are
+# using a remote that requires authentication because we need a `builder`
+# image (because builder requires builder, yuck) and no signed builder image
+# is available in any open access repository, at this time.
 #
 # Setting XDG_RUNTIME_DIR is a workaround for some podman/skopeo issues.
 # See https://github.com/containers/skopeo/issues/942 for more info.
@@ -113,5 +113,5 @@ mkdir $XDG_RUNTIME_DIR
 skopeo login --username admin --password password localhost:8080 --tls-verify=false
 skopeo copy docker://registry.access.redhat.com/ubi9/ubi-micro:latest docker://localhost:8080/testrepo/ubi-micro --dest-tls-verify=false
 
-podman login --username '6340056|ansible-runner-gha' --password "$1" registry.redhat.io
+podman login --username "$1" --password "$2" registry.redhat.io
 skopeo copy docker://registry.redhat.io/ansible-automation-platform-21/ansible-builder-rhel8:latest docker://localhost:8080/testrepo/ansible-builder-rhel8 --dest-tls-verify=false
