@@ -35,10 +35,24 @@ jobs:
       - name: Run tests
         run: tox
 
+  secrets_preflight:
+    runs-on: ubuntu-20.04
+    name: Secrets pre-flight check
+    steps:
+      - id: has_secrets
+        run: |
+          echo "::set-output name=has_secrets::${{ secrets.RH_REGISTRY_USER && secrets.RH_REGISTRY_PASSWORD }}"
+    outputs:
+      has_secrets: ${{ steps.has_secrets.outputs.has_secrets }}
+
 
   pulp_integration:
     runs-on: ubuntu-20.04
     name: Pulp Integration - ${{ matrix.py_version.name }}
+    # NB: running this job requires access to an RH registry token; PRs can't currently access the main repo secret,
+    # so forks will need to define the secrets locally to run these tests pre-merge
+    needs: secrets_preflight
+    if: needs.secrets_preflight.outputs.has_secrets == 'true'
 
     env:
       TOXENV: ${{ matrix.py_version.tox_env }}
