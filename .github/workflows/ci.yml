@@ -36,6 +36,54 @@ jobs:
         run: tox
 
 
+  pulp_integration:
+    runs-on: ubuntu-20.04
+    name: Pulp Integration - ${{ matrix.py_version.name }}
+
+    env:
+      TOXENV: ${{ matrix.py_version.tox_env }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        py_version:
+          - name: '3.10'
+            tox_env: pulp-integration-py310
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Python ${{ matrix.py_version.name }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.py_version.name }}
+
+      - name: Install tox
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tox
+
+      - name: Install pulp_cli
+        run: |
+          python3 -m pip install pulp_cli[pygments]
+
+      - name: Setup pulp
+        env:
+          BUILDER_RH_REGISTRY_USR: ${{ secrets.RH_REGISTRY_USER }}
+          BUILDER_RH_REGISTRY_PWD: ${{ secrets.RH_REGISTRY_PASSWORD }}
+        run: |
+          ./.github/test-scripts/setup_pulp.sh "$BUILDER_RH_REGISTRY_USR" "$BUILDER_RH_REGISTRY_PWD"
+
+      - name: Create tox environment
+        run: |
+          tox --notest
+
+      - name: Run pulp integration tests
+        run: |
+          tox
+
+
   integration:
     runs-on: ubuntu-20.04
     name: Integration - ${{ matrix.py_version.name }}
