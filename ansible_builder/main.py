@@ -75,7 +75,7 @@ class AnsibleBuilder:
 
         The container_policy and container_keyring arguments come from the CLI
         and work together to help build or use a podman policy.json file used
-        do image validation. Depending on the policy being used, the keyring
+        to do image validation. Depending on the policy being used, the keyring
         may or may not be necessary.
 
         The keyring, if required, must be a valid path, and will be transformed
@@ -104,7 +104,7 @@ class AnsibleBuilder:
             # any sig policy is defined.
             for key, _ in self.build_args.items():
                 if key in ('EE_BASE_IMAGE', 'EE_BUILDER_IMAGE'):
-                    raise ValueError(f'{key} not allowed in --build-arg option with --container-policy={resolved_policy.value}')
+                    raise ValueError(f'{key} not allowed in --build-arg option with version 2 format')
 
         if keyring is not None:
             # Require the correct policy to be specified
