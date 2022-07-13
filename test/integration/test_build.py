@@ -4,7 +4,7 @@ import os
 from ansible_builder import constants
 
 # Need to call this directly for multiple tag testing
-from test.integration.conftest import delete_image
+from test.conftest import delete_image
 
 
 @pytest.mark.test_all_runtimes

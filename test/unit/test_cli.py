@@ -190,7 +190,7 @@ def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_
     '''Test specifying image with --build-arg opt will fail'''
     content = {'version': 2}
     path = str(exec_env_definition_file(content=content))
-    with pytest.raises(ValueError, match='EE_BASE_IMAGE not allowed in --build-arg option with --container-policy=signature_required'):
+    with pytest.raises(ValueError, match='EE_BASE_IMAGE not allowed in --build-arg option with version 2 format'):
         prepare(['build',
                  '-f', path,
                  '-c', str(tmp_path),
