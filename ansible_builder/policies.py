@@ -61,6 +61,22 @@ class BaseImagePolicy(ABC):
         path.write_text(policy_json, encoding='utf8')
 
 
+class RejectAll(BaseImagePolicy):
+    """
+    Class used to generate a podman image validation policy that rejects any image.
+    """
+    @property
+    def identity_type(self):
+        return SignedIdentityType.REJECT_ALL
+
+    def generate_policy(self):
+        return {
+            'default': [
+                {'type': self.identity_type.value}
+            ]
+        }
+
+
 class IgnoreAll(BaseImagePolicy):
     """
     Class used to generate a podman image validation policy that accepts any image.

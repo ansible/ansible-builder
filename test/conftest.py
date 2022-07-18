@@ -186,6 +186,13 @@ def delete_image(runtime, image_name):
 
 
 @pytest.fixture
+def podman_ee_tag(request):
+    image_name = gen_image_name(request)
+    yield image_name
+    delete_image('podman', image_name)
+
+
+@pytest.fixture
 @pytest.mark.test_all_runtimes
 def ee_tag(request, runtime):
     image_name = gen_image_name(request)
