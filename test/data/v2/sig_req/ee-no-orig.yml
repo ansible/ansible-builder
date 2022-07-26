@@ -1,0 +1,9 @@
+---
+version: 2
+
+images:
+  base_image:
+    name: localhost:8080/testrepo/ansible-builder-rhel8:latest
+  builder_image:
+    name: localhost:8080/testrepo/ansible-builder-rhel8:latest
+    signature_original_name: registry.redhat.io/ansible-automation-platform-21/ansible-builder-rhel8:latest

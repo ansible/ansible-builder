@@ -16,9 +16,7 @@ def test_definition_version(exec_env_definition_file):
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
     aee = AnsibleBuilder(filename=path)
-
-    with pytest.raises(ValueError):
-        aee.version
+    assert aee.version == '1'
 
 
 @pytest.mark.parametrize('path_spec', ('absolute', 'relative'))

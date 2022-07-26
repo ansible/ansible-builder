@@ -27,6 +27,7 @@ else:
     default_container_runtime = 'docker'
 
 default_keyring_name = 'keyring.gpg'
+default_policy_file_name = 'policy.json'
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {

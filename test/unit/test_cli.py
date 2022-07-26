@@ -1,6 +1,10 @@
+import os
+import pytest
+
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.cli import parse_args
+from ansible_builder.policies import PolicyChoices
 
 
 def prepare(args):
@@ -79,3 +83,134 @@ def test_build_prune_images(good_exec_env_definition_path, tmp_path):
     assert aee_prune_images.prune_images
     assert 'prune' in aee_prune_images.prune_image_command
     assert not aee_no_prune_images.prune_images
+
+
+def test_container_policy_default(exec_env_definition_file, tmp_path):
+    '''
+    Test default policy file behavior.
+
+    Do not expect a policy file or forced pulls.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
+    assert aee.container_policy is None
+    assert '--signature-policy=' not in aee.build_command
+    assert '--pull-always' not in aee.build_command
+
+
+def test_container_policy_signature_required(exec_env_definition_file, tmp_path):
+    '''
+    Test signature_required policy.
+
+    Expect a policy file to be specified, and forced pulls.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+
+    keyring = tmp_path / 'keyring.gpg'
+    keyring.touch()
+
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-policy', 'signature_required',
+                   '--container-runtime', 'podman',
+                   '--container-keyring', str(keyring),
+                   ])
+    assert aee.container_policy == PolicyChoices.SIG_REQ
+    policy_path = os.path.join(str(tmp_path), constants.default_policy_file_name)
+    assert f'--signature-policy={policy_path}' in aee.build_command
+    assert '--pull-always' in aee.build_command
+
+
+def test_container_policy_system(exec_env_definition_file, tmp_path):
+    '''
+    Test system policy.
+
+    Do NOT expect a policy file, but do expect forced pulls.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-policy', 'system',
+                   '--container-runtime', 'podman',
+                   ])
+    assert aee.container_policy == PolicyChoices.SYSTEM
+    assert '--signature-policy=' not in aee.build_command
+    assert '--pull-always' in aee.build_command
+
+
+def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
+    '''Test --container-policy usage fails with non-podman runtime'''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+
+    with pytest.raises(ValueError, match='--container-policy is only valid with the podman runtime'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'docker',
+                 '--container-keyring', 'TBD',
+                 ])
+
+
+def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
+    '''Test that a container policy that requires a keyring fails when it is missing.'''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match='--container-policy=signature_required requires --container-keyring'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'podman',
+                 ])
+
+
+@pytest.mark.parametrize('policy', ('system', 'ignore_all'))
+def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path, policy):
+    '''Test that a container policy that doesn't require a keyring fails when it is supplied.'''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match=f'--container-keyring is not valid with --container-policy={policy}'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', policy,
+                 '--container-runtime', 'podman',
+                 '--container-keyring', 'TBD',
+                 ])
+
+
+def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_path):
+    '''Test specifying image with --build-arg opt will fail'''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match='EE_BASE_IMAGE not allowed in --build-arg option with version 2 format'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'podman',
+                 '--container-keyring', 'TBD',
+                 '--build-arg', 'EE_BASE_IMAGE=blah',
+                 ])
+
+
+def test_container_policy_with_version_1(exec_env_definition_file, tmp_path):
+    '''Test --container-policy usage fails with version 1 EE format'''
+    content = {'version': 1}
+    path = str(exec_env_definition_file(content=content))
+
+    with pytest.raises(ValueError, match='--container-policy not valid with version 1 format'):
+        prepare(['build',
+                 '-f', path,
+                 '-c', str(tmp_path),
+                 '--container-policy', 'signature_required',
+                 '--container-runtime', 'podman',
+                 '--container-keyring', 'TBD',
+                 ])
