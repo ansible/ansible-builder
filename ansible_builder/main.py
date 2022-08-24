@@ -1,5 +1,7 @@
+import importlib.resources
 import logging
 import os
+import pathlib
 
 from . import constants
 from .policies import PolicyChoices, IgnoreAll, ExactReference
@@ -8,6 +10,7 @@ from .steps import (
 )
 from .user_definition import UserDefinition
 from .utils import run_command, copy_file
+
 
 
 logger = logging.getLogger(__name__)
@@ -135,6 +138,7 @@ class AnsibleBuilder:
         return self.write_containerfile()
 
     def write_containerfile(self):
+        self.containerfile.prepare_dynamic_base_and_builder()
         # File preparation
         self.containerfile.create_folder_copy_files()
 
@@ -232,7 +236,7 @@ class AnsibleBuilder:
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, definition,
+    def __init__(self, definition: UserDefinition,
                  build_context=None,
                  container_runtime=None,
                  output_filename=None,
@@ -265,18 +269,28 @@ class Containerfile:
             "ARG EE_BASE_IMAGE={}".format(
                 self.definition.build_arg_defaults['EE_BASE_IMAGE']
             ),
-            "ARG EE_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
-            ),
         ]
+        if self.definition.builder_image:
+            self.steps.append(f"ARG EE_BUILDER_IMAGE={self.definition.build_arg_defaults['EE_BUILDER_IMAGE']}")
+
+        self.steps.append(f"ARG PYCMD={self.definition.python_path or '/usr/bin/python3'}")
+
+        if ansible_refs := self.definition.ansible_ref_install_list:
+            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{self.definition.ansible_ref_install_list}'")
+
 
     def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
         moves files from the definition into the folder
         """
-        os.makedirs(self.build_outputs_dir, exist_ok=True)
+        scripts_dir = str(pathlib.Path(self.build_outputs_dir) / 'scripts')
+        os.makedirs(scripts_dir, exist_ok=True)
 
         for item, new_name in constants.CONTEXT_FILES.items():
+            # HACK: new dynamic base/builder
+            if not new_name:
+                continue
+
             requirement_path = self.definition.get_dep_abs_path(item)
             if requirement_path is None:
                 continue
@@ -293,6 +307,14 @@ class Containerfile:
                 self.definition.ansible_config,
                 os.path.join(self.build_outputs_dir, 'ansible.cfg')
             )
+
+        # HACK: this sucks
+        scriptres = importlib.resources.files('ansible_builder._target_scripts')
+        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py'):
+            with importlib.resources.as_file(scriptres / script) as script_path:
+                # FIXME: just use builtin copy?
+                copy_file(str(script_path), scripts_dir)
+
 
     def prepare_ansible_config_file(self):
         ansible_config_file_path = self.definition.ansible_config
@@ -326,6 +348,22 @@ class Containerfile:
 
         return self.steps
 
+    def prepare_dynamic_base_and_builder(self):
+        # 'base' (possibly customized) will be used by future build stages
+        self.steps.append("FROM $EE_BASE_IMAGE as base")
+
+        if not self.definition.builder_image:
+            if python := self.definition.python_package_name:
+                self.steps.append(f'ARG PYPKG={self.definition.python_package_name}')
+                # FIXME: better dnf cleanup needed?
+                self.steps.append('RUN dnf install $PYPKG -y && dnf clean all')
+
+            if ansible_refs := self.definition.ansible_ref_install_list:
+                self.steps.append('ARG ANSIBLE_INSTALL_REFS')
+                self.steps.append('ARG PYCMD')
+                self.steps.append(f'RUN $PYCMD -m ensurepip && $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
+
+
     def prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
             self.steps.extend(BuildContextSteps())
@@ -343,11 +381,19 @@ class Containerfile:
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-            introspect_cmd = "RUN ansible-builder introspect --sanitize"
+            # copy in the various helper scripts
+            self.steps.append(f'ADD {constants.user_content_subfolder}/scripts/* .')
+
+            # FIXME: just fix it to run the scripts from the right place
+            self.steps.append('RUN mkdir -p /output && cp ./install-from-bindep /output')
+
+
+            introspect_cmd = "RUN $PYCMD introspect.py introspect --sanitize"
 
             requirements_file_exists = os.path.exists(os.path.join(
                 self.build_outputs_dir, constants.CONTEXT_FILES['python']
             ))
+
             if requirements_file_exists:
                 relative_requirements_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['python'])
                 self.steps.append(f"ADD {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
@@ -362,7 +408,7 @@ class Containerfile:
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 
             self.steps.append(introspect_cmd)
-            self.steps.append("RUN assemble")
+            self.steps.append("RUN ./assemble")
 
         return self.steps
 
@@ -377,7 +423,7 @@ class Containerfile:
     def prepare_galaxy_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BASE_IMAGE as galaxy",
+            "FROM base as galaxy",
             "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
                 self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
             ),
@@ -391,19 +437,27 @@ class Containerfile:
         return self.steps
 
     def prepare_build_stage_steps(self):
-        self.steps.extend([
-            "",
-            "FROM $EE_BUILDER_IMAGE as builder"
-            "",
-        ])
+        if self.definition.builder_image:
+            self.steps.extend([
+                "",
+                "FROM $EE_BUILDER_IMAGE as builder"
+                "",
+            ])
+        else:  # dynamic builder, create from customized base
+            self.steps.extend([
+                'FROM base as builder',
+                'ARG PYCMD',
+                'RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser'
+            ])
 
         return self.steps
 
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
-            "FROM $EE_BASE_IMAGE",
-            "USER root"
+            "FROM base",
+            "USER root",
+            "ARG PYCMD"  # this is consumed as an envvar by the install-from-bindep script
             "",
         ])
         return self.steps

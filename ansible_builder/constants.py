@@ -31,6 +31,11 @@ default_policy_file_name = 'policy.json'
 
 # Files that need to be moved into the build context, and their naming inside the context
 CONTEXT_FILES = {
+    # HACK: hacking in prototype other kinds of deps for dynamic builder
+    'python_interpreter': '',
+    'ansible_core': '',
+    'ansible_runner': '',
+
     'galaxy': 'requirements.yml',
     'python': 'requirements.txt',
     'system': 'bindep.txt',

@@ -1,5 +1,6 @@
 import os
 import textwrap
+import tempfile
 import yaml
 
 from . import constants
@@ -18,6 +19,9 @@ ALLOWED_KEYS_V2 = [
     'images',
 ]
 
+
+# HACK: manage lifetimes more carefully
+_tempfiles: list[tempfile.TemporaryFile] = []
 
 class ImageDescription:
     """
@@ -127,6 +131,26 @@ class UserDefinition:
         commands = self.raw.get('additional_build_steps')
         return commands
 
+    @property
+    def python_package_name(self):
+        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_name', None)
+
+    @property
+    def python_path(self):
+        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('python_path', None)
+
+    @property
+    def ansible_core_ref(self):
+        return self.raw.get('dependencies', {}).get('ansible_core', None)
+
+    @property
+    def ansible_runner_ref(self):
+        return self.raw.get('dependencies', {}).get('ansible_runner', None)
+
+    @property
+    def ansible_ref_install_list(self):
+        return ' '.join([r for r in (self.ansible_core_ref, self.ansible_runner_ref) if r]) or None
+
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
@@ -135,6 +159,19 @@ class UserDefinition:
         req_file = self.raw.get('dependencies', {}).get(entry)
 
         if not req_file:
+            return None
+
+        # HACK: jamming in prototype support for inline deps listing, tempfile handling is ass
+        if (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
+            tf = tempfile.NamedTemporaryFile('w')
+            if is_list:
+                tf.write('\n'.join(req_file))
+            else:
+                tf.write(req_file)
+            _tempfiles.append(tf)
+            tf.flush()  # don't close, it'll clean up on GC
+            req_file = tf.name
+        if not isinstance(req_file, str):
             return None
 
         if os.path.isabs(req_file):
@@ -152,7 +189,7 @@ class UserDefinition:
         yaml_keys = set(def_file_dict.keys())
 
         valid_keys = set(ALLOWED_KEYS_V1)
-        if self.version == '2':
+        if self.version >= '2':
             valid_keys = valid_keys.union(set(ALLOWED_KEYS_V2))
 
         invalid_keys = yaml_keys - valid_keys
@@ -186,11 +223,13 @@ class UserDefinition:
 
         if images:
             self.base_image = ImageDescription(images, 'base_image')
-            self.builder_image = ImageDescription(images, 'builder_image')
+            if images.get('builder_image'):
+                self.builder_image = ImageDescription(images, 'builder_image')
+                self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
             # Must set these values so that Containerfile uses the proper images
             self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
-            self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
+
 
     def _validate_v1(self):
         """
@@ -221,6 +260,9 @@ class UserDefinition:
                 )
 
         for item in constants.CONTEXT_FILES:
+            # HACK: non-file deps for dynamic base/builder
+            if not constants.CONTEXT_FILES[item]:
+                continue
             requirement_path = self.get_dep_abs_path(item)
             if requirement_path:
                 if not os.path.exists(requirement_path):
