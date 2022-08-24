@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-import yaml
 import os
 import pkg_resources
 
@@ -11,8 +10,7 @@ from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .policies import PolicyChoices
-from .introspect import process, simple_combine, base_collections_path
-from .requirements import sanitize_requirements
+from ._target_scripts.introspect import create_introspect_parser, run_introspect, process, simple_combine, base_collections_path
 from .utils import configure_logger, write_file
 
 
@@ -38,27 +36,7 @@ def run():
             sys.exit(1)
 
     elif args.action == 'introspect':
-        data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
-        if args.sanitize:
-            logger.info('# Sanitized dependencies for %s', args.folder)
-            data_for_write = data
-            data['python'] = sanitize_requirements(data['python'])
-            data['system'] = simple_combine(data['system'])
-        else:
-            logger.info('# Dependency data for %s', args.folder)
-            data_for_write = data.copy()
-            data_for_write['python'] = simple_combine(data['python'])
-            data_for_write['system'] = simple_combine(data['system'])
-
-        print('---')
-        print(yaml.dump(data, default_flow_style=False))
-
-        if args.write_pip and data.get('python'):
-            write_file(args.write_pip, data_for_write.get('python') + [''])
-        if args.write_bindep and data.get('system'):
-            write_file(args.write_bindep, data_for_write.get('system') + [''])
-
-        sys.exit(0)
+        run_introspect()
 
     logger.error("An error has occured.")
     sys.exit(1)
@@ -173,46 +151,7 @@ def add_container_options(parser):
                        help='The number of signatures that must successfully verify collections from '
                        'ansible-galaxy ~if there are any signatures provided~. See ansible-galaxy doc for more info.')
 
-    introspect_parser = parser.add_parser(
-        'introspect',
-        help='Introspects collections in folder.',
-        description=(
-            'Loops over collections in folder and returns data about dependencies. '
-            'This is used internally and exposed here for verification. '
-            'This is targeted toward collection authors and maintainers.'
-        )
-    )
-    introspect_parser.add_argument('--sanitize', action='store_true',
-                                   help=('Sanitize and de-duplicate requirements. '
-                                         'This is normally done separately from the introspect script, but this '
-                                         'option is given to more accurately test collection content.'))
-
-    introspect_parser.add_argument(
-        'folder', default=base_collections_path, nargs='?',
-        help=(
-            'Ansible collections path(s) to introspect. '
-            'This should have a folder named ansible_collections inside of it.'
-        )
-    )
-    # Combine user requirements and collection requirements into single file
-    # in the future, could look into passing multilple files to
-    # python-builder scripts to be fed multiple files as opposed to this
-    introspect_parser.add_argument(
-        '--user-pip', dest='user_pip',
-        help='An additional file to combine with collection pip requirements.'
-    )
-    introspect_parser.add_argument(
-        '--user-bindep', dest='user_bindep',
-        help='An additional file to combine with collection bindep requirements.'
-    )
-    introspect_parser.add_argument(
-        '--write-pip', dest='write_pip',
-        help='Write the combined pip requirements file to this location.'
-    )
-    introspect_parser.add_argument(
-        '--write-bindep', dest='write_bindep',
-        help='Write the combined bindep requirements file to this location.'
-    )
+    introspect_parser = create_introspect_parser(parser)
 
     for n in [create_command_parser, build_command_parser, introspect_parser]:
 

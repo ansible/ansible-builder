@@ -1,6 +1,6 @@
 import os
 
-from ansible_builder.introspect import process, process_collection, simple_combine
+from ansible_builder.target_scripts.introspect import process, process_collection, simple_combine
 from ansible_builder.requirements import sanitize_requirements
 
 
