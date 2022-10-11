@@ -5,6 +5,7 @@ import yaml
 
 from . import constants
 from .exceptions import DefinitionError
+from .ee_schema import validate_schema
 
 
 ALLOWED_KEYS_V1 = [
@@ -111,12 +112,12 @@ class UserDefinition:
     @property
     def version(self):
         """
-        Version of the EE file.
+        Integer version of the EE file.
 
         If no version is specified, assume version 1 (for backward compat).
         """
         version = self.raw.get('version', 1)
-        return str(version)
+        return version
 
     @property
     def ansible_config(self):
@@ -180,84 +181,13 @@ class UserDefinition:
 
         return os.path.join(self.reference_path, req_file)
 
-    def _validate_root_keys(self):
+    def validate(self):
         """
-        Identify any invalid top-level keys in the execution environment file.
-
-        :raises: DefinitionError exception if any invalid keys are identified.
-        """
-        def_file_dict = self.raw
-        yaml_keys = set(def_file_dict.keys())
-
-        valid_keys = set(ALLOWED_KEYS_V1)
-        if self.version >= '2':
-            valid_keys = valid_keys.union(set(ALLOWED_KEYS_V2))
-
-        invalid_keys = yaml_keys - valid_keys
-
-        if invalid_keys:
-            raise DefinitionError(textwrap.dedent(
-                f"""
-                Error: Unknown yaml key(s), {invalid_keys}, found in the definition file.\n
-                Allowed options are:
-                {valid_keys}
-                """)
-            )
-
-    def _validate_v2(self):
-        """
-        Validate all execution environment file, version 2, keys.
+        Check that all specified keys in the definition file are valid.
 
         :raises: DefinitionError exception if any errors are found.
         """
-
-        if self.version == "1":
-            return
-
-        images = self.raw.get('images', {})
-
-        # The base and builder images MUST be defined in the 'images' section only.
-        bad = self.raw.get('build_arg_defaults')
-        if bad:
-            if 'EE_BASE_IMAGE' in bad or 'EE_BUILDER_IMAGE' in bad:
-                raise DefinitionError("Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'")
-
-        if images:
-            self.base_image = ImageDescription(images, 'base_image')
-            if images.get('builder_image'):
-                self.builder_image = ImageDescription(images, 'builder_image')
-                self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
-
-            # Must set these values so that Containerfile uses the proper images
-            self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
-
-    def _validate_v1(self):
-        """
-        Validate all execution environment file, version 1, keys.
-
-        :raises: DefinitionError exception if any errors are found.
-        """
-
-        if self.raw.get('dependencies') is not None:
-            if not isinstance(self.raw.get('dependencies'), dict):
-                raise DefinitionError(textwrap.dedent(
-                    f"""
-                    Error: Unknown type {type(self.raw.get('dependencies'))} found for dependencies, must be a dict.\n
-                    Allowed options are:
-                    {list(constants.CONTEXT_FILES.keys())}
-                    """)
-                )
-
-            dependencies_keys = set(self.raw.get('dependencies'))
-            invalid_dependencies_keys = dependencies_keys - set(constants.CONTEXT_FILES.keys())
-            if invalid_dependencies_keys:
-                raise DefinitionError(textwrap.dedent(
-                    f"""
-                    Error: Unknown yaml key(s), {invalid_dependencies_keys}, found in dependencies.\n
-                    Allowed options are:
-                    {list(constants.CONTEXT_FILES.keys())}
-                    """)
-                )
+        validate_schema(self.raw)
 
         for item in constants.CONTEXT_FILES:
             # HACK: non-file deps for dynamic base/builder
@@ -271,54 +201,16 @@ class UserDefinition:
         # Validate and set any user-specified build arguments
         build_arg_defaults = self.raw.get('build_arg_defaults')
         if build_arg_defaults:
-            if not isinstance(build_arg_defaults, dict):
-                raise DefinitionError(
-                    f"Error: Unknown type {type(build_arg_defaults)} found for build_arg_defaults; "
-                    f"must be a dict."
-                )
-            unexpected_keys = set(build_arg_defaults) - set(constants.build_arg_defaults)
-            if unexpected_keys:
-                raise DefinitionError(
-                    f"Keys {unexpected_keys} are not allowed in 'build_arg_defaults'."
-                )
             for key, user_value in build_arg_defaults.items():
-                if user_value and not isinstance(user_value, str):
-                    raise DefinitionError(
-                        f"Expected build_arg_defaults.{key} to be a string; "
-                        f"Found a {type(user_value)} instead."
-                    )
                 self.build_arg_defaults[key] = user_value
 
-        additional_cmds = self.get_additional_commands()
-        if additional_cmds:
-            if not isinstance(additional_cmds, dict):
-                raise DefinitionError(textwrap.dedent("""
-                    Expected 'additional_build_steps' in the provided definition file to be a dictionary
-                    with keys 'prepend' and/or 'append'; found a {0} instead.
-                    """).format(type(additional_cmds).__name__))
+        if self.version == 2:
+            images = self.raw.get('images', {})
+            if images:
+                self.base_image = ImageDescription(images, 'base_image')
+                if images.get('builder_image'):
+                    self.builder_image = ImageDescription(images, 'builder_image')
+                    self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
-            expected_keys = frozenset(('append', 'prepend'))
-            unexpected_keys = set(additional_cmds) - expected_keys
-            if unexpected_keys:
-                raise DefinitionError(
-                    f"Keys {*unexpected_keys,} are not allowed in 'additional_build_steps'."
-                )
-
-        ansible_config_path = self.raw.get('ansible_config')
-        if ansible_config_path:
-            if not isinstance(ansible_config_path, str):
-                raise DefinitionError(textwrap.dedent(f"""
-                    Expected 'ansible_config' in the provided definition file to
-                    be a string; found a {type(ansible_config_path).__name__} instead.
-                    """))
-
-    def validate(self):
-        """
-        Check that all specified keys in the definition file are valid.
-
-        :raises: DefinitionError exception if any errors are found.
-        """
-
-        self._validate_root_keys()
-        self._validate_v1()
-        self._validate_v2()
+                # Must set these values so that Containerfile uses the proper images
+                self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name

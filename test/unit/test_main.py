@@ -10,13 +10,13 @@ from ansible_builder.main import AnsibleBuilder
 def test_definition_version(exec_env_definition_file):
     path = exec_env_definition_file(content={'version': 1})
     aee = AnsibleBuilder(filename=path)
-    assert aee.version == '1'
+    assert aee.version == 1
 
 
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
     aee = AnsibleBuilder(filename=path)
-    assert aee.version == '1'
+    assert aee.version == 1
 
 
 @pytest.mark.parametrize('path_spec', ('absolute', 'relative'))
@@ -92,7 +92,7 @@ def test_build_command(exec_env_definition_file, runtime):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
-    aee = AnsibleBuilder(filename=path, tag='my-custom-image')
+    aee = AnsibleBuilder(filename=path, tag=['my-custom-image'])
     command = aee.build_command
     assert 'build' and 'my-custom-image' in command
 
@@ -100,7 +100,8 @@ def test_build_command(exec_env_definition_file, runtime):
 
     command = aee.build_command
     assert 'foo/bar/path' in command
-    assert 'foo/bar/path/Dockerfile' in " ".join(command)
+    fpath = 'foo/bar/path/' + constants.runtime_files[runtime]
+    assert fpath in " ".join(command)
 
 
 def test_nested_galaxy_file(data_dir, tmp_path):
