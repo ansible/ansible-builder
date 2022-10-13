@@ -12,7 +12,6 @@ from .user_definition import UserDefinition
 from .utils import run_command, copy_file
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -276,8 +275,7 @@ class Containerfile:
         self.steps.append(f"ARG PYCMD={self.definition.python_path or '/usr/bin/python3'}")
 
         if ansible_refs := self.definition.ansible_ref_install_list:
-            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{self.definition.ansible_ref_install_list}'")
-
+            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{ansible_refs}'")
 
     def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
@@ -315,6 +313,9 @@ class Containerfile:
                 # FIXME: just use builtin copy?
                 copy_file(str(script_path), scripts_dir)
 
+        # later steps depend on base image containing these scripts
+        context_dir = pathlib.Path(self.build_outputs_dir).stem
+        self.steps.append(f'COPY {context_dir}/scripts/ /output/scripts/')
 
     def prepare_ansible_config_file(self):
         ansible_config_file_path = self.definition.ansible_config
@@ -354,15 +355,14 @@ class Containerfile:
 
         if not self.definition.builder_image:
             if python := self.definition.python_package_name:
-                self.steps.append(f'ARG PYPKG={self.definition.python_package_name}')
+                self.steps.append(f'ARG PYPKG={python}')
                 # FIXME: better dnf cleanup needed?
                 self.steps.append('RUN dnf install $PYPKG -y && dnf clean all')
 
-            if ansible_refs := self.definition.ansible_ref_install_list:
+            if self.definition.ansible_ref_install_list:
                 self.steps.append('ARG ANSIBLE_INSTALL_REFS')
                 self.steps.append('ARG PYCMD')
-                self.steps.append(f'RUN $PYCMD -m ensurepip && $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
-
+                self.steps.append('RUN $PYCMD -m ensurepip && $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
 
     def prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
@@ -381,14 +381,7 @@ class Containerfile:
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-            # copy in the various helper scripts
-            self.steps.append(f'ADD {constants.user_content_subfolder}/scripts/* .')
-
-            # FIXME: just fix it to run the scripts from the right place
-            self.steps.append('RUN mkdir -p /output && cp ./install-from-bindep /output')
-
-
-            introspect_cmd = "RUN $PYCMD introspect.py introspect --sanitize"
+            introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect --sanitize"
 
             requirements_file_exists = os.path.exists(os.path.join(
                 self.build_outputs_dir, constants.CONTEXT_FILES['python']
@@ -408,14 +401,14 @@ class Containerfile:
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 
             self.steps.append(introspect_cmd)
-            self.steps.append("RUN ./assemble")
+            self.steps.append("RUN /output/scripts/assemble")
 
         return self.steps
 
     def prepare_system_runtime_deps_steps(self):
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
-            "RUN /output/install-from-bindep && rm -rf /output/wheels",
+            "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
         ])
 
         return self.steps
@@ -443,7 +436,8 @@ class Containerfile:
                 "FROM $EE_BUILDER_IMAGE as builder"
                 "",
             ])
-        else:  # dynamic builder, create from customized base
+        else:
+            # dynamic builder, create from customized base
             self.steps.extend([
                 'FROM base as builder',
                 'ARG PYCMD',

@@ -295,6 +295,7 @@ def create_introspect_parser(parser):
 
     return introspect_parser
 
+
 EXCLUDE_REQUIREMENTS = frozenset((
     # obviously already satisfied or unwanted
     'ansible', 'ansible-base', 'python', 'ansible-core',
@@ -383,7 +384,6 @@ def write_file(filename: str, lines: list) -> bool:
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
-
 
 
 def main():

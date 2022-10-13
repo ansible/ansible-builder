@@ -4,9 +4,9 @@ version: 3
 images:
   base_image:
     name: quay.io/centos/centos:stream8  # vanilla image!
-    #name: quay.io/centos/centos:stream9  # vanilla image!
-    #name: registry.fedoraproject.org/fedora:36  # vanilla image!
-    #name: registry.access.redhat.com/ubi9/ubi:latest  # vanilla image!
+    # name: quay.io/centos/centos:stream9  # vanilla image!
+    # name: registry.fedoraproject.org/fedora:36  # vanilla image!
+    # name: registry.access.redhat.com/ubi9/ubi:latest  # vanilla image!
 
 # no longer required, we do the needful inline, but should still work if someone sets it
 #  builder_image:
@@ -17,9 +17,9 @@ dependencies:
     package_name: python39
     python_path: /usr/bin/python3.9
 
-  ansible_core: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz # install from a GH ref tarball
+  ansible_core: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz   # install from a GH ref tarball
 
-  ansible_runner: ansible-runner==2.2.1 # install from PyPI
+  ansible_runner: ansible-runner==2.2.1   # install from PyPI
 
   # FIXME: inline splat-as-string sucks, make separate keys for collections and roles
   galaxy: |
