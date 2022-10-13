@@ -10,8 +10,8 @@ from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .policies import PolicyChoices
-from ._target_scripts.introspect import create_introspect_parser, run_introspect, process, simple_combine, base_collections_path
-from .utils import configure_logger, write_file
+from ._target_scripts.introspect import create_introspect_parser, run_introspect
+from .utils import configure_logger
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def run():
             sys.exit(1)
 
     elif args.action == 'introspect':
-        run_introspect()
+        run_introspect(args, logger)
 
     logger.error("An error has occured.")
     sys.exit(1)
