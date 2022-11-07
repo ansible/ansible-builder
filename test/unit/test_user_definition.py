@@ -24,41 +24,39 @@ class TestUserDefinition:
         ),  # missing file
         (
             "{'version': 1, 'additional_build_steps': 'RUN me'}",
-            "Expected 'additional_build_steps' in the provided definition file to be a dictionary\n"
-            "with keys 'prepend' and/or 'append'; found a str instead."
+            "'RUN me' is not of type 'object'"
         ),  # not right format for additional_build_steps
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
-            "Keys ('middle',) are not allowed in 'additional_build_steps'."
+            "Additional properties are not allowed ('middle' was unexpected)"
         ),  # there are no "middle" build steps
         (
             "{'version': 1, 'build_arg_defaults': {'EE_BASE_IMAGE': ['foo']}}",
-            "Expected build_arg_defaults.EE_BASE_IMAGE to be a string; Found a <class 'list'> instead."
+            "['foo'] is not of type 'string'"
         ),  # image itself is wrong type
         (
             "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
-            "Keys {'BUILD_ARRRRRG'} are not allowed in 'build_arg_defaults'."
+            "Additional properties are not allowed ('BUILD_ARRRRRG' was unexpected)"
         ),  # image itself is wrong type
         (
             "{'version': 1, 'ansible_config': ['ansible.cfg']}",
-            "Expected 'ansible_config' in the provided definition file to\n"
-            "be a string; found a list instead."
+            "['ansible.cfg'] is not of type 'string'"
         ),
         (
             "{'version': 1, 'images': 'bar'}",
-            "Error: Unknown yaml key(s), {'images'}, found in the definition file."
+            "Additional properties are not allowed ('images' was unexpected)"
         ),
         (
             "{'version': 2, 'foo': 'bar'}",
-            "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
+            "Additional properties are not allowed ('foo' was unexpected)"
         ),
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BASE_IMAGE': 'foo'}, 'images': {}}",
-            "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
+            "Additional properties are not allowed ('EE_BASE_IMAGE' was unexpected)"
         ),  # v1 base image defined in v2 file
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
-            "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
+            "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)"
         ),  # v1 builder image defined in v2 file
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
@@ -88,7 +86,7 @@ class TestUserDefinition:
         path = exec_env_definition_file("{'version': 1, 'bad_key': 1}")
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
-        assert "Error: Unknown yaml key(s), {'bad_key'}, found in the definition file." in str(error.value.args[0])
+        assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(error.value.args[0])
 
     def test_ee_missing_image_name(self, exec_env_definition_file):
         path = exec_env_definition_file("{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}")
