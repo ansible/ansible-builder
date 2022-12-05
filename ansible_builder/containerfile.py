@@ -3,9 +3,6 @@ import os
 import pathlib
 
 from . import constants
-from .steps import (
-    AdditionalBuildSteps, BuildContextSteps, GalaxyInstallSteps, GalaxyCopySteps, AnsibleConfigSteps
-)
 from .user_definition import UserDefinition
 from .utils import copy_file
 
@@ -40,20 +37,7 @@ class Containerfile:
         self.copied_galaxy_keyring = None
         self.galaxy_required_valid_signature_count = galaxy_required_valid_signature_count
         self.galaxy_ignore_signature_status_codes = galaxy_ignore_signature_status_codes
-
-        # Build args all need to go at top of file to avoid errors
-        self.steps = [
-            "ARG EE_BASE_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BASE_IMAGE']
-            ),
-        ]
-        if self.definition.builder_image:
-            self.steps.append(f"ARG EE_BUILDER_IMAGE={self.definition.build_arg_defaults['EE_BUILDER_IMAGE']}")
-
-        self.steps.append(f"ARG PYCMD={self.definition.python_path or '/usr/bin/python3'}")
-
-        if ansible_refs := self.definition.ansible_ref_install_list:
-            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{ansible_refs}'")
+        self.steps: list = []
 
     def prepare(self):
         """
@@ -63,6 +47,22 @@ class Containerfile:
         info to eventually be written directly to the container definition file
         via a separate call to the `Containerfile.write()` method.
         """
+
+        # Build args all need to go at top of file to avoid errors
+        self.steps.extend([
+            "ARG EE_BASE_IMAGE={}".format(
+                self.definition.build_arg_defaults['EE_BASE_IMAGE']
+            ),
+        ])
+
+        if self.definition.builder_image:
+            self.steps.append(f"ARG EE_BUILDER_IMAGE={self.definition.build_arg_defaults['EE_BUILDER_IMAGE']}")
+
+        self.steps.append(f"ARG PYCMD={self.definition.python_path or '/usr/bin/python3'}")
+
+        if ansible_refs := self.definition.ansible_ref_install_list:
+            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{ansible_refs}'")
+
         self.prepare_dynamic_base_and_builder()
         # File preparation
         self.create_folder_copy_files()
@@ -78,7 +78,6 @@ class Containerfile:
         self.prepare_galaxy_copy_steps()
         self.prepare_introspect_assemble_steps()
 
-        # Second stage
         self.prepare_final_stage_steps()
         self.prepare_prepended_steps()
         self.prepare_galaxy_copy_steps()
@@ -118,8 +117,7 @@ class Containerfile:
             copy_file(requirement_path, dest)
 
         if self.original_galaxy_keyring:
-            self.copied_galaxy_keyring = constants.default_keyring_name
-            copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, self.copied_galaxy_keyring))
+            copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, constants.default_keyring_name))
 
         if self.definition.ansible_config:
             copy_file(
@@ -143,32 +141,37 @@ class Containerfile:
         if ansible_config_file_path:
             context_file_path = os.path.join(
                 constants.user_content_subfolder, 'ansible.cfg')
-            return self.steps.extend(AnsibleConfigSteps(context_file_path))
+            self.steps.extend([
+                f"ADD {context_file_path} ~/.ansible.cfg",
+                "",
+            ])
 
     def prepare_prepended_steps(self):
         additional_prepend_steps = self.definition.get_additional_commands()
         if additional_prepend_steps:
             prepended_steps = additional_prepend_steps.get('prepend')
             if prepended_steps:
-                return self.steps.extend(AdditionalBuildSteps(prepended_steps))
-
-        return False
+                if isinstance(prepended_steps, str):
+                    lines = prepended_steps.strip().splitlines()
+                else:
+                    lines = prepended_steps
+                self.steps.extend(lines)
 
     def prepare_appended_steps(self):
         additional_append_steps = self.definition.get_additional_commands()
         if additional_append_steps:
             appended_steps = additional_append_steps.get('append')
             if appended_steps:
-                return self.steps.extend(AdditionalBuildSteps(appended_steps))
-
-        return False
+                if isinstance(appended_steps, str):
+                    lines = appended_steps.strip().splitlines()
+                else:
+                    lines = appended_steps
+                self.steps.extend(lines)
 
     def prepare_label_steps(self):
         self.steps.extend([
             "LABEL ansible-execution-environment=true",
         ])
-
-        return self.steps
 
     def prepare_dynamic_base_and_builder(self):
         # 'base' (possibly customized) will be used by future build stages
@@ -187,16 +190,39 @@ class Containerfile:
 
     def prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
-            self.steps.extend(BuildContextSteps())
-        return self.steps
+            self.steps.extend([
+                "ADD {0} /build".format(constants.user_content_subfolder),
+                "WORKDIR /build",
+                "",
+            ])
 
     def prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyInstallSteps(constants.CONTEXT_FILES['galaxy'],
-                                                 self.copied_galaxy_keyring,
-                                                 self.galaxy_ignore_signature_status_codes,
-                                                 self.galaxy_required_valid_signature_count))
-        return self.steps
+            env = ""
+            install_opts = f"-r {constants.CONTEXT_FILES['galaxy']} --collections-path \"{constants.base_collections_path}\""
+
+            if self.galaxy_ignore_signature_status_codes:
+                for code in self.galaxy_ignore_signature_status_codes:
+                    install_opts += f" --ignore-signature-status-code {code}"
+
+            if self.galaxy_required_valid_signature_count:
+                install_opts += f" --required-valid-signature-count {self.galaxy_required_valid_signature_count}"
+
+            if self.original_galaxy_keyring:
+                install_opts += f" --keyring \"{constants.default_keyring_name}\""
+            else:
+                # We have to use the environment variable to disable signature
+                # verification because older versions (<2.13) of ansible-galaxy do
+                # not support the --disable-gpg-verify option. We don't use ENV in
+                # the Containerfile since we need it only during the build and not
+                # in the final image.
+                env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
+
+            self.steps.append(
+                f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']}"
+                f" --roles-path \"{constants.base_roles_path}\"",
+            )
+            self.steps.append(f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}")
 
     def prepare_introspect_assemble_steps(self):
         # The introspect/assemble block is valid if there are any form of requirements
@@ -224,15 +250,11 @@ class Containerfile:
             self.steps.append(introspect_cmd)
             self.steps.append("RUN /output/scripts/assemble")
 
-        return self.steps
-
     def prepare_system_runtime_deps_steps(self):
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
             "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
         ])
-
-        return self.steps
 
     def prepare_galaxy_stage_steps(self):
         self.steps.extend([
@@ -247,8 +269,6 @@ class Containerfile:
             "USER root",
             ""
         ])
-
-        return self.steps
 
     def prepare_build_stage_steps(self):
         if self.definition.builder_image:
@@ -265,8 +285,6 @@ class Containerfile:
                 'RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser'
             ])
 
-        return self.steps
-
     def prepare_final_stage_steps(self):
         self.steps.extend([
             "",
@@ -275,11 +293,13 @@ class Containerfile:
             "ARG PYCMD"  # this is consumed as an envvar by the install-from-bindep script
             "",
         ])
-        return self.steps
 
     def prepare_galaxy_copy_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
-            self.steps.extend(GalaxyCopySteps())
-        return self.steps
-
-        return True
+            self.steps.extend([
+                "",
+                "COPY --from=galaxy {0} {0}".format(
+                    os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
+                ),
+                "",
+            ])
