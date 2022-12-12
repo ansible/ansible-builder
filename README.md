@@ -1,7 +1,7 @@
 [![CI](https://github.com/ansible/ansible-builder/actions/workflows/ci.yml/badge.svg?branch=devel)](https://github.com/ansible/ansible-builder/actions?query=branch%3Adevel)
 [![codecov](https://codecov.io/gh/ansible/ansible-builder/branch/devel/graph/badge.svg?token=4F6P3DBI40)](https://codecov.io/gh/ansible/ansible-builder)
 
-# Ansible Builder
+# ansible Builder
 
 Ansible Builder is a tool that automates the process of building execution
 environments using the schemas and tooling defined in various Ansible
