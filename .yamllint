@@ -14,6 +14,9 @@ rules:
     level: error
   line-length: disable
   document-start: disable
+  indentation:
+    spaces: consistent
+    indent-sequences: consistent
   truthy:
     allowed-values:
       - 'True'
