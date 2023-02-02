@@ -62,10 +62,31 @@ class TestUserDefinition:
             "{'version': 2, 'additional_build_steps': {'prepend': ''}}",
             "Additional properties are not allowed ('prepend' was unexpected)"
         ),  # 'prepend' is renamed in v2
+        (
+            "{'version': 2, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
+            "'dest' must not be an absolute path or contain '..': ../b"
+        ),  # destination cannot contain ..
+        (
+            "{'version': 2, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
+            "'dest' must not be an absolute path or contain '..': /b"
+        ),  # destination cannot be absolute
+        (
+            "{'version': 2, 'additional_build_files': [ {'dest': 'b'} ]}",
+            "'src' is a required property"
+        ),  # source is required
+        (
+            "{'version': 2, 'additional_build_files': [ {'src': 'a'} ]}",
+            "'dest' is a required property"
+        ),  # destination is required
+        (
+            "{'version': 2, 'ansible_config': 'ansible.cfg' }",
+            "Additional properties are not allowed ('ansible_config' was unexpected)"
+        ),  # ansible_config not supported in v2
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
         'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v2',
+        'dest_has_dot_dot', 'dest_is_absolute', 'src_req', 'dest_req', 'ansible_cfg',
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)

@@ -1,10 +1,15 @@
 import importlib.resources
+import logging
 import os
-import pathlib
+
+from pathlib import Path
 
 from . import constants
 from .user_definition import UserDefinition
 from .utils import copy_file
+
+
+logger = logging.getLogger(__name__)
 
 
 class Containerfile:
@@ -179,7 +184,7 @@ class Containerfile:
         Creates the build context directory, and copies any potential context
         files (python, galaxy, or bindep requirements) into it.
         """
-        scripts_dir = str(pathlib.Path(self.build_outputs_dir) / 'scripts')
+        scripts_dir = str(Path(self.build_outputs_dir) / 'scripts')
         os.makedirs(scripts_dir, exist_ok=True)
 
         for item, new_name in constants.CONTEXT_FILES.items():
@@ -197,6 +202,8 @@ class Containerfile:
         if self.original_galaxy_keyring:
             copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, constants.default_keyring_name))
 
+        self._handle_additional_build_files()
+
         if self.definition.ansible_config:
             copy_file(
                 self.definition.ansible_config,
@@ -211,10 +218,47 @@ class Containerfile:
                 copy_file(str(script_path), scripts_dir)
 
         # later steps depend on base image containing these scripts
-        context_dir = pathlib.Path(self.build_outputs_dir).stem
+        context_dir = Path(self.build_outputs_dir).stem
         self.steps.append(f'COPY {context_dir}/scripts/ /output/scripts/')
 
+    def _handle_additional_build_files(self):
+        """
+        Deal with any files the user wants added to the image build context.
+
+        The 'src' value is either an absolute path, or a path relative to the
+        EE definition file. For example, 'src' can be a relative path like
+        "data_files/configs/*.cfg", but cannot be "/home/user/files/*.cfg",
+        the latter not being relative to the EE.
+        """
+        for entry in self.definition.additional_build_files:
+            src = Path(entry['src'])
+            dst = entry['dest']
+
+            # 'src' is either an absolute path or a path glob relative to the EE file
+            ee_file = Path(self.definition.filename)
+            if src.is_absolute():
+                if not src.exists():
+                    logger.warning(f"User build file {src} does not exist.")
+                    continue
+                src_files = [src]
+            elif not (src_files := list(ee_file.parent.glob(str(src)))):
+                logger.warning(f"No matches for '{src}' in additional_build_files.")
+                continue
+
+            final_dst = Path(self.build_outputs_dir) / dst
+            logger.debug(f"Creating {final_dst}")
+            final_dst.mkdir(parents=True, exist_ok=True)
+
+            for src_file in src_files:
+                # Destination is the subdir under context plus the basename of the source
+                copy_location = final_dst / src_file.name
+                logger.debug(f"Copying user file '{src_file}' to '{copy_location}'")
+                copy_file(str(src_file), str(copy_location))
+
     def _prepare_ansible_config_file(self):
+        if self.definition.version != 1:
+            return
+
         ansible_config_file_path = self.definition.ansible_config
         if ansible_config_file_path:
             context_file_path = os.path.join(
@@ -225,7 +269,7 @@ class Containerfile:
             ])
 
     def _insert_custom_steps(self, section: str):
-        additional_steps = self.definition.get_additional_commands()
+        additional_steps = self.definition.additional_build_steps
         if additional_steps:
             section_steps = additional_steps.get(section)
             if section_steps:

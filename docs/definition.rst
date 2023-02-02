@@ -152,6 +152,11 @@ the following changes:
 3. The ``additional_build_steps`` section allows for specifying additional commands
    either before or after each of the four build phases (base/galaxy/builder/final).
    The version 1 format supported this for only the final build phase.
+4. A new ``additional_build_files`` sections allows for including any file in
+   the build context to be referenced at any image build stage.
+5. The ``ansible_config`` keyword is removed. Similar functionality can be
+   achieved through the use of ``additional_build_steps`` and ``additional_build_files``
+   (see below for an example).
 
 An example version 2 execution environment definition schema is as follows:
 
@@ -162,8 +167,6 @@ An example version 2 execution environment definition schema is as follows:
 
     build_arg_defaults:
       ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--pre'
-
-    ansible_config: 'ansible.cfg'
 
     dependencies:
       galaxy: requirements.yml
@@ -177,7 +180,14 @@ An example version 2 execution environment definition schema is as follows:
         name: my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest
         signature_original_name: registry.redhat.io/ansible-automation-platform-21/ansible-builder-rhel8:latest
 
+    additional_build_files:
+        - src: files/ansible.cfg
+          dest: configs
+
     additional_build_steps:
+      prepend_galaxy:
+        - ADD _build/configs/ansible.cfg ~/.ansible.cfg
+
       prepend_final: |
         RUN whoami
         RUN cat /etc/os-release
@@ -257,3 +267,25 @@ string, or a list of strings.
 ``append_final``
   Commands to insert after building of the final image. This is the equivalent
   of the ``append`` version 1 keyword.
+
+additional_build_files
+^^^^^^^^^^^^^^^^^^^^^^
+
+This section allows you to add any file to the build context directory. These can
+then be referenced at any of image build stages. The format is a list of dictionary
+values, each with a ``src`` and ``dest`` key and value.
+
+Each list item must be a dictionary containing the following (non-optional) keys:
+
+``src``
+  Specifies the source file(s) to copy into the build context directory. This
+  may either be an absolute path (e.g., ``/home/user/.ansible.cfg``),
+  or a path that is relative to the execution environment file. Relative paths may be
+  a regular expression matching one or more files (e.g. ``files/*.cfg``). Note
+  that the absolute path may *not* include a regular expression.
+
+``dest``
+  Specifies a subdirectory path underneath the ``_build`` subdirectory of the
+  build context directory that should contain the source file(s) (e.g., ``files/configs``).
+  This may not be an absolute path or contain ``..`` within the path. This directory
+  will be created for you if it does not exist.

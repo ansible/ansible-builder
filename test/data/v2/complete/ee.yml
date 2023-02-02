@@ -17,3 +17,7 @@ dependencies:
   python_interpreter:
     package_name: "mypython3"
     python_path: "/usr/local/bin/mypython"
+
+additional_build_files:
+  - src: random.cfg
+    dest: myconfigs

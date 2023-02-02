@@ -97,10 +97,6 @@ schema_v2 = {
             "type": "number",
         },
 
-        "ansible_config": {
-            "type": "string",
-        },
-
         "build_arg_defaults": {
             "type": "object",
             "additionalProperties": False,
@@ -198,6 +194,26 @@ schema_v2 = {
                 "append_builder": TYPE_StringOrListOfStrings,
                 "prepend_final": TYPE_StringOrListOfStrings,
                 "append_final": TYPE_StringOrListOfStrings,
+            },
+        },
+
+        "additional_build_files": {
+            "description": "Describes files to add to the build context",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "src": {
+                        "description": "File to add to build context",
+                        "type": "string",
+                    },
+                    "dest": {
+                        "description": "Relative subdirectory under build context to place file",
+                        "type": "string",
+                    },
+                },
+                "required": ["src", "dest"],
             },
         },
     },

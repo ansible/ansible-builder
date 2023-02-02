@@ -235,3 +235,9 @@ def test_v2_complete(cli, data_dir, tmp_path):
     assert 'ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS="--foo"\n' in text
     assert 'ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS="--bar"\n' in text
     assert 'ARG ANSIBLE_INSTALL_REFS="ansible-core==2.13 ansible-runner==2.3.1"\n' in text
+
+    # check additional_build_files
+    myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
+    assert myconfigs_path.is_dir()
+    random_file = myconfigs_path / "random.cfg"
+    assert random_file.exists()

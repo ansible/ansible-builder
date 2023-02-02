@@ -3,6 +3,8 @@ import textwrap
 import tempfile
 import yaml
 
+from pathlib import Path
+
 from . import constants
 from .exceptions import DefinitionError
 from .ee_schema import validate_schema
@@ -127,11 +129,11 @@ class UserDefinition:
             return None
         return str(ansible_config)
 
-    def get_additional_commands(self):
+    @property
+    def additional_build_steps(self):
         """Gets additional commands from the exec env file, if any are specified.
         """
-        commands = self.raw.get('additional_build_steps')
-        return commands
+        return self.raw.get('additional_build_steps')
 
     @property
     def python_package_name(self):
@@ -152,6 +154,10 @@ class UserDefinition:
     @property
     def ansible_ref_install_list(self):
         return ' '.join([r for r in (self.ansible_core_ref, self.ansible_runner_ref) if r]) or None
+
+    @property
+    def additional_build_files(self):
+        return self.raw.get('additional_build_files', [])
 
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either
@@ -180,6 +186,20 @@ class UserDefinition:
             return req_file
 
         return os.path.join(self.reference_path, req_file)
+
+    def _validate_additional_build_files(self):
+        """
+        Check that entries in additional_build_files look correct.
+
+        The 'dest' values are checked for the correct format. Since 'src' can
+        be a file glob or an absolute or relative path, it is not checked.
+
+        :raises: DefinitionError exception if any errors are found.
+        """
+        for entry in self.additional_build_files:
+            dest = Path(entry['dest'])
+            if dest.is_absolute() or '..' in dest.parts:
+                raise DefinitionError(f"'dest' must not be an absolute path or contain '..': {dest}")
 
     def validate(self):
         """
@@ -218,3 +238,5 @@ class UserDefinition:
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
                 else:
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = None
+
+            self._validate_additional_build_files()
