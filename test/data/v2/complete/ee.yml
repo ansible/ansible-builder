@@ -1,0 +1,19 @@
+---
+version: 2
+
+images:
+  base_image:
+    name: registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest
+  builder_image:
+    name: my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest
+
+build_arg_defaults:
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--foo'
+  ANSIBLE_GALAXY_CLI_ROLE_OPTS: '--bar'
+
+dependencies:
+  ansible_core: ansible-core==2.13
+  ansible_runner: ansible-runner==2.3.1
+  python_interpreter:
+    package_name: "mypython3"
+    python_path: "/usr/local/bin/mypython"

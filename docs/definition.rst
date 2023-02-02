@@ -149,6 +149,9 @@ the following changes:
    base and builder images.
 2. Defining ``EE_BASE_IMAGE`` or ``EE_BUILDER_IMAGE`` in the ``build_args_defaults``
    section, or with the :ref:`build-arg` CLI option, is no longer allowed.
+3. The ``additional_build_steps`` section allows for specifying additional commands
+   either before or after each of the four build phases (base/galaxy/builder/final).
+   The version 1 format supported this for only the final build phase.
 
 An example version 2 execution environment definition schema is as follows:
 
@@ -173,6 +176,14 @@ An example version 2 execution environment definition schema is as follows:
       builder_image:
         name: my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest
         signature_original_name: registry.redhat.io/ansible-automation-platform-21/ansible-builder-rhel8:latest
+
+    additional_build_steps:
+      prepend_final: |
+        RUN whoami
+        RUN cat /etc/os-release
+      append_final:
+        - RUN echo This is a post-install command!
+        - RUN ls -la /etc
 
 images
 ^^^^^^
@@ -211,3 +222,38 @@ Valid keys for this section are:
   key must be supplied with the container image to use. Use the ``signature_original_name``
   key if the image is mirrored within your repository, but signed with the original
   image's signature key. Image names *MUST* contain a tag, such as ``:latest``.
+
+additional_build_steps (v2)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Similar to the version 1 format, you can specify custom build commands in this
+section, but for all build phases.
+
+Below are the valid keys for this section. Each supports either a multi-line
+string, or a list of strings.
+
+``prepend_base``
+  Commands to insert before building of the base image.
+
+``append_base``
+  Commands to insert after building of the base image.
+
+``prepend_galaxy``
+  Commands to insert before building of the galaxy image.
+
+``append_galaxy``
+  Commands to insert after building of the galaxy image.
+
+``prepend_builder``
+  Commands to insert before building of the builder image.
+
+``append_builder``
+  Commands to insert after building of the builder image.
+
+``prepend_final``
+  Commands to insert before building of the final image. This is the equivalent
+  of the ``prepend`` version 1 keyword.
+
+``append_final``
+  Commands to insert after building of the final image. This is the equivalent
+  of the ``append`` version 1 keyword.

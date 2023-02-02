@@ -214,3 +214,7 @@ class UserDefinition:
 
                 # Must set these values so that Containerfile uses the proper images
                 self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
+                if self.builder_image:
+                    self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
+                else:
+                    self.build_arg_defaults['EE_BUILDER_IMAGE'] = None

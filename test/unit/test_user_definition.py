@@ -58,10 +58,14 @@ class TestUserDefinition:
             "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
             "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)"
         ),  # v1 builder image defined in v2 file
+        (
+            "{'version': 2, 'additional_build_steps': {'prepend': ''}}",
+            "Additional properties are not allowed ('prepend' was unexpected)"
+        ),  # 'prepend' is renamed in v2
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
-        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2'
+        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v2',
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
@@ -93,6 +97,47 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "'name' is a required field for 'base_image'" in str(error.value.args[0])
+
+    def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):
+        """ Test that EE schema keys are upgraded from version V1 to V2. """
+        path = exec_env_definition_file("{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}")
+        definition = UserDefinition(path)
+        definition.validate()
+        add_bld_steps = definition.raw['additional_build_steps']
+        assert 'prepend' in add_bld_steps
+        assert 'append' in add_bld_steps
+        assert add_bld_steps['prepend'] == 'value1'
+        assert add_bld_steps['append'] == 'value2'
+        assert 'prepend_final' in add_bld_steps
+        assert 'append_final' in add_bld_steps
+        assert add_bld_steps['prepend_final'] == add_bld_steps['prepend']
+        assert add_bld_steps['append_final'] == add_bld_steps['append']
+
+    def test_v2_images(self, exec_env_definition_file):
+        """
+        Verify that image definition contents are assigned correctly and copied
+        to the build_arg_defaults equivalents.
+        """
+        path = exec_env_definition_file(
+            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        assert definition.base_image.name == "base_image:latest"
+        assert definition.builder_image.name == "builder_image:latest"
+        assert definition.build_arg_defaults['EE_BASE_IMAGE'] == "base_image:latest"
+        assert definition.build_arg_defaults['EE_BUILDER_IMAGE'] == "builder_image:latest"
+
+    def test_v2_ansible_install_refs(self, exec_env_definition_file):
+        path = exec_env_definition_file(
+            "{'version': 2, 'dependencies': {'ansible_core': 'ansible-core==2.13', 'ansible_runner': 'ansible-runner==2.3.1'}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+        assert definition.ansible_core_ref == "ansible-core==2.13"
+        assert definition.ansible_runner_ref == "ansible-runner==2.3.1"
+        assert definition.ansible_ref_install_list == "ansible-core==2.13 ansible-runner==2.3.1"
 
 
 class TestImageDescription:

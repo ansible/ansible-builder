@@ -84,7 +84,7 @@ def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmp_
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'EE_BASE_IMAGE=my-other-custom-image' in content
+    assert 'EE_BASE_IMAGE="my-other-custom-image"' in content
 
 
 @pytest.mark.test_all_runtimes

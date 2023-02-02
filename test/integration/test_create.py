@@ -108,7 +108,7 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
 
 def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
     """
-    Test that all extr asigning args for gpg are passed into the container file.
+    Test that all extra signing args for gpg are passed into the container file.
     """
     ee = [
         'dependencies:',
@@ -194,3 +194,44 @@ def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
 
     assert "ARG EE_BASE_IMAGE=quay.io/ansible/awx-ee:latest" in text
     assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+
+
+def test_pre_post_commands(cli, data_dir, tmp_path):
+    """Test that the pre/post commands are inserted"""
+    ee_def = data_dir / 'v2' / 'pre_and_post' / 'ee.yml'
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    assert r.rc == 0
+
+    containerfile = tmp_path / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "ARG PRE_BASE1\n" in text
+    assert "ARG PRE_BASE2\n" in text
+    assert "ARG POST_BASE1\n" in text
+    assert "ARG POST_BASE2\n" in text
+    assert "ARG PRE_GALAXY" in text
+    assert "ARG POST_GALAXY" in text
+    assert "ARG PRE_BUILDER" in text
+    assert "ARG POST_BUILDER" in text
+    assert "ARG PRE_FINAL" in text
+    assert "ARG POST_FINAL" in text
+
+
+def test_v2_complete(cli, data_dir, tmp_path):
+    """For testing various elements in a complete v2 EE file"""
+    ee_def = data_dir / 'v2' / 'complete' / 'ee.yml'
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    assert r.rc == 0
+
+    containerfile = tmp_path / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert 'ARG EE_BASE_IMAGE="registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest"\n' in text
+    assert 'ARG EE_BUILDER_IMAGE="my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest"\n' in text
+    assert 'ARG PYCMD="/usr/local/bin/mypython"\n' in text
+    assert 'ARG PYPKG="mypython3"\n' in text
+    assert 'ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS="--foo"\n' in text
+    assert 'ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS="--bar"\n' in text
+    assert 'ARG ANSIBLE_INSTALL_REFS="ansible-core==2.13 ansible-runner==2.3.1"\n' in text

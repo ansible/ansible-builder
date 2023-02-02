@@ -3,6 +3,19 @@ from jsonschema import validate, SchemaError, ValidationError
 from ansible_builder.exceptions import DefinitionError
 
 
+TYPE_StringOrListOfStrings = {
+    "anyOf": [
+        {"type": "string"},
+        {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    ]
+}
+
+
 ############
 # Version 1
 ############
@@ -33,6 +46,9 @@ schema_v1 = {
                 "ANSIBLE_GALAXY_CLI_COLLECTION_OPTS": {
                     "type": "string",
                 },
+                "ANSIBLE_GALAXY_CLI_ROLE_OPTS": {
+                    "type": "string",
+                },
             },
         },
 
@@ -60,12 +76,8 @@ schema_v1 = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "prepend": {
-                    "anyOf": [{"type": "string"}, {"type": "array"}],
-                },
-                "append": {
-                    "anyOf": [{"type": "string"}, {"type": "array"}],
-                },
+                "prepend": TYPE_StringOrListOfStrings,
+                "append": TYPE_StringOrListOfStrings,
             },
         },
     },
@@ -96,6 +108,9 @@ schema_v2 = {
                 "ANSIBLE_GALAXY_CLI_COLLECTION_OPTS": {
                     "type": "string",
                 },
+                "ANSIBLE_GALAXY_CLI_ROLE_OPTS": {
+                    "type": "string",
+                },
             },
         },
 
@@ -114,6 +129,29 @@ schema_v2 = {
                 },
                 "system": {
                     "description": "The system dependency file",
+                    "type": "string",
+                },
+                "python_interpreter": {
+                    "description": "Python package name and path",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "package_name": {
+                            "description": "The python package to install",
+                            "type": "string",
+                        },
+                        "python_path": {
+                            "description": "Path to the python interpreter",
+                            "type": "string",
+                        },
+                    },
+                },
+                "ansible_core": {
+                    "description": "Ansible version for pip installation",
+                    "type": "string",
+                },
+                "ansible_runner": {
+                    "description": "Ansible Runner version for pip installation",
                     "type": "string",
                 },
             },
@@ -152,12 +190,14 @@ schema_v2 = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
-                "prepend": {
-                    "anyOf": [{"type": "string"}, {"type": "array"}],
-                },
-                "append": {
-                    "anyOf": [{"type": "string"}, {"type": "array"}],
-                },
+                "prepend_base": TYPE_StringOrListOfStrings,
+                "append_base": TYPE_StringOrListOfStrings,
+                "prepend_galaxy": TYPE_StringOrListOfStrings,
+                "append_galaxy": TYPE_StringOrListOfStrings,
+                "prepend_builder": TYPE_StringOrListOfStrings,
+                "append_builder": TYPE_StringOrListOfStrings,
+                "prepend_final": TYPE_StringOrListOfStrings,
+                "append_final": TYPE_StringOrListOfStrings,
             },
         },
     },
@@ -182,3 +222,24 @@ def validate_schema(ee_def: dict):
             validate(instance=ee_def, schema=schema_v2)
     except (SchemaError, ValidationError) as e:
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
+
+    _handle_aliasing(ee_def)
+
+
+def _handle_aliasing(ee_def: dict):
+    """
+    Upgrade EE keys into standard keys across schema versions.
+
+    Some EE keys are renamed across schema versions. So that we don't need to
+    check schema version, or do some other hackery, in the builder code when
+    accessing the values, just do the key name upgrades/aliasing here.
+    """
+
+    if 'additional_build_steps' in ee_def:
+        # V1 'prepend' == V2 'prepend_final'
+        if 'prepend' in ee_def['additional_build_steps']:
+            ee_def['additional_build_steps']['prepend_final'] = ee_def['additional_build_steps']['prepend']
+
+        # V1 'append' == V2 'append_final'
+        if 'append' in ee_def['additional_build_steps']:
+            ee_def['additional_build_steps']['append_final'] = ee_def['additional_build_steps']['append']

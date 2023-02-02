@@ -10,32 +10,32 @@ def make_containerfile(tmpdir, ee_path, **cf_kwargs):
     return c
 
 
-def test_prepare_prepended_steps(build_dir_and_ee_yml):
+def test_insert_custom_steps_list(build_dir_and_ee_yml):
     ee_data = [
         'additional_build_steps:',
         '  prepend:',
-        '    - RUN echo This is the prepend test',
+        '    - RUN echo This is the custom steps list test',
         '    - RUN whoami',
     ]
 
     tmpdir, ee_path = build_dir_and_ee_yml("\n".join(ee_data))
     c = make_containerfile(tmpdir, ee_path)
-    c.prepare_prepended_steps()
-    assert c.steps == ['RUN echo This is the prepend test', 'RUN whoami']
+    c._insert_custom_steps("prepend")
+    assert c.steps == ['RUN echo This is the custom steps list test', 'RUN whoami']
 
 
-def test_prepare_appended_steps(build_dir_and_ee_yml):
+def test_insert_custom_steps_string(build_dir_and_ee_yml):
     ee_data = [
         'additional_build_steps:',
         '  append: |',
-        '    RUN echo This is the append test',
+        '    RUN echo This is the custom steps string test',
         '    RUN whoami',
     ]
 
     tmpdir, ee_path = build_dir_and_ee_yml("\n".join(ee_data))
     c = make_containerfile(tmpdir, ee_path)
-    c.prepare_appended_steps()
-    assert c.steps == ['RUN echo This is the append test', 'RUN whoami']
+    c._insert_custom_steps("append")
+    assert c.steps == ['RUN echo This is the custom steps string test', 'RUN whoami']
 
 
 def test_prepare_galaxy_install_steps(build_dir_and_ee_yml):
@@ -45,7 +45,7 @@ def test_prepare_galaxy_install_steps(build_dir_and_ee_yml):
     ]
     tmpdir, ee_path = build_dir_and_ee_yml("\n".join(ee_data))
     c = make_containerfile(tmpdir, ee_path)
-    c.prepare_galaxy_install_steps()
+    c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install "
@@ -61,7 +61,7 @@ def test_prepare_galaxy_install_steps_with_keyring(build_dir_and_ee_yml):
     ]
     tmpdir, ee_path = build_dir_and_ee_yml("\n".join(ee_data))
     c = make_containerfile(tmpdir, ee_path, galaxy_keyring=constants.default_keyring_name)
-    c.prepare_galaxy_install_steps()
+    c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {constants.CONTEXT_FILES['galaxy']} "
@@ -80,7 +80,7 @@ def test_prepare_galaxy_install_steps_with_sigcount(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path,
                            galaxy_keyring=constants.default_keyring_name,
                            galaxy_required_valid_signature_count=sig_count)
-    c.prepare_galaxy_install_steps()
+    c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {constants.CONTEXT_FILES['galaxy']} "
@@ -99,7 +99,7 @@ def test_prepare_galaxy_install_steps_with_ignore_code(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path,
                            galaxy_keyring=constants.default_keyring_name,
                            galaxy_ignore_signature_status_codes=codes)
-    c.prepare_galaxy_install_steps()
+    c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {constants.CONTEXT_FILES['galaxy']} "

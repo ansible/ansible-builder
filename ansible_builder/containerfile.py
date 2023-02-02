@@ -49,41 +49,93 @@ class Containerfile:
         """
 
         # Build args all need to go at top of file to avoid errors
+        self._insert_global_args(include_values=True)
+
+        ######################################################################
+        # Zero stage: prep base image
+        ######################################################################
+
+        # 'base' (possibly customized) will be used by future build stages
         self.steps.extend([
-            "ARG EE_BASE_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BASE_IMAGE']
-            ),
+            "# Base build stage",
+            "FROM $EE_BASE_IMAGE as base",
         ])
 
+        self._insert_global_args()
+        self._insert_custom_steps('prepend_base')
+
+        if not self.definition.builder_image:
+            if self.definition.python_package_name:
+                # FIXME: better dnf cleanup needed?
+                self.steps.append('RUN dnf install $PYPKG -y && dnf clean all')
+
+            if self.definition.ansible_ref_install_list:
+                self.steps.append('RUN $PYCMD -m ensurepip && $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
+
+        self._create_folder_copy_files()
+        self._insert_custom_steps('append_base')
+
+        ######################################################################
+        # First stage (aka, galaxy): install roles/collections
+        ######################################################################
+
+        self.steps.extend([
+            "",
+            "# Galaxy build stage",
+            "FROM base as galaxy",
+            "USER root",
+        ])
+
+        self._insert_global_args()
+        self._insert_custom_steps('prepend_galaxy')
+        self._prepare_ansible_config_file()
+        self._prepare_build_context()
+        self._prepare_galaxy_install_steps()
+        self._insert_custom_steps('append_galaxy')
+
+        ######################################################################
+        # Second stage (aka, builder): assemble (pip installs, bindep run)
+        ######################################################################
+
         if self.definition.builder_image:
-            self.steps.append(f"ARG EE_BUILDER_IMAGE={self.definition.build_arg_defaults['EE_BUILDER_IMAGE']}")
+            image = "$EE_BUILDER_IMAGE"
+        else:
+            # dynamic builder, create from customized base
+            image = "base"
 
-        self.steps.append(f"ARG PYCMD={self.definition.python_path or '/usr/bin/python3'}")
+        self.steps.extend([
+            "",
+            "# Builder build stage",
+            f"FROM {image} as builder",
+        ])
 
-        if ansible_refs := self.definition.ansible_ref_install_list:
-            self.steps.append(f"ARG ANSIBLE_INSTALL_REFS='{ansible_refs}'")
+        self._insert_global_args()
 
-        self.prepare_dynamic_base_and_builder()
-        # File preparation
-        self.create_folder_copy_files()
+        if image == "base":
+            self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
 
-        # First stage, galaxy
-        self.prepare_galaxy_stage_steps()
-        self.prepare_ansible_config_file()
-        self.prepare_build_context()
-        self.prepare_galaxy_install_steps()
+        self._insert_custom_steps('prepend_builder')
+        self._prepare_galaxy_copy_steps()
+        self._prepare_introspect_assemble_steps()
+        self._insert_custom_steps('append_builder')
 
-        # Second stage, builder
-        self.prepare_build_stage_steps()
-        self.prepare_galaxy_copy_steps()
-        self.prepare_introspect_assemble_steps()
+        ######################################################################
+        # Final stage: package manager installs from bindep output
+        ######################################################################
 
-        self.prepare_final_stage_steps()
-        self.prepare_prepended_steps()
-        self.prepare_galaxy_copy_steps()
-        self.prepare_system_runtime_deps_steps()
-        self.prepare_appended_steps()
-        self.prepare_label_steps()
+        self.steps.extend([
+            "",
+            "# Final build stage",
+            "FROM base",
+            "USER root",
+        ])
+
+        self._insert_global_args()
+        self._insert_custom_steps('prepend_final')
+        self._prepare_galaxy_copy_steps()
+        self._prepare_system_runtime_deps_steps()
+        self._insert_custom_steps('append_final')
+        self._prepare_label_steps()
 
     def write(self):
         """
@@ -96,7 +148,33 @@ class Containerfile:
                 f.write(step + self.newline_char)
         return True
 
-    def create_folder_copy_files(self):
+    def _insert_global_args(self, include_values: bool = False):
+        """
+        Insert Containerfile ARGs and, possibly, their values.
+
+        An ARG with a None or empty value will not be included.
+        """
+
+        # ARGs will be output in the order listed below.
+        global_args = {
+            'EE_BASE_IMAGE': self.definition.build_arg_defaults['EE_BASE_IMAGE'],
+            'EE_BUILDER_IMAGE': self.definition.build_arg_defaults['EE_BUILDER_IMAGE'],
+            'PYCMD': self.definition.python_path or '/usr/bin/python3',
+            'PYPKG': self.definition.python_package_name,
+            'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
+            'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
+            'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
+        }
+
+        for arg, value in global_args.items():
+            if include_values and value:
+                # quote the value in case it includes spaces
+                self.steps.append(f'ARG {arg}="{value}"')
+            elif value:
+                self.steps.append(f"ARG {arg}")
+        self.steps.append("")
+
+    def _create_folder_copy_files(self):
         """
         Creates the build context directory, and copies any potential context
         files (python, galaxy, or bindep requirements) into it.
@@ -136,7 +214,7 @@ class Containerfile:
         context_dir = pathlib.Path(self.build_outputs_dir).stem
         self.steps.append(f'COPY {context_dir}/scripts/ /output/scripts/')
 
-    def prepare_ansible_config_file(self):
+    def _prepare_ansible_config_file(self):
         ansible_config_file_path = self.definition.ansible_config
         if ansible_config_file_path:
             context_file_path = os.path.join(
@@ -146,49 +224,23 @@ class Containerfile:
                 "",
             ])
 
-    def prepare_prepended_steps(self):
-        additional_prepend_steps = self.definition.get_additional_commands()
-        if additional_prepend_steps:
-            prepended_steps = additional_prepend_steps.get('prepend')
-            if prepended_steps:
-                if isinstance(prepended_steps, str):
-                    lines = prepended_steps.strip().splitlines()
+    def _insert_custom_steps(self, section: str):
+        additional_steps = self.definition.get_additional_commands()
+        if additional_steps:
+            section_steps = additional_steps.get(section)
+            if section_steps:
+                if isinstance(section_steps, str):
+                    lines = section_steps.strip().splitlines()
                 else:
-                    lines = prepended_steps
+                    lines = section_steps
                 self.steps.extend(lines)
 
-    def prepare_appended_steps(self):
-        additional_append_steps = self.definition.get_additional_commands()
-        if additional_append_steps:
-            appended_steps = additional_append_steps.get('append')
-            if appended_steps:
-                if isinstance(appended_steps, str):
-                    lines = appended_steps.strip().splitlines()
-                else:
-                    lines = appended_steps
-                self.steps.extend(lines)
-
-    def prepare_label_steps(self):
+    def _prepare_label_steps(self):
         self.steps.extend([
             "LABEL ansible-execution-environment=true",
         ])
 
-    def prepare_dynamic_base_and_builder(self):
-        # 'base' (possibly customized) will be used by future build stages
-        self.steps.append("FROM $EE_BASE_IMAGE as base")
-
-        if not self.definition.builder_image:
-            if python := self.definition.python_package_name:
-                self.steps.append(f'ARG PYPKG={python}')
-                # FIXME: better dnf cleanup needed?
-                self.steps.append('RUN dnf install $PYPKG -y && dnf clean all')
-
-            if self.definition.ansible_ref_install_list:
-                self.steps.append('ARG ANSIBLE_INSTALL_REFS')
-                self.steps.append('ARG PYCMD')
-                self.steps.append('RUN $PYCMD -m ensurepip && $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
-
-    def prepare_build_context(self):
+    def _prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
             self.steps.extend([
                 "ADD {0} /build".format(constants.user_content_subfolder),
@@ -196,7 +248,7 @@ class Containerfile:
                 "",
             ])
 
-    def prepare_galaxy_install_steps(self):
+    def _prepare_galaxy_install_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
             env = ""
             install_opts = f"-r {constants.CONTEXT_FILES['galaxy']} --collections-path \"{constants.base_collections_path}\""
@@ -224,7 +276,7 @@ class Containerfile:
             )
             self.steps.append(f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}")
 
-    def prepare_introspect_assemble_steps(self):
+    def _prepare_introspect_assemble_steps(self):
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
@@ -250,51 +302,13 @@ class Containerfile:
             self.steps.append(introspect_cmd)
             self.steps.append("RUN /output/scripts/assemble")
 
-    def prepare_system_runtime_deps_steps(self):
+    def _prepare_system_runtime_deps_steps(self):
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
             "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
         ])
 
-    def prepare_galaxy_stage_steps(self):
-        self.steps.extend([
-            "",
-            "FROM base as galaxy",
-            "ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS={}".format(
-                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS']
-            ),
-            "ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS={}".format(
-                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS']
-            ),
-            "USER root",
-            ""
-        ])
-
-    def prepare_build_stage_steps(self):
-        if self.definition.builder_image:
-            self.steps.extend([
-                "",
-                "FROM $EE_BUILDER_IMAGE as builder"
-                "",
-            ])
-        else:
-            # dynamic builder, create from customized base
-            self.steps.extend([
-                'FROM base as builder',
-                'ARG PYCMD',
-                'RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser'
-            ])
-
-    def prepare_final_stage_steps(self):
-        self.steps.extend([
-            "",
-            "FROM base",
-            "USER root",
-            "ARG PYCMD"  # this is consumed as an envvar by the install-from-bindep script
-            "",
-        ])
-
-    def prepare_galaxy_copy_steps(self):
+    def _prepare_galaxy_copy_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
             self.steps.extend([
                 "",
