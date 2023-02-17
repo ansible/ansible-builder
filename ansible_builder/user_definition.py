@@ -4,6 +4,7 @@ import tempfile
 import yaml
 
 from pathlib import Path
+from typing import Callable
 
 from . import constants
 from .exceptions import DefinitionError
@@ -24,7 +25,7 @@ ALLOWED_KEYS_V2 = [
 
 
 # HACK: manage lifetimes more carefully
-_tempfiles: list[type[tempfile.TemporaryFile]] = []
+_tempfiles: list[Callable] = []
 
 
 class ImageDescription:

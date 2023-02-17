@@ -1,8 +1,11 @@
 coverage
 flake8
+mypy==1.0.1
 pytest
 pytest-cov
 pytest-mock
 pytest-xdist
+types-jsonschema
+types-pyyaml
 tox
 yamllint
