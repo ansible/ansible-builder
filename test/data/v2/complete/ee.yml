@@ -19,5 +19,7 @@ dependencies:
     python_path: "/usr/local/bin/mypython"
 
 additional_build_files:
-  - src: random.cfg
+  - src: files/random.cfg
     dest: myconfigs
+  - src: files/data
+    dest: mydata

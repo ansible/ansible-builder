@@ -282,7 +282,8 @@ Each list item must be a dictionary containing the following (non-optional) keys
   may either be an absolute path (e.g., ``/home/user/.ansible.cfg``),
   or a path that is relative to the execution environment file. Relative paths may be
   a regular expression matching one or more files (e.g. ``files/*.cfg``). Note
-  that the absolute path may *not* include a regular expression.
+  that the absolute path may *not* include a regular expression. If ``src`` is
+  a directory, the entire contents of that directory are copied to ``dest``.
 
 ``dest``
   Specifies a subdirectory path underneath the ``_build`` subdirectory of the

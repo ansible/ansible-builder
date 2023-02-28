@@ -241,3 +241,18 @@ def test_v2_complete(cli, data_dir, tmp_path):
     assert myconfigs_path.is_dir()
     random_file = myconfigs_path / "random.cfg"
     assert random_file.exists()
+
+    # Tree structure we expect:
+    # ├── mydata
+    # │   ├── a.dat
+    # │   └── text_files
+    # │       ├── a.txt
+
+    mydata_path = tmp_path / constants.user_content_subfolder / "mydata"
+    assert mydata_path.is_dir()
+    dat_file = mydata_path / "a.dat"
+    assert dat_file.exists()
+    text_files = mydata_path / "text_files"
+    assert text_files.is_dir()
+    a_text = text_files / "a.txt"
+    assert a_text.exists()

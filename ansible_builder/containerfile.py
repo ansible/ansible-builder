@@ -6,7 +6,7 @@ from pathlib import Path
 
 from . import constants
 from .user_definition import UserDefinition
-from .utils import copy_file
+from .utils import copy_directory, copy_file
 
 
 logger = logging.getLogger(__name__)
@@ -250,10 +250,12 @@ class Containerfile:
             final_dst.mkdir(parents=True, exist_ok=True)
 
             for src_file in src_files:
-                # Destination is the subdir under context plus the basename of the source
-                copy_location = final_dst / src_file.name
-                logger.debug(f"Copying user file '{src_file}' to '{copy_location}'")
-                copy_file(str(src_file), str(copy_location))
+                if src_file.is_dir():
+                    copy_directory(src_file, final_dst)
+                else:
+                    # Destination is the subdir under context plus the basename of the source
+                    copy_location = final_dst / src_file.name
+                    copy_file(str(src_file), str(copy_location))
 
     def _prepare_ansible_config_file(self):
         if self.definition.version != 1:

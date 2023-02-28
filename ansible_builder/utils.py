@@ -5,7 +5,9 @@ import os
 import shutil
 import subprocess
 import sys
+
 from collections import deque
+from pathlib import Path
 
 from .colors import MessageColors
 from . import constants
@@ -136,6 +138,29 @@ def write_file(filename: str, lines: list) -> bool:
     with open(filename, 'w') as f:
         f.write(new_text)
     return True
+
+
+def copy_directory(source_dir: Path, dest: Path):
+    """
+    Recursively copy a source directory to a path in the context directory.
+
+    In order to not corrupt the build context cache, if it should exist, we
+    attempt to copy files within the source directory to the context directory
+    if necessary by utilizing copy_file() on each file, rather than a blind
+    recursive copy.
+    """
+
+    if not source_dir.is_dir():
+        raise Exception(f"Expected a directory at '{source_dir}'")
+
+    for child in source_dir.iterdir():
+        copy_location = dest / child.name
+        if child.is_dir():
+            # a subdir of our build destination directory
+            copy_location.mkdir(exist_ok=True)
+            copy_directory(child, copy_location)
+        else:
+            copy_file(str(child), str(copy_location))
 
 
 def copy_file(source: str, dest: str) -> bool:
