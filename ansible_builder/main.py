@@ -265,10 +265,13 @@ class Containerfile:
             "ARG EE_BASE_IMAGE={}".format(
                 self.definition.build_arg_defaults['EE_BASE_IMAGE']
             ),
-            "ARG EE_BUILDER_IMAGE={}".format(
-                self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
-            ),
         ]
+        if self.definition.build_arg_defaults['EE_BUILDER_IMAGE']:
+            self.steps.extend([
+                "ARG EE_BUILDER_IMAGE={}".format(
+                    self.definition.build_arg_defaults['EE_BUILDER_IMAGE']
+                )
+            ])
 
     def create_folder_copy_files(self):
         """Creates the build context file for this Containerfile
@@ -367,12 +370,13 @@ class Containerfile:
         return self.steps
 
     def prepare_system_runtime_deps_steps(self):
-        self.steps.extend([
-            "COPY --from=builder /output/ /output/",
-            "RUN /output/install-from-bindep && rm -rf /output/wheels",
-        ])
+        if self.definition.build_arg_defaults['EE_BUILDER_IMAGE']:
+            self.steps.extend([
+                "COPY --from=builder /output/ /output/",
+                "RUN /output/install-from-bindep && rm -rf /output/wheels",
+            ])
 
-        return self.steps
+            return self.steps
 
     def prepare_galaxy_stage_steps(self):
         self.steps.extend([
@@ -391,13 +395,14 @@ class Containerfile:
         return self.steps
 
     def prepare_build_stage_steps(self):
-        self.steps.extend([
-            "",
-            "FROM $EE_BUILDER_IMAGE as builder"
-            "",
-        ])
+        if self.definition.build_arg_defaults['EE_BUILDER_IMAGE']:
+            self.steps.extend([
+                "",
+                "FROM $EE_BUILDER_IMAGE as builder"
+                "",
+            ])
 
-        return self.steps
+            return self.steps
 
     def prepare_final_stage_steps(self):
         self.steps.extend([
