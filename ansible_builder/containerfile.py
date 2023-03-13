@@ -64,6 +64,7 @@ class Containerfile:
         self.steps.extend([
             "# Base build stage",
             "FROM $EE_BASE_IMAGE as base",
+            "USER root",
         ])
 
         self._insert_global_args()
@@ -88,7 +89,6 @@ class Containerfile:
             "",
             "# Galaxy build stage",
             "FROM base as galaxy",
-            "USER root",
         ])
 
         self._insert_global_args()
@@ -132,7 +132,6 @@ class Containerfile:
             "",
             "# Final build stage",
             "FROM base",
-            "USER root",
         ])
 
         self._insert_global_args()
