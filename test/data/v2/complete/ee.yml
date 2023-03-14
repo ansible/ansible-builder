@@ -17,6 +17,9 @@ dependencies:
   python_interpreter:
     package_name: "mypython3"
     python_path: "/usr/local/bin/mypython"
+  galaxy: |
+    collections:
+      - ansible.utils
 
 additional_build_files:
   - src: files/random.cfg

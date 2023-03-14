@@ -1,6 +1,9 @@
 ---
 version: 2
 
+dependencies:
+  galaxy: requirements.yml
+
 additional_build_steps:
   prepend_base: |
     ARG PRE_BASE1

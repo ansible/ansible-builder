@@ -83,20 +83,28 @@ class Containerfile:
 
         ######################################################################
         # First stage (aka, galaxy): install roles/collections
+        #
+        # NOTE: This stage is skipped if there are no galaxy requirements.
         ######################################################################
 
-        self.steps.extend([
-            "",
-            "# Galaxy build stage",
-            "FROM base as galaxy",
-        ])
+        if self.definition.get_dep_abs_path('galaxy'):
+            self.steps.extend([
+                "",
+                "# Galaxy build stage",
+                "FROM base as galaxy",
+            ])
 
-        self._insert_global_args()
-        self._insert_custom_steps('prepend_galaxy')
-        self._prepare_ansible_config_file()
-        self._prepare_build_context()
-        self._prepare_galaxy_install_steps()
-        self._insert_custom_steps('append_galaxy')
+            self._insert_global_args()
+            self._insert_custom_steps('prepend_galaxy')
+
+            # Run the check for the 'ansible-galaxy' executable. This will fail
+            # the build if the command is not found.
+            self.steps.append("RUN /output/scripts/check_galaxy")
+
+            self._prepare_ansible_config_file()
+            self._prepare_build_context()
+            self._prepare_galaxy_install_steps()
+            self._insert_custom_steps('append_galaxy')
 
         ######################################################################
         # Second stage (aka, builder): assemble (pip installs, bindep run)
@@ -211,7 +219,7 @@ class Containerfile:
 
         # HACK: this sucks
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
-        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py'):
+        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy'):
             with importlib.resources.as_file(scriptres / script) as script_path:
                 # FIXME: just use builtin copy?
                 copy_file(str(script_path), scripts_dir)
@@ -294,32 +302,31 @@ class Containerfile:
             ])
 
     def _prepare_galaxy_install_steps(self):
-        if self.definition.get_dep_abs_path('galaxy'):
-            env = ""
-            install_opts = f"-r {constants.CONTEXT_FILES['galaxy']} --collections-path \"{constants.base_collections_path}\""
+        env = ""
+        install_opts = f"-r {constants.CONTEXT_FILES['galaxy']} --collections-path \"{constants.base_collections_path}\""
 
-            if self.galaxy_ignore_signature_status_codes:
-                for code in self.galaxy_ignore_signature_status_codes:
-                    install_opts += f" --ignore-signature-status-code {code}"
+        if self.galaxy_ignore_signature_status_codes:
+            for code in self.galaxy_ignore_signature_status_codes:
+                install_opts += f" --ignore-signature-status-code {code}"
 
-            if self.galaxy_required_valid_signature_count:
-                install_opts += f" --required-valid-signature-count {self.galaxy_required_valid_signature_count}"
+        if self.galaxy_required_valid_signature_count:
+            install_opts += f" --required-valid-signature-count {self.galaxy_required_valid_signature_count}"
 
-            if self.original_galaxy_keyring:
-                install_opts += f" --keyring \"{constants.default_keyring_name}\""
-            else:
-                # We have to use the environment variable to disable signature
-                # verification because older versions (<2.13) of ansible-galaxy do
-                # not support the --disable-gpg-verify option. We don't use ENV in
-                # the Containerfile since we need it only during the build and not
-                # in the final image.
-                env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
+        if self.original_galaxy_keyring:
+            install_opts += f" --keyring \"{constants.default_keyring_name}\""
+        else:
+            # We have to use the environment variable to disable signature
+            # verification because older versions (<2.13) of ansible-galaxy do
+            # not support the --disable-gpg-verify option. We don't use ENV in
+            # the Containerfile since we need it only during the build and not
+            # in the final image.
+            env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
 
-            self.steps.append(
-                f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']}"
-                f" --roles-path \"{constants.base_roles_path}\"",
-            )
-            self.steps.append(f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}")
+        self.steps.append(
+            f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']}"
+            f" --roles-path \"{constants.base_roles_path}\"",
+        )
+        self.steps.append(f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}")
 
     def _prepare_introspect_assemble_steps(self):
         # The introspect/assemble block is valid if there are any form of requirements
