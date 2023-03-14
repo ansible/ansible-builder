@@ -221,8 +221,8 @@ To remove unused images created after the build process:
 This option controls the final image layer squashing. Valid values are:
 
 * ``new``: Squash all of the final image's new layers into a single new layer
-  (preexisting new layers are not squashed). This is the default.
-* ``all``: Squash all of the final image's new layers, including those inherited
+  (preexisting layers are not squashed). This is the default.
+* ``all``: Squash all of the final image's layers, including those inherited
   from the base image, into a single new layer.
 * ``off``: Turn off layer squashing.
 
