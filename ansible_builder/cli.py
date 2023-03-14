@@ -124,7 +124,7 @@ def add_container_options(parser):
         '--squash',
         choices=['new', 'all', 'off'],
         default='new',
-        help='Squash to a single layer (choices: %(choices)s). Defaults to "%(default)s". (podman only)'
+        help='Squash layers in the final image (choices: %(choices)s). Defaults to "%(default)s". (podman only)'
     )
 
     for p in [create_command_parser, build_command_parser]:
