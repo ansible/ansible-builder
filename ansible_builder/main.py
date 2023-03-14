@@ -28,6 +28,7 @@ class AnsibleBuilder:
                  galaxy_ignore_signature_status_codes=(),
                  container_policy=None,
                  container_keyring=None,
+                 squash=None,
                  ):
         """
         :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
@@ -63,6 +64,7 @@ class AnsibleBuilder:
             galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
         self.verbosity = verbosity
         self.container_policy, self.container_keyring = self._handle_image_validation_opts(container_policy, container_keyring)
+        self.squash = squash
 
     def _handle_image_validation_opts(self, policy, keyring):
         """
@@ -161,6 +163,13 @@ class AnsibleBuilder:
 
         if self.no_cache:
             command.append('--no-cache')
+
+        # Image layer squashing works only with podman. Still experimental for docker.
+        if self.container_runtime == 'podman' and self.squash and self.squash != 'off':
+            if self.squash == 'new':
+                command.append('--squash')
+            elif self.squash == 'all':
+                command.append('--squash-all')
 
         if self.container_policy:
             logger.debug('Container policy is %s', PolicyChoices(self.container_policy).value)

@@ -214,3 +214,63 @@ def test_container_policy_with_version_1(exec_env_definition_file, tmp_path):
                  '--container-runtime', 'podman',
                  '--container-keyring', 'TBD',
                  ])
+
+
+def test_squash_default(exec_env_definition_file, tmp_path):
+    '''
+    Test the squash CLI option with default.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-runtime', 'podman',
+                   ])
+    assert '--squash' in aee.build_command
+    assert '--squash-all' not in aee.build_command
+
+
+def test_squash_all(exec_env_definition_file, tmp_path):
+    '''
+    Test the squash CLI option with 'all'.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-runtime', 'podman',
+                   '--squash', 'all'
+                   ])
+    assert '--squash-all' in aee.build_command
+
+
+def test_squash_off(exec_env_definition_file, tmp_path):
+    '''
+    Test the squash CLI option with 'off'.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-runtime', 'podman',
+                   '--squash', 'off'
+                   ])
+    assert '--squash' not in aee.build_command
+
+
+def test_squash_ignored(exec_env_definition_file, tmp_path):
+    '''
+    Test the squash CLI option is ignored with docker.
+    '''
+    content = {'version': 2}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-runtime', 'docker',
+                   '--squash', 'all'
+                   ])
+    assert '--squash' not in aee.build_command

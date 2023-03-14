@@ -120,6 +120,13 @@ def add_container_options(parser):
         help='GPG keyring for container image validation.',
     )
 
+    build_command_parser.add_argument(
+        '--squash',
+        choices=['new', 'all', 'off'],
+        default='new',
+        help='Squash to a single layer (choices: %(choices)s). Defaults to "%(default)s". (podman only)'
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
