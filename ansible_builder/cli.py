@@ -207,11 +207,11 @@ def add_container_options(parser):
     )
     introspect_parser.add_argument(
         '--write-pip', dest='write_pip',
-        help='Write the combined bindep file to this location.'
+        help='Write the combined pip requirements file to this location.'
     )
     introspect_parser.add_argument(
         '--write-bindep', dest='write_bindep',
-        help='Write the combined bindep file to this location.'
+        help='Write the combined bindep requirements file to this location.'
     )
 
     for n in [create_command_parser, build_command_parser, introspect_parser]:
