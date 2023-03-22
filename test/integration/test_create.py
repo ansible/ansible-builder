@@ -148,8 +148,8 @@ def test_v2_default_images(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/ansible-runner:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/ansible-builder:latest"' in text
 
 
 def test_v2_default_base_image(cli, build_dir_and_ee_yml):
@@ -170,8 +170,8 @@ def test_v2_default_base_image(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/awx-ee:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/ansible-runner:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/awx-ee:latest"' in text
 
 
 def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
@@ -192,8 +192,8 @@ def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/awx-ee:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/awx-ee:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/ansible-builder:latest"' in text
 
 
 def test_pre_post_commands(cli, data_dir, tmp_path):
