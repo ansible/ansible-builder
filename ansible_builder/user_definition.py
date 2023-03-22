@@ -189,8 +189,11 @@ class UserDefinition:
             self.builder_image = ImageDescription(images, 'builder_image')
 
             # Must set these values so that Containerfile uses the proper images
-            self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
-            self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
+            if self.base_image.name:
+                self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
+
+            if self.builder_image.name:
+                self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
     def _validate_v1(self):
         """

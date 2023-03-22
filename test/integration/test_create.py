@@ -132,3 +132,65 @@ def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
 
     assert "--ignore-signature-status-code 500" in text
     assert "--required-valid-signature-count 3" in text
+
+
+def test_v2_default_images(cli, build_dir_and_ee_yml):
+    """
+    Test that the base and builder images will use the defaults if not given.
+    """
+    ee = [
+        'version: 2',
+    ]
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
+    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+
+
+def test_v2_default_base_image(cli, build_dir_and_ee_yml):
+    """
+    Test that the base image will use the default if not given when builder is supplied.
+    Related issue: https://github.com/ansible/ansible-builder/issues/454
+    """
+    ee = [
+        'version: 2',
+        'images:',
+        '  builder_image:',
+        '    name: quay.io/ansible/awx-ee:latest',
+    ]
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
+    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/awx-ee:latest" in text
+
+
+def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
+    """
+    Test that the builder image will use the default if not given when base is supplied.
+    Related issue: https://github.com/ansible/ansible-builder/issues/454
+    """
+    ee = [
+        'version: 2',
+        'images:',
+        '  base_image:',
+        '    name: quay.io/ansible/awx-ee:latest',
+    ]
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "ARG EE_BASE_IMAGE=quay.io/ansible/awx-ee:latest" in text
+    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
