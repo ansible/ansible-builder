@@ -45,7 +45,7 @@ jobs:
       - id: has_secrets
         if: ${{ env.secret_user != '' && env.secret_pass != '' }}
         run: |
-          echo "has_secrets::${{ true }}" >> $GITHUB_OUTPUT
+          echo "has_secrets=${{ true }}" >> $GITHUB_OUTPUT
     outputs:
       has_secrets: ${{ steps.has_secrets.outputs.has_secrets }}
 
