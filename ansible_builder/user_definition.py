@@ -151,6 +151,11 @@ class UserDefinition:
     def additional_build_files(self):
         return self.raw.get('additional_build_files', [])
 
+    @property
+    def options(self):
+        # Since some options have default values, the 'options' key is always available
+        return self.raw['options']
+
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder

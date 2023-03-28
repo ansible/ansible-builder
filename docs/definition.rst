@@ -261,6 +261,24 @@ Valid keys for this section are:
       key if the image is mirrored within your repository, but signed with the original
       image's signature key. Image names *MUST* contain a tag, such as ``:latest``.
 
+options
+*******
+
+This section is a dictionary that contains keywords/options that can affect
+builder runtime functionality. Valid keys for this section are:
+
+    ``skip_ansible_check``
+      This boolean value controls whether or not the check for an installation
+      of Ansible and Ansible Runner is performed on the final image. Set this
+      value to ``True`` to not perform this check. The default is ``False``.
+
+Example ``options`` section:
+
+.. code:: yaml
+
+    options:
+        skip_ansible_check: True
+
 version
 *******
 

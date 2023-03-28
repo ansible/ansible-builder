@@ -148,6 +148,12 @@ class Containerfile:
 
         self._insert_global_args()
         self._insert_custom_steps('prepend_final')
+
+        # Run the check for 'ansible' and 'ansible-runner' installations for
+        # any EE version 3 or above, unless explicitly skipped.
+        if self.definition.version >= 3 and not self.definition.options['skip_ansible_check']:
+            self.steps.append("RUN /output/scripts/check_ansible $PYCMD")
+
         self._prepare_galaxy_copy_steps()
         self._prepare_system_runtime_deps_steps()
         self._insert_custom_steps('append_final')
@@ -223,7 +229,7 @@ class Containerfile:
 
         # HACK: this sucks
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
-        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy'):
+        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible'):
             with importlib.resources.as_file(scriptres / script) as script_path:
                 # FIXME: just use builtin copy?
                 copy_file(str(script_path), scripts_dir)

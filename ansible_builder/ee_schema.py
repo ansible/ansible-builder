@@ -290,6 +290,18 @@ schema_v3 = {
                 "required": ["src", "dest"],
             },
         },
+
+        "options": {
+            "description": "Options that effect runtime behavior",
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "skip_ansible_check": {
+                    "description": "Disables the check for Ansible/Runner in final image",
+                    "type": "boolean",
+                },
+            },
+        },
     },
 }
 
@@ -316,6 +328,7 @@ def validate_schema(ee_def: dict):
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
 
     _handle_aliasing(ee_def)
+    _handle_options_defaults(ee_def)
 
 
 def _handle_aliasing(ee_def: dict):
@@ -335,3 +348,16 @@ def _handle_aliasing(ee_def: dict):
         # V1/V2 'append' == V3 'append_final'
         if 'append' in ee_def['additional_build_steps']:
             ee_def['additional_build_steps']['append_final'] = ee_def['additional_build_steps']['append']
+
+
+def _handle_options_defaults(ee_def: dict):
+    """
+    JSONSchema can document a "default" value, but it isn't used for validation.
+    This method is used to set any default values for the "options" dictionary
+    properties.
+    """
+    if 'options' not in ee_def:
+        ee_def['options'] = {}
+
+    if ee_def['options'].get('skip_ansible_check') is None:
+        ee_def['options']['skip_ansible_check'] = False

@@ -86,12 +86,16 @@ class TestUserDefinition:
             "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
             "Additional properties are not allowed ('builder_image' was unexpected)"
         ),  # builder_image not suppored in v3
+        (
+            "{'version': 3, 'options': { 'skip_ansible_check': 'True' } }",
+            "'True' is not of type 'boolean'"
+        ),
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
         'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v3',
         'dest_has_dot_dot', 'dest_is_absolute', 'src_req', 'dest_req', 'ansible_cfg',
-        'builder_in_v3'
+        'builder_in_v3', 'opt_skip_ans_chk',
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
@@ -190,6 +194,19 @@ class TestUserDefinition:
 
         system_req = definition.raw.get('dependencies', {}).get('system')
         assert system_req == ['req1', 'req2']
+
+    def test_v3_skip_ansible_check_default(self, exec_env_definition_file):
+        """
+        Test that options.skip_ansible_check defaults to False
+        """
+        path = exec_env_definition_file(
+            "{'version': 3}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('skip_ansible_check')
+        assert value is False
 
 
 class TestImageDescription:

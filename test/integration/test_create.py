@@ -239,6 +239,9 @@ def test_v3_complete(cli, data_dir, tmp_path):
     # verify that the ansible-galaxy command check is performed
     assert 'RUN /output/scripts/check_galaxy' in text
 
+    # verify that the ansible/runner check is performed
+    assert 'RUN /output/scripts/check_ansible' in text
+
     # check additional_build_files
     myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
     assert myconfigs_path.is_dir()
@@ -259,3 +262,23 @@ def test_v3_complete(cli, data_dir, tmp_path):
     assert text_files.is_dir()
     a_text = text_files / "a.txt"
     assert a_text.exists()
+
+
+def test_v3_skip_ansible_check(cli, build_dir_and_ee_yml):
+    """
+    Test 'options.skip_ansible_check' works.
+    """
+    ee = [
+        'version: 3',
+        'options:',
+        '  skip_ansible_check: True',
+    ]
+
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "check_ansible" not in text
