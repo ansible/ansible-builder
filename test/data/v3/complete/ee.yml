@@ -1,11 +1,9 @@
 ---
-version: 2
+version: 3
 
 images:
   base_image:
     name: registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest
-  builder_image:
-    name: my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest
 
 build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--foo'
@@ -20,6 +18,12 @@ dependencies:
   galaxy: |
     collections:
       - ansible.utils
+  python:
+    - six
+    - PyYaml==6.0
+  system:
+    - python311
+    - mysql
 
 additional_build_files:
   - src: files/random.cfg

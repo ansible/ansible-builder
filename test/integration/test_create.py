@@ -196,9 +196,9 @@ def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
     assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/ansible-builder:latest"' in text
 
 
-def test_pre_post_commands(cli, data_dir, tmp_path):
+def test_v3_pre_post_commands(cli, data_dir, tmp_path):
     """Test that the pre/post commands are inserted"""
-    ee_def = data_dir / 'v2' / 'pre_and_post' / 'ee.yml'
+    ee_def = data_dir / 'v3' / 'pre_and_post' / 'ee.yml'
     r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
     assert r.rc == 0
 
@@ -218,9 +218,9 @@ def test_pre_post_commands(cli, data_dir, tmp_path):
     assert "ARG POST_FINAL" in text
 
 
-def test_v2_complete(cli, data_dir, tmp_path):
+def test_v3_complete(cli, data_dir, tmp_path):
     """For testing various elements in a complete v2 EE file"""
-    ee_def = data_dir / 'v2' / 'complete' / 'ee.yml'
+    ee_def = data_dir / 'v3' / 'complete' / 'ee.yml'
     r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
     assert r.rc == 0
 
@@ -229,7 +229,7 @@ def test_v2_complete(cli, data_dir, tmp_path):
     text = containerfile.read_text()
 
     assert 'ARG EE_BASE_IMAGE="registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest"\n' in text
-    assert 'ARG EE_BUILDER_IMAGE="my-mirror.example.com/aap-mirror/ansible-builder-rhel8:latest"\n' in text
+    assert 'ARG EE_BUILDER_IMAGE' not in text
     assert 'ARG PYCMD="/usr/local/bin/mypython"\n' in text
     assert 'ARG PYPKG="mypython3"\n' in text
     assert 'ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS="--foo"\n' in text

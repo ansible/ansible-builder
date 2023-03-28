@@ -59,34 +59,39 @@ class TestUserDefinition:
             "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)"
         ),  # v1 builder image defined in v2 file
         (
-            "{'version': 2, 'additional_build_steps': {'prepend': ''}}",
+            "{'version': 3, 'additional_build_steps': {'prepend': ''}}",
             "Additional properties are not allowed ('prepend' was unexpected)"
         ),  # 'prepend' is renamed in v2
         (
-            "{'version': 2, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
+            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
             "'dest' must not be an absolute path or contain '..': ../b"
         ),  # destination cannot contain ..
         (
-            "{'version': 2, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
+            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
             "'dest' must not be an absolute path or contain '..': /b"
         ),  # destination cannot be absolute
         (
-            "{'version': 2, 'additional_build_files': [ {'dest': 'b'} ]}",
+            "{'version': 3, 'additional_build_files': [ {'dest': 'b'} ]}",
             "'src' is a required property"
         ),  # source is required
         (
-            "{'version': 2, 'additional_build_files': [ {'src': 'a'} ]}",
+            "{'version': 3, 'additional_build_files': [ {'src': 'a'} ]}",
             "'dest' is a required property"
         ),  # destination is required
         (
-            "{'version': 2, 'ansible_config': 'ansible.cfg' }",
+            "{'version': 3, 'ansible_config': 'ansible.cfg' }",
             "Additional properties are not allowed ('ansible_config' was unexpected)"
-        ),  # ansible_config not supported in v2
+        ),  # ansible_config not supported in v3
+        (
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
+            "Additional properties are not allowed ('builder_image' was unexpected)"
+        ),  # builder_image not suppored in v3
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
-        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v2',
+        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v3',
         'dest_has_dot_dot', 'dest_is_absolute', 'src_req', 'dest_req', 'ansible_cfg',
+        'builder_in_v3'
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
@@ -150,15 +155,41 @@ class TestUserDefinition:
         assert definition.build_arg_defaults['EE_BASE_IMAGE'] == "base_image:latest"
         assert definition.build_arg_defaults['EE_BUILDER_IMAGE'] == "builder_image:latest"
 
-    def test_v2_ansible_install_refs(self, exec_env_definition_file):
+    def test_v3_ansible_install_refs(self, exec_env_definition_file):
         path = exec_env_definition_file(
-            "{'version': 2, 'dependencies': {'ansible_core': 'ansible-core==2.13', 'ansible_runner': 'ansible-runner==2.3.1'}}"
+            "{'version': 3, 'dependencies': {'ansible_core': 'ansible-core==2.13', 'ansible_runner': 'ansible-runner==2.3.1'}}"
         )
         definition = UserDefinition(path)
         definition.validate()
         assert definition.ansible_core_ref == "ansible-core==2.13"
         assert definition.ansible_runner_ref == "ansible-runner==2.3.1"
         assert definition.ansible_ref_install_list == "ansible-core==2.13 ansible-runner==2.3.1"
+
+    def test_v3_inline_python(self, exec_env_definition_file):
+        """
+        Test that inline values for dependencies.python work.
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'python': ['req1', 'req2']}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        python_req = definition.raw.get('dependencies', {}).get('python')
+        assert python_req == ['req1', 'req2']
+
+    def test_v3_inline_system(self, exec_env_definition_file):
+        """
+        Test that inline values for dependencies.system work.
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'system': ['req1', 'req2']}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        system_req = definition.raw.get('dependencies', {}).get('system')
+        assert system_req == ['req1', 'req2']
 
 
 class TestImageDescription:

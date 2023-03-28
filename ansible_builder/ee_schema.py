@@ -97,6 +97,10 @@ schema_v2 = {
             "type": "number",
         },
 
+        "ansible_config": {
+            "type": "string",
+        },
+
         "build_arg_defaults": {
             "type": "object",
             "additionalProperties": False,
@@ -127,6 +131,87 @@ schema_v2 = {
                     "description": "The system dependency file",
                     "type": "string",
                 },
+            },
+        },
+
+        "additional_build_steps": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "prepend": TYPE_StringOrListOfStrings,
+                "append": TYPE_StringOrListOfStrings,
+            },
+        },
+
+        "images": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "base_image": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                        },
+                        "signature_original_name": {
+                            "type": "string",
+                        },
+                    },
+                },
+                "builder_image": {
+                    "type": "object",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                        },
+                        "signature_original_name": {
+                            "type": "string",
+                        },
+                    },
+                }
+            },
+        },
+    },
+}
+
+
+############
+# Version 3
+############
+
+schema_v3 = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "version": {
+            "description": "The EE schema version number",
+            "type": "number",
+        },
+
+        "build_arg_defaults": {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "ANSIBLE_GALAXY_CLI_COLLECTION_OPTS": {
+                    "type": "string",
+                },
+                "ANSIBLE_GALAXY_CLI_ROLE_OPTS": {
+                    "type": "string",
+                },
+            },
+        },
+
+        "dependencies": {
+            "description": "The dependency stuff",
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "python": TYPE_StringOrListOfStrings,
+                "galaxy": {
+                    "description": "The Galaxy dependency file",
+                    "type": "string",
+                },
+                "system": TYPE_StringOrListOfStrings,
                 "python_interpreter": {
                     "description": "Python package name and path",
                     "type": "object",
@@ -168,17 +253,6 @@ schema_v2 = {
                         },
                     },
                 },
-                "builder_image": {
-                    "type": "object",
-                    "properties": {
-                        "name": {
-                            "type": "string",
-                        },
-                        "signature_original_name": {
-                            "type": "string",
-                        },
-                    },
-                }
             },
         },
 
@@ -228,7 +302,7 @@ def validate_schema(ee_def: dict):
         except ValueError:
             raise DefinitionError(f"Schema version not an integer: {ee_def['version']}")
 
-    if schema_version not in (1, 2):
+    if schema_version not in (1, 2, 3):
         raise DefinitionError(f"Unsupported schema version: {schema_version}")
 
     try:
@@ -236,6 +310,8 @@ def validate_schema(ee_def: dict):
             validate(instance=ee_def, schema=schema_v1)
         elif schema_version == 2:
             validate(instance=ee_def, schema=schema_v2)
+        elif schema_version == 3:
+            validate(instance=ee_def, schema=schema_v3)
     except (SchemaError, ValidationError) as e:
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
 
@@ -252,10 +328,10 @@ def _handle_aliasing(ee_def: dict):
     """
 
     if 'additional_build_steps' in ee_def:
-        # V1 'prepend' == V2 'prepend_final'
+        # V1/V2 'prepend' == V3 'prepend_final'
         if 'prepend' in ee_def['additional_build_steps']:
             ee_def['additional_build_steps']['prepend_final'] = ee_def['additional_build_steps']['prepend']
 
-        # V1 'append' == V2 'append_final'
+        # V1/V2 'append' == V3 'append_final'
         if 'append' in ee_def['additional_build_steps']:
             ee_def['additional_build_steps']['append_final'] = ee_def['additional_build_steps']['append']

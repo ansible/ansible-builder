@@ -11,19 +11,6 @@ from .exceptions import DefinitionError
 from .ee_schema import validate_schema
 
 
-ALLOWED_KEYS_V1 = [
-    'version',
-    'build_arg_defaults',
-    'dependencies',
-    'ansible_config',
-    'additional_build_steps',
-]
-
-ALLOWED_KEYS_V2 = [
-    'images',
-]
-
-
 # HACK: manage lifetimes more carefully
 _tempfiles: list[Callable] = []
 
@@ -106,6 +93,10 @@ class UserDefinition:
         # Set default values for the build arguments. User supplied values
         # are set later during validation.
         self.build_arg_defaults = constants.build_arg_defaults.copy()
+        if self.version > 2:
+            # v3 and higher no longer supports a builder image so make
+            # sure this value is cleared of the default value.
+            self.build_arg_defaults['EE_BUILDER_IMAGE'] = None
 
         # Attributes used for creating podman container policies. These will be None
         # if no 'images' section is present in the EE, or an ImageDescription object otherwise.
@@ -225,16 +216,16 @@ class UserDefinition:
             for key, user_value in build_arg_defaults.items():
                 self.build_arg_defaults[key] = user_value
 
-        if self.version == 2:
+        if self.version > 1:
             images = self.raw.get('images', {})
             if images:
                 self.base_image = ImageDescription(images, 'base_image')
-                self.builder_image = ImageDescription(images, 'builder_image')
 
                 # Must set these values so that Containerfile uses the proper images
                 if self.base_image.name:
                     self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
-                if self.builder_image.name:
+                if 'builder_image' in images:
+                    self.builder_image = ImageDescription(images, 'builder_image')
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
             self._validate_additional_build_files()
