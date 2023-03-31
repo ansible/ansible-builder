@@ -300,6 +300,10 @@ schema_v3 = {
                     "description": "Disables the check for Ansible/Runner in final image",
                     "type": "boolean",
                 },
+                "package_manager_path": {
+                    "description": "Path to the system package manager to use",
+                    "type": "string",
+                }
             },
         },
     },
@@ -328,7 +332,9 @@ def validate_schema(ee_def: dict):
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
 
     _handle_aliasing(ee_def)
-    _handle_options_defaults(ee_def)
+
+    if schema_version >= 3:
+        _handle_options_defaults(ee_def)
 
 
 def _handle_aliasing(ee_def: dict):
@@ -361,3 +367,6 @@ def _handle_options_defaults(ee_def: dict):
 
     if ee_def['options'].get('skip_ansible_check') is None:
         ee_def['options']['skip_ansible_check'] = False
+
+    if ee_def['options'].get('package_manager_path') is None:
+        ee_def['options']['package_manager_path'] = '/usr/bin/dnf'

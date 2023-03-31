@@ -153,8 +153,7 @@ class UserDefinition:
 
     @property
     def options(self):
-        # Since some options have default values, the 'options' key is always available
-        return self.raw['options']
+        return self.raw.get('options', {})
 
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either

@@ -72,8 +72,7 @@ class Containerfile:
 
         if not self.definition.builder_image:
             if self.definition.python_package_name:
-                # FIXME: better dnf cleanup needed?
-                self.steps.append('RUN dnf install $PYPKG -y && dnf clean all')
+                self.steps.append('RUN $PKGMGR install $PYPKG -y && $PKGMGR clean all')
 
             # We should always make sure pip is available for later stages.
             self.steps.append('RUN $PYCMD -m ensurepip')
@@ -187,6 +186,9 @@ class Containerfile:
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
         }
+
+        if self.definition.version >= 3:
+            global_args['PKGMGR'] = self.definition.options['package_manager_path']
 
         for arg, value in global_args.items():
             if include_values and value:

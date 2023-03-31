@@ -267,6 +267,12 @@ options
 This section is a dictionary that contains keywords/options that can affect
 builder runtime functionality. Valid keys for this section are:
 
+    ``package_manager_path``
+      A string with the path to the package manager (dnf or microdnf) to use.
+      The default is ``/usr/bin/dnf``. This value will be used to install a
+      python interpreter, if specified in ``dependencies``, and during the
+      build phase by the ``assemble`` script.
+
     ``skip_ansible_check``
       This boolean value controls whether or not the check for an installation
       of Ansible and Ansible Runner is performed on the final image. Set this
@@ -277,6 +283,7 @@ Example ``options`` section:
 .. code:: yaml
 
     options:
+        package_manager_path: /usr/bin/microdnf
         skip_ansible_check: True
 
 version

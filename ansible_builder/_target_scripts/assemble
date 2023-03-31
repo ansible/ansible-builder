@@ -37,12 +37,16 @@ if [ -z $PKGMGR ]; then
     PKGMGR=/usr/bin/dnf
     if [ -f "/usr/bin/microdnf" ]; then
         PKGMGR=/usr/bin/microdnf
-        if [ -z $PKGMGR_OPTS ]; then
-            # NOTE(pabelanger): skip install docs and weak dependencies to
-            # make smaller images. Sadly, setting these in dnf.conf don't
-            # appear to work.
-            PKGMGR_OPTS="--nodocs --setopt install_weak_deps=0"
-        fi
+    fi
+fi
+
+if [ "$PKGMGR" = "/usr/bin/microdnf" ]
+then
+    if [ -z $PKGMGR_OPTS ]; then
+        # NOTE(pabelanger): skip install docs and weak dependencies to
+        # make smaller images. Sadly, setting these in dnf.conf don't
+        # appear to work.
+        PKGMGR_OPTS="--nodocs --setopt install_weak_deps=0"
     fi
 fi
 
@@ -54,7 +58,7 @@ mkdir -p /tmp/src
 
 cd /tmp/src
 
-$PKGMGR update -y
+$PKGMGR upgrade -y
 
 function install_bindep {
     # Protect from the bindep builder image use of the assemble script
@@ -92,7 +96,7 @@ function install_wheels {
     # possible to tell what is the wheel for the project and
     # what is the wheel cache.
     if [ -f setup.py ] ; then
-        python3 setup.py sdist bdist_wheel -d /output/wheels
+        $PYCMD setup.py sdist bdist_wheel -d /output/wheels
     fi
 
     # Install everything so that the wheel cache is populated with
@@ -139,7 +143,7 @@ done
 # NOTE(pabelanger): We allow users to install distro python packages of
 # libraries. This is important for projects that eventually want to produce
 # an RPM or offline install.
-python3 -m venv /tmp/venv --system-site-packages --without-pip
+$PYCMD -m venv /tmp/venv --system-site-packages --without-pip
 source /tmp/venv/bin/activate
 
 # If there is an upper-constraints.txt file in the source tree,
