@@ -155,8 +155,15 @@ class Containerfile:
 
         self._prepare_galaxy_copy_steps()
         self._prepare_system_runtime_deps_steps()
+
+        # install init package if specified
+        # FUTURE: could move this into the pre-install wheel phase
+        if init_pip_pkg := self.definition.container_init.get('package_pip'):
+            self.steps.append(f"RUN $PYCMD -m pip install --no-cache-dir '{init_pip_pkg}'")
+
         self._insert_custom_steps('append_final')
         self._prepare_label_steps()
+        self._prepare_entrypoint_steps()
 
     def write(self):
         """
@@ -381,3 +388,9 @@ class Containerfile:
                 ),
                 "",
             ])
+
+    def _prepare_entrypoint_steps(self):
+        if ep := self.definition.container_init.get('entrypoint'):
+            self.steps.append(f"ENTRYPOINT {ep}")
+        if cmd := self.definition.container_init.get('cmd'):
+            self.steps.append(f"CMD {cmd}")

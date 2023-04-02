@@ -303,7 +303,26 @@ schema_v3 = {
                 "package_manager_path": {
                     "description": "Path to the system package manager to use",
                     "type": "string",
-                }
+                },
+                "container_init": {
+                    "description": "Customize container startup behavior",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "package_pip": {
+                            "description": "package to install via pip for entrypoint support",
+                            "type": "string",
+                        },
+                        "entrypoint": {
+                            "description": "literal value for ENTRYPOINT Containerfile directive",
+                            "type": "string",
+                        },
+                        "cmd": {
+                            "description": "literal value for CMD Containerfile directive",
+                            "type": "string",
+                        },
+                    },
+                },
             },
         },
     },
@@ -362,11 +381,12 @@ def _handle_options_defaults(ee_def: dict):
     This method is used to set any default values for the "options" dictionary
     properties.
     """
-    if 'options' not in ee_def:
-        ee_def['options'] = {}
+    options = ee_def.setdefault('options', {})
 
-    if ee_def['options'].get('skip_ansible_check') is None:
-        ee_def['options']['skip_ansible_check'] = False
-
-    if ee_def['options'].get('package_manager_path') is None:
-        ee_def['options']['package_manager_path'] = '/usr/bin/dnf'
+    options.setdefault('skip_ansible_check', False)
+    options.setdefault('package_manager_path', '/usr/bin/dnf')
+    options.setdefault('container_init', {
+        'package_pip': 'dumb-init==1.2.5',
+        'entrypoint': '["dumb-init"]',
+        'cmd': '["bash"]',
+    })

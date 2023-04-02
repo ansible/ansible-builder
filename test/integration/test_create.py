@@ -242,6 +242,10 @@ def test_v3_complete(cli, data_dir, tmp_path):
     # verify that the ansible/runner check is performed
     assert 'RUN /output/scripts/check_ansible' in text
 
+    # verify that the default init is being installed and that ENTRYPOINT is set
+    assert "RUN $PYCMD -m pip install --no-cache-dir 'dumb-init==" in text
+    assert 'ENTRYPOINT ["dumb-init"]' in text
+
     # check additional_build_files
     myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
     assert myconfigs_path.is_dir()
@@ -282,3 +286,46 @@ def test_v3_skip_ansible_check(cli, build_dir_and_ee_yml):
     text = containerfile.read_text()
 
     assert "check_ansible" not in text
+
+
+def test_v3_skip_container_init(cli, build_dir_and_ee_yml):
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        options:
+          container_init: {}
+        """
+    )
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "dumb-init" not in text
+    assert "ENTRYPOINT" not in text
+    assert 'CMD ["bash"]' not in text
+
+
+def test_v3_custom_container_init(cli, build_dir_and_ee_yml):
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        options:
+          container_init:
+            package_pip: custominit==1.2.3
+            entrypoint: |
+              ["custominit"]
+            cmd: |
+              ["customcmd"]
+        """
+    )
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "pip install --no-cache-dir 'custominit==1.2.3'" in text
+    assert 'ENTRYPOINT ["custominit"]' in text
+    assert 'CMD ["customcmd"]' in text

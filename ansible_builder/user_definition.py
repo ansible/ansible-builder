@@ -152,6 +152,10 @@ class UserDefinition:
         return self.raw.get('additional_build_files', [])
 
     @property
+    def container_init(self):
+        return self.raw.get('options', {}).get('container_init', {})
+
+    @property
     def options(self):
         return self.raw.get('options', {})
 
