@@ -8,7 +8,7 @@ on:
 jobs:
   sanity:
     name: ${{ matrix.test.name }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: quay.io/ansible/ansible-builder-test-container:2.0.0
       env:
@@ -20,7 +20,7 @@ jobs:
       matrix:
         test:
           - name: Lint
-            tox_env: linters
+            tox_env: linters-py39
 
           - name: Docs
             tox_env: docs
@@ -36,7 +36,7 @@ jobs:
         run: tox
 
   secrets_preflight:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Secrets pre-flight check
     env:
       secret_user: ${{ secrets.RH_REGISTRY_USER }}
@@ -51,7 +51,7 @@ jobs:
 
 
   pulp_integration:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Pulp Integration - ${{ matrix.py_version.name }}
     # NB: running this job requires access to an RH registry token; PRs can't currently access the main repo secret,
     # so forks will need to define the secrets locally to run these tests pre-merge
@@ -103,7 +103,7 @@ jobs:
 
 
   integration:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Integration - ${{ matrix.py_version.name }}
 
     env:
@@ -113,9 +113,6 @@ jobs:
       fail-fast: false
       matrix:
         py_version:
-          - name: '3.8'
-            tox_env: integration-py38
-
           - name: '3.9'
             tox_env: integration-py39
 
@@ -156,7 +153,7 @@ jobs:
 
   unit:
     name: Unit - ${{ matrix.py_version.name}}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: quay.io/ansible/ansible-builder-test-container:2.0.0
       env:
@@ -167,9 +164,6 @@ jobs:
       fail-fast: false
       matrix:
         py_version:
-          - name: '3.8'
-            tox_env: unit-py38
-
           - name: '3.9'
             tox_env: unit-py39
 

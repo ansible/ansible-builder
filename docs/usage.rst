@@ -215,6 +215,24 @@ To remove unused images created after the build process:
    already exists or created by ansible-builder build process.
 
 
+``--squash``
+************
+
+This option controls the final image layer squashing. Valid values are:
+
+* ``new``: Squash all of the final image's new layers into a single new layer
+  (preexisting layers are not squashed). This is the default.
+* ``all``: Squash all of the final image's layers, including those inherited
+  from the base image, into a single new layer.
+* ``off``: Turn off layer squashing.
+
+.. note::
+
+   This flag is compatible only with the ``podman`` runtime and will be ignored
+   for any other runtime. Docker is not supported since layer image squashing is
+   considered an experimental feature.
+
+
 The ``create`` command
 ----------------------
 

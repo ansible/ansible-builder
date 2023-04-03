@@ -111,7 +111,7 @@ export XDG_RUNTIME_DIR=/tmp/pulptests
 mkdir $XDG_RUNTIME_DIR
 
 skopeo login --username admin --password password localhost:8080 --tls-verify=false
-skopeo copy docker://registry.access.redhat.com/ubi9/ubi-micro:latest docker://localhost:8080/testrepo/ubi-micro --dest-tls-verify=false
+skopeo copy docker://registry.access.redhat.com/ubi9/ubi-minimal:latest docker://localhost:8080/testrepo/ubi-minimal --dest-tls-verify=false
 
 podman login --username "$1" --password "$2" registry.redhat.io
 skopeo copy docker://registry.redhat.io/ansible-automation-platform-21/ansible-builder-rhel8:latest docker://localhost:8080/testrepo/ansible-builder-rhel8 --dest-tls-verify=false

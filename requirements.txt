@@ -1,3 +1,4 @@
 PyYAML
 requirements-parser
 bindep
+jsonschema

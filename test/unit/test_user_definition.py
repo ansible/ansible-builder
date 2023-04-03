@@ -24,46 +24,78 @@ class TestUserDefinition:
         ),  # missing file
         (
             "{'version': 1, 'additional_build_steps': 'RUN me'}",
-            "Expected 'additional_build_steps' in the provided definition file to be a dictionary\n"
-            "with keys 'prepend' and/or 'append'; found a str instead."
+            "'RUN me' is not of type 'object'"
         ),  # not right format for additional_build_steps
         (
             "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
-            "Keys ('middle',) are not allowed in 'additional_build_steps'."
+            "Additional properties are not allowed ('middle' was unexpected)"
         ),  # there are no "middle" build steps
         (
             "{'version': 1, 'build_arg_defaults': {'EE_BASE_IMAGE': ['foo']}}",
-            "Expected build_arg_defaults.EE_BASE_IMAGE to be a string; Found a <class 'list'> instead."
+            "['foo'] is not of type 'string'"
         ),  # image itself is wrong type
         (
             "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
-            "Keys {'BUILD_ARRRRRG'} are not allowed in 'build_arg_defaults'."
+            "Additional properties are not allowed ('BUILD_ARRRRRG' was unexpected)"
         ),  # image itself is wrong type
         (
             "{'version': 1, 'ansible_config': ['ansible.cfg']}",
-            "Expected 'ansible_config' in the provided definition file to\n"
-            "be a string; found a list instead."
+            "['ansible.cfg'] is not of type 'string'"
         ),
         (
             "{'version': 1, 'images': 'bar'}",
-            "Error: Unknown yaml key(s), {'images'}, found in the definition file."
+            "Additional properties are not allowed ('images' was unexpected)"
         ),
         (
             "{'version': 2, 'foo': 'bar'}",
-            "Error: Unknown yaml key(s), {'foo'}, found in the definition file."
+            "Additional properties are not allowed ('foo' was unexpected)"
         ),
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BASE_IMAGE': 'foo'}, 'images': {}}",
-            "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
+            "Additional properties are not allowed ('EE_BASE_IMAGE' was unexpected)"
         ),  # v1 base image defined in v2 file
         (
             "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
-            "Error: Version 2 does not allow defining EE_BASE_IMAGE or EE_BUILDER_IMAGE in 'build_arg_defaults'"
+            "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)"
         ),  # v1 builder image defined in v2 file
+        (
+            "{'version': 3, 'additional_build_steps': {'prepend': ''}}",
+            "Additional properties are not allowed ('prepend' was unexpected)"
+        ),  # 'prepend' is renamed in v2
+        (
+            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
+            "'dest' must not be an absolute path or contain '..': ../b"
+        ),  # destination cannot contain ..
+        (
+            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
+            "'dest' must not be an absolute path or contain '..': /b"
+        ),  # destination cannot be absolute
+        (
+            "{'version': 3, 'additional_build_files': [ {'dest': 'b'} ]}",
+            "'src' is a required property"
+        ),  # source is required
+        (
+            "{'version': 3, 'additional_build_files': [ {'src': 'a'} ]}",
+            "'dest' is a required property"
+        ),  # destination is required
+        (
+            "{'version': 3, 'ansible_config': 'ansible.cfg' }",
+            "Additional properties are not allowed ('ansible_config' was unexpected)"
+        ),  # ansible_config not supported in v3
+        (
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
+            "Additional properties are not allowed ('builder_image' was unexpected)"
+        ),  # builder_image not suppored in v3
+        (
+            "{'version': 3, 'options': { 'skip_ansible_check': 'True' } }",
+            "'True' is not of type 'boolean'"
+        ),
     ], ids=[
         'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
         'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
-        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2'
+        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v3',
+        'dest_has_dot_dot', 'dest_is_absolute', 'src_req', 'dest_req', 'ansible_cfg',
+        'builder_in_v3', 'opt_skip_ans_chk',
     ])
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
@@ -88,13 +120,93 @@ class TestUserDefinition:
         path = exec_env_definition_file("{'version': 1, 'bad_key': 1}")
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
-        assert "Error: Unknown yaml key(s), {'bad_key'}, found in the definition file." in str(error.value.args[0])
+        assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(error.value.args[0])
 
     def test_ee_missing_image_name(self, exec_env_definition_file):
         path = exec_env_definition_file("{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}")
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "'name' is a required field for 'base_image'" in str(error.value.args[0])
+
+    def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):
+        """ Test that EE schema keys are upgraded from version V1 to V2. """
+        path = exec_env_definition_file("{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}")
+        definition = UserDefinition(path)
+        definition.validate()
+        add_bld_steps = definition.raw['additional_build_steps']
+        assert 'prepend' in add_bld_steps
+        assert 'append' in add_bld_steps
+        assert add_bld_steps['prepend'] == 'value1'
+        assert add_bld_steps['append'] == 'value2'
+        assert 'prepend_final' in add_bld_steps
+        assert 'append_final' in add_bld_steps
+        assert add_bld_steps['prepend_final'] == add_bld_steps['prepend']
+        assert add_bld_steps['append_final'] == add_bld_steps['append']
+
+    def test_v2_images(self, exec_env_definition_file):
+        """
+        Verify that image definition contents are assigned correctly and copied
+        to the build_arg_defaults equivalents.
+        """
+        path = exec_env_definition_file(
+            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        assert definition.base_image.name == "base_image:latest"
+        assert definition.builder_image.name == "builder_image:latest"
+        assert definition.build_arg_defaults['EE_BASE_IMAGE'] == "base_image:latest"
+        assert definition.build_arg_defaults['EE_BUILDER_IMAGE'] == "builder_image:latest"
+
+    def test_v3_ansible_install_refs(self, exec_env_definition_file):
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'ansible_core': 'ansible-core==2.13', 'ansible_runner': 'ansible-runner==2.3.1'}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+        assert definition.ansible_core_ref == "ansible-core==2.13"
+        assert definition.ansible_runner_ref == "ansible-runner==2.3.1"
+        assert definition.ansible_ref_install_list == "ansible-core==2.13 ansible-runner==2.3.1"
+
+    def test_v3_inline_python(self, exec_env_definition_file):
+        """
+        Test that inline values for dependencies.python work.
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'python': ['req1', 'req2']}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        python_req = definition.raw.get('dependencies', {}).get('python')
+        assert python_req == ['req1', 'req2']
+
+    def test_v3_inline_system(self, exec_env_definition_file):
+        """
+        Test that inline values for dependencies.system work.
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'system': ['req1', 'req2']}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        system_req = definition.raw.get('dependencies', {}).get('system')
+        assert system_req == ['req1', 'req2']
+
+    def test_v3_skip_ansible_check_default(self, exec_env_definition_file):
+        """
+        Test that options.skip_ansible_check defaults to False
+        """
+        path = exec_env_definition_file(
+            "{'version': 3}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('skip_ansible_check')
+        assert value is False
 
 
 class TestImageDescription:

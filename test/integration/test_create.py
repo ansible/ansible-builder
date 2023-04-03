@@ -108,7 +108,7 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
 
 def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
     """
-    Test that all extr asigning args for gpg are passed into the container file.
+    Test that all extra signing args for gpg are passed into the container file.
     """
     ee = [
         'dependencies:',
@@ -148,8 +148,8 @@ def test_v2_default_images(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/ansible-runner:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/ansible-builder:latest"' in text
 
 
 def test_v2_default_base_image(cli, build_dir_and_ee_yml):
@@ -170,8 +170,8 @@ def test_v2_default_base_image(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/ansible-runner:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/awx-ee:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/ansible-runner:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/awx-ee:latest"' in text
 
 
 def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
@@ -192,5 +192,140 @@ def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "ARG EE_BASE_IMAGE=quay.io/ansible/awx-ee:latest" in text
-    assert "ARG EE_BUILDER_IMAGE=quay.io/ansible/ansible-builder:latest" in text
+    assert 'ARG EE_BASE_IMAGE="quay.io/ansible/awx-ee:latest"' in text
+    assert 'ARG EE_BUILDER_IMAGE="quay.io/ansible/ansible-builder:latest"' in text
+
+
+def test_v3_pre_post_commands(cli, data_dir, tmp_path):
+    """Test that the pre/post commands are inserted"""
+    ee_def = data_dir / 'v3' / 'pre_and_post' / 'ee.yml'
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    assert r.rc == 0
+
+    containerfile = tmp_path / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "ARG PRE_BASE1\n" in text
+    assert "ARG PRE_BASE2\n" in text
+    assert "ARG POST_BASE1\n" in text
+    assert "ARG POST_BASE2\n" in text
+    assert "ARG PRE_GALAXY" in text
+    assert "ARG POST_GALAXY" in text
+    assert "ARG PRE_BUILDER" in text
+    assert "ARG POST_BUILDER" in text
+    assert "ARG PRE_FINAL" in text
+    assert "ARG POST_FINAL" in text
+
+
+def test_v3_complete(cli, data_dir, tmp_path):
+    """For testing various elements in a complete v2 EE file"""
+    ee_def = data_dir / 'v3' / 'complete' / 'ee.yml'
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    assert r.rc == 0
+
+    containerfile = tmp_path / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert 'ARG EE_BASE_IMAGE="registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest"\n' in text
+    assert 'ARG EE_BUILDER_IMAGE' not in text
+    assert 'ARG PYCMD="/usr/local/bin/mypython"\n' in text
+    assert 'ARG PYPKG="mypython3"\n' in text
+    assert 'ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS="--foo"\n' in text
+    assert 'ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS="--bar"\n' in text
+    assert 'ARG ANSIBLE_INSTALL_REFS="ansible-core==2.13 ansible-runner==2.3.1"\n' in text
+
+    # verify that the ansible-galaxy command check is performed
+    assert 'RUN /output/scripts/check_galaxy' in text
+
+    # verify that the ansible/runner check is performed
+    assert 'RUN /output/scripts/check_ansible' in text
+
+    # verify that the default init is being installed and that ENTRYPOINT is set
+    assert "RUN $PYCMD -m pip install --no-cache-dir 'dumb-init==" in text
+    assert 'ENTRYPOINT ["dumb-init"]' in text
+
+    # check additional_build_files
+    myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
+    assert myconfigs_path.is_dir()
+    random_file = myconfigs_path / "random.cfg"
+    assert random_file.exists()
+
+    # Tree structure we expect:
+    # ├── mydata
+    # │   ├── a.dat
+    # │   └── text_files
+    # │       ├── a.txt
+
+    mydata_path = tmp_path / constants.user_content_subfolder / "mydata"
+    assert mydata_path.is_dir()
+    dat_file = mydata_path / "a.dat"
+    assert dat_file.exists()
+    text_files = mydata_path / "text_files"
+    assert text_files.is_dir()
+    a_text = text_files / "a.txt"
+    assert a_text.exists()
+
+
+def test_v3_skip_ansible_check(cli, build_dir_and_ee_yml):
+    """
+    Test 'options.skip_ansible_check' works.
+    """
+    ee = [
+        'version: 3',
+        'options:',
+        '  skip_ansible_check: True',
+    ]
+
+    tmpdir, eeyml = build_dir_and_ee_yml("\n".join(ee))
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "check_ansible" not in text
+
+
+def test_v3_skip_container_init(cli, build_dir_and_ee_yml):
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        options:
+          container_init: {}
+        """
+    )
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "dumb-init" not in text
+    assert "ENTRYPOINT" not in text
+    assert 'CMD ["bash"]' not in text
+
+
+def test_v3_custom_container_init(cli, build_dir_and_ee_yml):
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        options:
+          container_init:
+            package_pip: custominit==1.2.3
+            entrypoint: |
+              ["custominit"]
+            cmd: |
+              ["customcmd"]
+        """
+    )
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "pip install --no-cache-dir 'custominit==1.2.3'" in text
+    assert 'ENTRYPOINT ["custominit"]' in text
+    assert 'CMD ["customcmd"]' in text

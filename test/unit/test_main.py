@@ -1,6 +1,3 @@
-import os
-import pathlib
-
 import pytest
 
 from ansible_builder import constants
@@ -10,13 +7,13 @@ from ansible_builder.main import AnsibleBuilder
 def test_definition_version(exec_env_definition_file):
     path = exec_env_definition_file(content={'version': 1})
     aee = AnsibleBuilder(filename=path)
-    assert aee.version == '1'
+    assert aee.version == 1
 
 
 def test_definition_version_missing(exec_env_definition_file):
     path = exec_env_definition_file(content={})
     aee = AnsibleBuilder(filename=path)
-    assert aee.version == '1'
+    assert aee.version == 1
 
 
 @pytest.mark.parametrize('path_spec', ('absolute', 'relative'))
@@ -84,7 +81,7 @@ def test_base_image_via_definition_file_build_arg(exec_env_definition_file, tmp_
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert 'EE_BASE_IMAGE=my-other-custom-image' in content
+    assert 'EE_BASE_IMAGE="my-other-custom-image"' in content
 
 
 @pytest.mark.test_all_runtimes
@@ -92,7 +89,7 @@ def test_build_command(exec_env_definition_file, runtime):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
-    aee = AnsibleBuilder(filename=path, tag='my-custom-image')
+    aee = AnsibleBuilder(filename=path, tag=['my-custom-image'])
     command = aee.build_command
     assert 'build' and 'my-custom-image' in command
 
@@ -100,30 +97,30 @@ def test_build_command(exec_env_definition_file, runtime):
 
     command = aee.build_command
     assert 'foo/bar/path' in command
-    assert 'foo/bar/path/Dockerfile' in " ".join(command)
+    fpath = 'foo/bar/path/' + constants.runtime_files[runtime]
+    assert fpath in " ".join(command)
 
 
 def test_nested_galaxy_file(data_dir, tmp_path):
-    if not os.path.exists('test/data/nested-galaxy.yml'):
-        pytest.skip('Test is only valid when ran from ansible-builder root')
-
-    AnsibleBuilder(filename='test/data/nested-galaxy.yml', build_context=tmp_path).build()
+    nested_galaxy_file = str(data_dir / 'nested_galaxy_file' / 'nested-galaxy.yml')
+    AnsibleBuilder(filename=nested_galaxy_file, build_context=tmp_path).build()
 
     req_in_bc = tmp_path.joinpath(constants.user_content_subfolder, 'requirements.yml')
     assert req_in_bc.exists()
 
-    req_original = pathlib.Path('test/data/foo/requirements.yml')
+    req_original = data_dir / 'nested_galaxy_file' / 'foo' / 'requirements.yml'
     assert req_in_bc.read_text() == req_original.read_text()
 
 
-def test_ansible_config_for_galaxy(exec_env_definition_file, tmp_path):
-    if not os.path.exists('test/data/ansible-test.cfg'):
-        pytest.skip('Test is only valid when ran from ansible-builder root')
-
-    ansible_config_path = 'test/data/ansible-test.cfg'
+def test_ansible_config_for_galaxy(exec_env_definition_file, tmp_path, data_dir):
+    ansible_config_path = str(data_dir / 'ansible_cfg_for_galaxy' / 'ansible-test.cfg')
+    galaxy_req = str(data_dir / 'ansible_cfg_for_galaxy' / 'requirements.yml')
     content = {
         'version': 1,
-        'ansible_config': ansible_config_path
+        'ansible_config': ansible_config_path,
+        'dependencies': {
+            'galaxy': galaxy_req,
+        },
     }
     path = exec_env_definition_file(content=content)
     aee = AnsibleBuilder(filename=path, build_context=tmp_path.joinpath('bc'))

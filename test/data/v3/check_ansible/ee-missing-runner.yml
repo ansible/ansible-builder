@@ -1,0 +1,14 @@
+---
+version: 3
+
+images:
+  base_image:
+    name: localhost:8080/testrepo/ubi-minimal:latest
+
+dependencies:
+  ansible_core: ansible_core
+  python_interpreter:
+    package_name: python3
+
+options:
+  package_manager_path: /usr/bin/microdnf

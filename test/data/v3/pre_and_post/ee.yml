@@ -1,0 +1,25 @@
+---
+version: 3
+
+dependencies:
+  galaxy: requirements.yml
+
+additional_build_steps:
+  prepend_base: |
+    ARG PRE_BASE1
+    ARG PRE_BASE2
+  append_base:
+    - ARG POST_BASE1
+    - ARG POST_BASE2
+  prepend_galaxy:
+    - ARG PRE_GALAXY
+  append_galaxy:
+    - ARG POST_GALAXY
+  prepend_builder:
+    - ARG PRE_BUILDER
+  append_builder:
+    - ARG POST_BUILDER
+  prepend_final:
+    - ARG PRE_FINAL
+  append_final:
+    - ARG POST_FINAL
