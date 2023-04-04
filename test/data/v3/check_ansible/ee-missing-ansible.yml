@@ -9,7 +9,7 @@ dependencies:
   ansible_runner:
     package_pip: ansible-runner
   python_interpreter:
-    package_name: python3
+    package_system: python3
 
 options:
   package_manager_path: /usr/bin/microdnf

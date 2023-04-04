@@ -15,7 +15,7 @@ dependencies:
   ansible_runner:
     package_pip: ansible-runner==2.3.1
   python_interpreter:
-    package_name: "mypython3"
+    package_system: "mypython3"
     python_path: "/usr/local/bin/mypython"
   galaxy: |
     collections:

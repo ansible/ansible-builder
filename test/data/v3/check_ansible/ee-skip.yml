@@ -7,7 +7,7 @@ images:
 
 dependencies:
   python_interpreter:
-    package_name: python3
+    package_system: python3
 
 options:
   skip_ansible_check: True

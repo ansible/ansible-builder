@@ -217,8 +217,8 @@ schema_v3 = {
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
-                        "package_name": {
-                            "description": "The python package to install",
+                        "package_system": {
+                            "description": "The python package to install via system package manager",
                             "type": "string",
                         },
                         "python_path": {

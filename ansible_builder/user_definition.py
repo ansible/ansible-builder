@@ -128,8 +128,8 @@ class UserDefinition:
         return self.raw.get('additional_build_steps')
 
     @property
-    def python_package_name(self):
-        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_name', None)
+    def python_package_system(self):
+        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_system', None)
 
     @property
     def python_path(self):

@@ -194,7 +194,7 @@ The following keys are valid for this section:
 
     ``python_interpreter``
       A dictionary that defines the Python system package name to be installed by
-      dnf (``package_name``) and/or a path to the Python interpreter to be used
+      dnf (``package_system``) and/or a path to the Python interpreter to be used
       (``python_path``).
 
     ``system``
@@ -214,7 +214,7 @@ The following example uses filenames that contain the various dependencies:
         ansible_runner:
             package_pip: ansible-runner==2.3.1
         python_interpreter:
-            package_name: "python310"
+            package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
 And this example uses inline values:
@@ -235,7 +235,7 @@ And this example uses inline values:
         ansible_runner:
             package_pip: ansible-runner==2.3.1
         python_interpreter:
-            package_name: "python310"
+            package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
 .. note::

@@ -14,7 +14,7 @@ images:
 
 dependencies:
   python_interpreter:
-    package_name: python39
+    package_system: python39
     python_path: /usr/bin/python3.9
 
   ansible_core:
