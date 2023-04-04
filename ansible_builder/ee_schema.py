@@ -228,12 +228,34 @@ schema_v3 = {
                     },
                 },
                 "ansible_core": {
-                    "description": "Ansible version for pip installation",
-                    "type": "string",
+                    "description": "Ansible package installation",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "package_pip": {
+                            "description": "Ansible package to install via pip",
+                            "type": "string",
+                        },
+                    },
+                    "oneOf": [
+                        # more to be added later
+                        {"required": ["package_pip"]},
+                    ],
                 },
                 "ansible_runner": {
-                    "description": "Ansible Runner version for pip installation",
-                    "type": "string",
+                    "description": "Ansible Runner package installation",
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "package_pip": {
+                            "description": "Ansible Runner package to install via pip",
+                            "type": "string",
+                        },
+                    },
+                    "oneOf": [
+                        # more to be added later
+                        {"required": ["package_pip"]},
+                    ],
                 },
             },
         },

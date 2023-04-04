@@ -10,8 +10,10 @@ build_arg_defaults:
   ANSIBLE_GALAXY_CLI_ROLE_OPTS: '--bar'
 
 dependencies:
-  ansible_core: ansible-core==2.13
-  ansible_runner: ansible-runner==2.3.1
+  ansible_core:
+    package_pip: ansible-core==2.13
+  ansible_runner:
+    package_pip: ansible-runner==2.3.1
   python_interpreter:
     package_name: "mypython3"
     python_path: "/usr/local/bin/mypython"

@@ -161,7 +161,14 @@ class TestUserDefinition:
 
     def test_v3_ansible_install_refs(self, exec_env_definition_file):
         path = exec_env_definition_file(
-            "{'version': 3, 'dependencies': {'ansible_core': 'ansible-core==2.13', 'ansible_runner': 'ansible-runner==2.3.1'}}"
+            """
+            {'version': 3,
+             'dependencies': {
+                'ansible_core': {'package_pip': 'ansible-core==2.13'},
+                'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
+             }
+            }
+            """
         )
         definition = UserDefinition(path)
         definition.validate()
