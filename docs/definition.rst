@@ -32,6 +32,10 @@ Below is an example version 3 EE file:
       ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--pre'
 
     dependencies:
+      ansible_core:
+        package_pip: ansible-core==2.14.4
+      ansible_runner:
+        package_pip: ansible-runner
       galaxy: requirements.yml
       python:
         - six
@@ -152,25 +156,33 @@ The following keys are valid for this section:
 
     ``ansible_core``
       The version of the Ansible python package to be installed. This value is
-      passed directly to `pip` for installation and can be in any format that
+      a dictionary with a single key, ``package_pip``. The ``package_pip`` value
+      is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
 
       .. code:: yaml
 
-        ansible_core: ansible-core
-        ansible_core: ansible-core==2.14.3
-        ansible_core: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
+        ansible_core:
+            package_pip: ansible-core
+        ansible_core:
+            package_pip: ansible-core==2.14.3
+        ansible_core:
+            package_pip: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
 
     ``ansible_runner``
-      The version of the Ansible Runner python package to be installed. This value is
-      passed directly to `pip` for installation and can be in any format that
+      The version of the Ansible Runner python package to be installed. This value
+      is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
+      is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
 
       .. code:: yaml
 
-        ansible_runner: ansible-runner
-        ansible_runner: ansible-runner==2.3.2
-        ansible_runner: https://github.com/example_user/ansible-runner/archive/refs/heads/ansible-runner.tar.gz
+        ansible_runner:
+            package_pip: ansible-runner
+        ansible_runner:
+            package_pip: ansible-runner==2.3.2
+        ansible_runner:
+            package_pip: https://github.com/example_user/ansible-runner/archive/refs/heads/ansible-runner.tar.gz
 
     ``galaxy``
       Galaxy installation requirements. This may either be a filename, or a string
@@ -182,7 +194,7 @@ The following keys are valid for this section:
 
     ``python_interpreter``
       A dictionary that defines the Python system package name to be installed by
-      dnf (``package_name``) and/or a path to the Python interpreter to be used
+      dnf (``package_system``) and/or a path to the Python interpreter to be used
       (``python_path``).
 
     ``system``
@@ -197,10 +209,12 @@ The following example uses filenames that contain the various dependencies:
         python: requirements.txt
         system: bindep.txt
         galaxy: requirements.yml
-        ansible_core: ansible-core==2.14.2
-        ansible_runner: ansible-runner==2.3.1
+        ansible_core:
+            package_pip: ansible-core==2.14.2
+        ansible_runner:
+            package_pip: ansible-runner==2.3.1
         python_interpreter:
-            package_name: "python310"
+            package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
 And this example uses inline values:
@@ -216,10 +230,12 @@ And this example uses inline values:
           collections:
             - community.windows
             - ansible.utils
-        ansible_core: ansible-core==2.14.2
-        ansible_runner: ansible-runner==2.3.1
+        ansible_core:
+            package_pip: ansible-core==2.14.2
+        ansible_runner:
+            package_pip: ansible-runner==2.3.1
         python_interpreter:
-            package_name: "python310"
+            package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
 .. note::

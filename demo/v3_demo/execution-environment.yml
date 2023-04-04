@@ -14,12 +14,14 @@ images:
 
 dependencies:
   python_interpreter:
-    package_name: python39
+    package_system: python39
     python_path: /usr/bin/python3.9
 
-  ansible_core: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz   # install from a GH ref tarball
+  ansible_core:
+    package_pip: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz   # install from a GH ref tarball
 
-  ansible_runner: ansible-runner==2.2.1   # install from PyPI
+  ansible_runner:
+    package_pip: ansible-runner==2.2.1   # install from PyPI
 
   # FIXME: inline splat-as-string sucks, make separate keys for collections and roles
   galaxy: |

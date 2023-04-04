@@ -128,8 +128,8 @@ class UserDefinition:
         return self.raw.get('additional_build_steps')
 
     @property
-    def python_package_name(self):
-        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_name', None)
+    def python_package_system(self):
+        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_system', None)
 
     @property
     def python_path(self):
@@ -137,11 +137,11 @@ class UserDefinition:
 
     @property
     def ansible_core_ref(self):
-        return self.raw.get('dependencies', {}).get('ansible_core', None)
+        return self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
 
     @property
     def ansible_runner_ref(self):
-        return self.raw.get('dependencies', {}).get('ansible_runner', None)
+        return self.raw.get('dependencies', {}).get('ansible_runner', {}).get('package_pip', None)
 
     @property
     def ansible_ref_install_list(self):
