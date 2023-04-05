@@ -192,6 +192,7 @@ class Containerfile:
             'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
+            'PIP_OPTS': self.definition.build_arg_defaults['PIP_OPTS'],
         }
 
         if self.definition.version >= 3:
