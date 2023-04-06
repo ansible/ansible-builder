@@ -22,6 +22,7 @@ PKGMGR_OPTS="${PKGMGR_OPTS:-}"
 
 PYCMD="${PYCMD:=/usr/bin/python3}"
 PIPCMD="${PIPCMD:=$PYCMD -m pip}"
+PIP_OPTS="${PIP_OPTS-}"
 
 $PYCMD -m ensurepip
 
@@ -69,7 +70,7 @@ fi
 # to do things like pick up patched but unreleased versions
 # of dependencies.
 if [ -f /output/requirements.txt ] ; then
-    $PIPCMD install $CONSTRAINTS --cache-dir=/output/wheels -r /output/requirements.txt
+    $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels -r /output/requirements.txt
 fi
 
 # Add any requested extras to the list of things to install
@@ -81,7 +82,7 @@ done
 if [ -f /output/packages.txt ] ; then
   # If a package list was passed to assemble, install that in the final
   # image.
-  $PIPCMD install $CONSTRAINTS --cache-dir=/output/wheels -r /output/packages.txt $EXTRAS
+  $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels -r /output/packages.txt $EXTRAS
 else
   # Install the wheels. Uninstall any existing version as siblings maybe
   # be built with the same version number as the latest release, but we
@@ -90,10 +91,10 @@ else
   # NOTE(pabelanger): It is possible a project may not have a wheel, but does have requirements.txt
   if [ $(ls -1 /output/wheels/*whl 2>/dev/null | wc -l) -gt 0 ]; then
       $PIPCMD uninstall -y /output/wheels/*.whl
-      $PIPCMD install $CONSTRAINTS --cache-dir=/output/wheels /output/wheels/*.whl $EXTRAS
+      $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels /output/wheels/*.whl $EXTRAS
   elif [ ! -z "$EXTRAS" ] ; then
       $PIPCMD uninstall -y $EXTRAS
-      $PIPCMD install $CONSTRAINTS --cache-dir=/output/wheels $EXTRAS
+      $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels $EXTRAS
   fi
 fi
 
