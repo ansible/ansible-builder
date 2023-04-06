@@ -140,8 +140,6 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
-          podman build --rm=true -t quay.io/ansible/ansible-builder -f Containerfile .
           tox
 
       - name: Upload coverage report
