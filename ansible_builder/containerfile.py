@@ -292,7 +292,7 @@ class Containerfile:
             context_file_path = os.path.join(
                 constants.user_content_subfolder, 'ansible.cfg')
             self.steps.extend([
-                f"ADD {context_file_path} ~/.ansible.cfg",
+                f"COPY {context_file_path} ~/.ansible.cfg",
                 "",
             ])
 
@@ -315,7 +315,7 @@ class Containerfile:
     def _prepare_build_context(self):
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
             self.steps.extend([
-                "ADD {0} /build".format(constants.user_content_subfolder),
+                f"COPY {constants.user_content_subfolder} /build",
                 "WORKDIR /build",
                 "",
             ])
@@ -359,13 +359,13 @@ class Containerfile:
 
             if requirements_file_exists:
                 relative_requirements_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['python'])
-                self.steps.append(f"ADD {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
+                self.steps.append(f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
                 # WORKDIR is /build, so we use the (shorter) relative paths there
                 introspect_cmd += " --user-pip={0}".format(constants.CONTEXT_FILES['python'])
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
             if bindep_exists:
                 relative_bindep_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['system'])
-                self.steps.append(f"ADD {relative_bindep_path} {constants.CONTEXT_FILES['system']}")
+                self.steps.append(f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}")
                 introspect_cmd += " --user-bindep={0}".format(constants.CONTEXT_FILES['system'])
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"

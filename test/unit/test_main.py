@@ -41,7 +41,7 @@ def test_galaxy_requirements(exec_env_definition_file, galaxy_requirements_file,
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert f'ADD {constants.user_content_subfolder} /build' in content
+    assert f'COPY {constants.user_content_subfolder} /build' in content
 
 
 def test_base_image_via_build_args(exec_env_definition_file, tmp_path):
@@ -129,7 +129,7 @@ def test_ansible_config_for_galaxy(exec_env_definition_file, tmp_path, data_dir)
     with open(aee.containerfile.path) as f:
         content = f.read()
 
-    assert f'ADD {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
+    assert f'COPY {constants.user_content_subfolder}/ansible.cfg ~/.ansible.cfg' in content
 
 
 @pytest.mark.test_all_runtimes
