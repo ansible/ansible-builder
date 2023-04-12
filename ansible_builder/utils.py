@@ -116,7 +116,7 @@ def run_command(command, capture_output=False, allow_error=False):
                 for line in trailing_output:
                     logger.error(line)
                 logger.error('')
-        logger.error("An error occured (rc=%s), see output line(s) above for details.", rc)
+        logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
         sys.exit(1)
 
     return (rc, output)
