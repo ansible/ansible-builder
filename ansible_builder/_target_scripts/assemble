@@ -50,7 +50,7 @@ then
     fi
 fi
 
-# NOTE(pabelanger): Ensure all the direcotry we use exists regardless
+# NOTE(pabelanger): Ensure all the directory we use exists regardless
 # of the user first creating them or not.
 mkdir -p /output/bindep
 mkdir -p /output/wheels

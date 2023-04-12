@@ -38,7 +38,7 @@ def run():
     elif args.action == 'introspect':
         run_introspect(args, logger)
 
-    logger.error("An error has occured.")
+    logger.error("An error has occurred.")
     sys.exit(1)
 
 
