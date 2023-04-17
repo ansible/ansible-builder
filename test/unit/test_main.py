@@ -94,7 +94,7 @@ def test_build_command(exec_env_definition_file, runtime):
     content = {'version': 1}
     path = exec_env_definition_file(content=content)
 
-    aee = AnsibleBuilder(filename=path, tag='my-custom-image')
+    aee = AnsibleBuilder(filename=path, tag=['my-custom-image'])
     command = aee.build_command
     assert 'build' and 'my-custom-image' in command
 
@@ -102,7 +102,8 @@ def test_build_command(exec_env_definition_file, runtime):
 
     command = aee.build_command
     assert 'foo/bar/path' in command
-    assert 'foo/bar/path/Dockerfile' in " ".join(command)
+    fpath = 'foo/bar/path/' + constants.runtime_files[runtime]
+    assert fpath in " ".join(command)
 
 
 def test_nested_galaxy_file(data_dir, tmp_path):
