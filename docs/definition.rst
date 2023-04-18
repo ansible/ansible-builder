@@ -283,6 +283,18 @@ options
 This section is a dictionary that contains keywords/options that can affect
 builder runtime functionality. Valid keys for this section are:
 
+    ``container_init``
+      A dict with keys that allow for customization of the container
+      ``ENTRYPOINT`` and ``CMD`` instructions. Valid keys are:
+
+        * ``cmd`` - Literal value for the ``CMD`` instruction file directive.
+          The default value is ``["bash"]``.
+        * ``entrypoint`` - Literal value for the ``ENTRYPOINT`` instruction file directive.
+          The default value is ``["dumb-init"]``.
+        * ``package_pip`` - Package to install via pip for entrypoint support. This
+          package will be installed in the final build image. The default value is
+          ``dumb-init==1.2.5``.
+
     ``package_manager_path``
       A string with the path to the package manager (dnf or microdnf) to use.
       The default is ``/usr/bin/dnf``. This value will be used to install a
@@ -299,6 +311,10 @@ Example ``options`` section:
 .. code:: yaml
 
     options:
+        container_init:
+            package_pip: dumb-init>=1.2.5
+            entrypoint: '["dumb-init"]'
+            cmd: '["csh"]'
         package_manager_path: /usr/bin/microdnf
         skip_ansible_check: True
 
