@@ -39,9 +39,9 @@ then
     exit 1
 fi
 
-ansible --version
 
-if [ $? -ne 0 ]
+
+if ! ansible --version;
 then
     cat<<EOF
 **********************************************************************
@@ -60,9 +60,7 @@ EOF
     exit 1
 fi
 
-ansible-runner --version
-
-if [ $? -ne 0 ]
+if ! ansible-runner --version;
 then
     cat<<EOF
 **********************************************************************
@@ -82,9 +80,9 @@ EOF
     exit 1
 fi
 
-$PYCMD -c 'import ansible ; import ansible_runner'
 
-if [ $? -ne 0 ]
+
+if ! $PYCMD -c 'import ansible ; import ansible_runner';
 then
     cat<<EOF
 **********************************************************************
