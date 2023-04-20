@@ -120,7 +120,7 @@ function install_wheels {
     # writes out the req files into /output/$extra/requirements.txt.
 
     # FIXME: this doesn't error out the build when it fails, yay
-    for req in $(/build/get-extras-packages) ; do
+    for req in $(/output/scripts/get-extras-packages) ; do
         $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels "$req"
     done
 }
