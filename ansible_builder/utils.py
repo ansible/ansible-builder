@@ -169,7 +169,11 @@ def copy_file(source: str, dest: str) -> bool:
     if os.path.abspath(source) == os.path.abspath(dest):
         logger.info("File %s was placed in build context by user, leaving unmodified.", dest)
         return False
-    elif not os.path.exists(dest):
+    if Path(source).is_dir():
+        raise Exception(f"Source {source} can not be a directory. Please use copy_directory instead.")
+    if Path(dest).is_dir():
+        raise Exception(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
+    if not os.path.exists(dest):
         logger.debug("File %s will be created.", dest)
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):

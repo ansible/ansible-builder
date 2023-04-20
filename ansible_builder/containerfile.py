@@ -241,7 +241,7 @@ class Containerfile:
         for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible'):
             with importlib.resources.as_file(scriptres / script) as script_path:
                 # FIXME: just use builtin copy?
-                copy_file(str(script_path), scripts_dir)
+                copy_file(str(script_path), os.path.join(scripts_dir, script))
 
         # later steps depend on base image containing these scripts
         context_dir = Path(self.build_outputs_dir).stem

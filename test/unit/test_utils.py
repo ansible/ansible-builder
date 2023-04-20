@@ -55,6 +55,21 @@ def test_copy_touched_file(dest_file, source_file):
     assert not copy_file(source_file, dest_file)
 
 
+def test_copy_file_with_destination_directory(dest_file, source_file):
+    # Change source file to trigger copy_file
+    source_file.write_text('foo\nbar\nzoo')
+
+    with pytest.raises(Exception) as err:
+        copy_file(source_file, '/tmp')
+    assert "can not be a directory" in str(err.value.args[0])
+
+    with pytest.raises(Exception) as err:
+        copy_file('/tmp', dest_file)
+    assert "can not be a directory" in str(err.value.args[0])
+
+    assert copy_file(source_file, dest_file)
+
+
 @pytest.mark.run_command
 def test_failed_command(mocker):
     mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
