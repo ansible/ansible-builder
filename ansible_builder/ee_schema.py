@@ -318,9 +318,17 @@ schema_v3 = {
             "type": "object",
             "additionalProperties": False,
             "properties": {
+                "relax_passwd_permissions": {
+                    "description": "allows GID0 write access to /etc/passwd; currently necessary for many uses",
+                    "type": "boolean",
+                },
                 "skip_ansible_check": {
                     "description": "Disables the check for Ansible/Runner in final image",
                     "type": "boolean",
+                },
+                "workdir": {
+                    "description": "Default working directory, also often the homedir for ephemeral UIDs",
+                    "type": ["string", "null"],
                 },
                 "package_manager_path": {
                     "description": "Path to the system package manager to use",
@@ -406,9 +414,11 @@ def _handle_options_defaults(ee_def: dict):
     options = ee_def.setdefault('options', {})
 
     options.setdefault('skip_ansible_check', False)
+    options.setdefault('relax_passwd_permissions', True)
+    options.setdefault('workdir', '/runner')
     options.setdefault('package_manager_path', '/usr/bin/dnf')
     options.setdefault('container_init', {
         'package_pip': 'dumb-init==1.2.5',
-        'entrypoint': '["dumb-init"]',
+        'entrypoint': '["/output/scripts/entrypoint", "dumb-init"]',
         'cmd': '["bash"]',
     })

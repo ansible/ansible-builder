@@ -156,6 +156,12 @@ class Containerfile:
         self._prepare_galaxy_copy_steps()
         self._prepare_system_runtime_deps_steps()
 
+        if self.definition.version >= 3 and self.definition.options['relax_passwd_permissions']:
+            self._relax_etc_passwd_permissions()
+
+        if self.definition.version >= 3 and (final_workdir := self.definition.options['workdir']):
+            self._prepare_final_workdir(final_workdir)
+
         # install init package if specified
         # FUTURE: could move this into the pre-install wheel phase
         if init_pip_pkg := self.definition.container_init.get('package_pip'):
@@ -238,7 +244,7 @@ class Containerfile:
 
         # HACK: this sucks
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
-        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible'):
+        for script in ('assemble', 'get-extras-packages', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible', 'entrypoint'):
             with importlib.resources.as_file(scriptres / script) as script_path:
                 # FIXME: just use builtin copy?
                 copy_file(str(script_path), scripts_dir)
@@ -306,6 +312,24 @@ class Containerfile:
                 else:
                     lines = section_steps
                 self.steps.extend(lines)
+
+    def _relax_etc_passwd_permissions(self):
+        if self.definition.version < 3:
+            return
+
+        self.steps.append(
+            "RUN chmod ug+rw /etc/passwd"
+        )
+
+    def _prepare_final_workdir(self, workdir: str):
+        workdir = workdir.strip()
+        if not workdir:
+            return
+
+        self.steps.extend([
+            f"RUN mkdir -p {workdir} && chgrp 0 {workdir} && chmod -R ug+rwx {workdir}",
+            f"WORKDIR {workdir}"
+        ])
 
     def _prepare_label_steps(self):
         self.steps.extend([
