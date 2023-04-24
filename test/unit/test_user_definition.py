@@ -215,6 +215,18 @@ class TestUserDefinition:
         value = definition.raw.get('options', {}).get('skip_ansible_check')
         assert value is False
 
+    def test_v3_pkgmgr_opts(self, exec_env_definition_file):
+        """
+        Test that options.pkgmgr_opts
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'options': {'package_manager_options': '--nodocs'}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('package_manager_options')
+        assert value == '--nodocs'
 
 class TestImageDescription:
 

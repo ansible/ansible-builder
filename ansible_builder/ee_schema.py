@@ -326,6 +326,10 @@ schema_v3 = {
                     "description": "Path to the system package manager to use",
                     "type": "string",
                 },
+                "package_manager_options": {
+                    "description": "Options for the system package manager to use",
+                    "type": "string",
+                },
                 "container_init": {
                     "description": "Customize container startup behavior",
                     "type": "object",
@@ -407,6 +411,7 @@ def _handle_options_defaults(ee_def: dict):
 
     options.setdefault('skip_ansible_check', False)
     options.setdefault('package_manager_path', '/usr/bin/dnf')
+    options.setdefault('package_manager_options', '')
     options.setdefault('container_init', {
         'package_pip': 'dumb-init==1.2.5',
         'entrypoint': '["dumb-init"]',

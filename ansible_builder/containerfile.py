@@ -196,6 +196,7 @@ class Containerfile:
 
         if self.definition.version >= 3:
             global_args['PKGMGR'] = self.definition.options['package_manager_path']
+            global_args['PKGMGR_OPTS'] = self.definition.options['package_manager_options']
 
         for arg, value in global_args.items():
             if include_values and value:

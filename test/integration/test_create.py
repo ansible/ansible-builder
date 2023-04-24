@@ -235,6 +235,7 @@ def test_v3_complete(cli, data_dir, tmp_path):
     assert 'ARG ANSIBLE_GALAXY_CLI_COLLECTION_OPTS="--foo"\n' in text
     assert 'ARG ANSIBLE_GALAXY_CLI_ROLE_OPTS="--bar"\n' in text
     assert 'ARG ANSIBLE_INSTALL_REFS="ansible-core==2.13 ansible-runner==2.3.1"\n' in text
+    assert 'ARG PKGMGR_OPTS="--nodocs"\n' in text
 
     # verify that the ansible-galaxy command check is performed
     assert 'RUN /output/scripts/check_galaxy' in text

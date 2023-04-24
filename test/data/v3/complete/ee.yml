@@ -5,6 +5,9 @@ images:
   base_image:
     name: registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest
 
+options:
+  package_manager_options: '--nodocs'
+
 build_arg_defaults:
   ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--foo'
   ANSIBLE_GALAXY_CLI_ROLE_OPTS: '--bar'
