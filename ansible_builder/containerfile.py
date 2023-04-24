@@ -314,9 +314,6 @@ class Containerfile:
                 self.steps.extend(lines)
 
     def _relax_etc_passwd_permissions(self):
-        if self.definition.version < 3:
-            return
-
         self.steps.append(
             "RUN chmod ug+rw /etc/passwd"
         )
