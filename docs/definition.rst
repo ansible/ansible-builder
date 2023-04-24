@@ -285,15 +285,21 @@ builder runtime functionality. Valid keys for this section are:
 
     ``container_init``
       A dictionary with keys that allow for customization of the container ``ENTRYPOINT`` and
-      ``CMD`` instructions (and related behaviors). Customizing these behaviors is an advanced
+      ``CMD`` directives (and related behaviors). Customizing these behaviors is an advanced
       task, and may result in subtle, difficult-to-debug failures. As the provided defaults for
       this section control a number of intertwined behaviors, overriding any value will skip all
       remaining defaults in this dictionary.
         Valid keys are:
-        * ``cmd`` - Literal value for the ``CMD`` instruction file directive.
+        * ``cmd`` - Literal value for the ``CMD`` Containerfile directive.
           The default value is ``["bash"]``.
-        * ``entrypoint`` - Literal value for the ``ENTRYPOINT`` instruction file directive.
-          The default value is ``["/output/scripts/entrypoint", "dumb-init"]``.
+        * ``entrypoint`` - Literal value for the ``ENTRYPOINT`` Containerfile directive. The
+          default entrypoint behavior handles signal propagation to subprocesses, as well as attempting to
+          ensure at runtime that the container user has a proper environment with a valid writeable
+          home directory, represented in ``/etc/passwd``, with the ``HOME`` envvar set to match. The default
+          entrypoint script may emit warnings to ``stderr`` in cases where it is unable to suitably adjust the
+          user runtime environment. This behavior can be ignored or elevated to a fatal error; consult the
+          source for the ``entrypoint`` target script for more details. The default value is
+          ``["/output/scripts/entrypoint", "dumb-init"]``.
         * ``package_pip`` - Package to install via pip for entrypoint support. This
           package will be installed in the final build image. The default value is
           ``dumb-init==1.2.5``.
@@ -309,12 +315,22 @@ builder runtime functionality. Valid keys for this section are:
       of Ansible and Ansible Runner is performed on the final image. Set this
       value to ``True`` to not perform this check. The default is ``False``.
 
-    ``workdir`` - Default current working directory for new processes started under
-      the final container image. Some container runtimes also use this value as ``HOME``
-      for dynamically-created users in the ``root`` (GID 0) group. When this value is
-      specified, the directory will be created (if it doesn't already exist), set to ``root``
-      group ownership, and ``rwx`` group permissions recursively applied to it.
-      The default value is ``/runner``.
+    ``relax_passwd_permissions``
+      This boolean value controls whether the ``root`` group (GID 0) is explicitly granted
+      write permission to ``/etc/passwd`` in the final container image. The default entrypoint
+      script may attempt to update ``/etc/passwd`` under some container runtimes with dynamically
+      created users to ensure a fully-functional POSIX user environment and home directory. Disabling
+      this capability can cause failures of software features that require users to be listed in
+      ``/etc/passwd`` with a valid and writeable home directory (eg, ``async`` in ansible-core, and the
+      ``~username`` shell expansion). The default is ``True``.
+
+    ``workdir``
+      Default current working directory for new processes started under the final container
+      image. Some container runtimes also use this value as ``HOME`` for dynamically-created
+      users in the ``root`` (GID 0) group. When this value is specified, the directory will be
+      created (if it doesn't already exist), set to ``root`` group ownership, and ``rwx`` group
+      permissions recursively applied to it. The default value is ``/runner``.
+
 
 Example ``options`` section:
 
@@ -326,6 +342,7 @@ Example ``options`` section:
             entrypoint: '["dumb-init"]'
             cmd: '["csh"]'
         package_manager_path: /usr/bin/microdnf
+        relax_password_permissions: false
         skip_ansible_check: true
         workdir: /myworkdir
 
