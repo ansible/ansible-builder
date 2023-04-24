@@ -244,7 +244,10 @@ def test_v3_complete(cli, data_dir, tmp_path):
 
     # verify that the default init is being installed and that ENTRYPOINT is set
     assert "RUN $PYCMD -m pip install --no-cache-dir 'dumb-init==" in text
-    assert 'ENTRYPOINT ["dumb-init"]' in text
+    assert 'WORKDIR /runner' in text
+    assert 'RUN chmod ug+rw /etc/passwd' in text
+    assert 'RUN mkdir -p /runner' in text
+    assert 'ENTRYPOINT ["/output/scripts/entrypoint", "dumb-init"]' in text
 
     # check additional_build_files
     myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
@@ -329,3 +332,65 @@ def test_v3_custom_container_init(cli, build_dir_and_ee_yml):
     assert "pip install --no-cache-dir 'custominit==1.2.3'" in text
     assert 'ENTRYPOINT ["custominit"]' in text
     assert 'CMD ["customcmd"]' in text
+
+
+def test_v3_no_relax_passwd_perms(cli, build_dir_and_ee_yml):
+    """
+    Test that disabling 'options.relax_passwd_permissions' works.
+    """
+    ee = """
+    version: 3
+    options:
+        relax_passwd_permissions: false
+    """
+
+    tmpdir, eeyml = build_dir_and_ee_yml(ee)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "/etc/passwd" not in text
+
+
+def test_v3_custom_workdir(cli, build_dir_and_ee_yml):
+    """
+    Test that a custom 'options.workdir' creates the dir and sets it
+    """
+    ee = """
+    version: 3
+    options:
+        workdir: /yourmom
+    """
+
+    tmpdir, eeyml = build_dir_and_ee_yml(ee)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "WORKDIR /yourmom" in text
+    assert "mkdir -p /yourmom && chgrp 0 /yourmom && chmod -R ug+rwx /yourmom" in text
+
+
+def test_v3_no_workdir(cli, build_dir_and_ee_yml):
+    """
+    Test that empty 'options.workdir' skips the setting and creation of the default.
+    """
+    ee = """
+    version: 3
+    options:
+        workdir:
+    """
+
+    tmpdir, eeyml = build_dir_and_ee_yml(ee)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "WORKDIR" not in text
+    assert "mkdir -p /runner" not in text
