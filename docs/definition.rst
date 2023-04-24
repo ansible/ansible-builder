@@ -284,13 +284,16 @@ This section is a dictionary that contains keywords/options that can affect
 builder runtime functionality. Valid keys for this section are:
 
     ``container_init``
-      A dict with keys that allow for customization of the container
-      ``ENTRYPOINT`` and ``CMD`` instructions. Valid keys are:
-
+      A dictionary with keys that allow for customization of the container ``ENTRYPOINT`` and
+      ``CMD`` instructions (and related behaviors). Customizing these behaviors is an advanced
+      task, and may result in subtle, difficult-to-debug failures. As the provided defaults for
+      this section control a number of intertwined behaviors, overriding any value will skip all
+      remaining defaults in this dictionary.
+        Valid keys are:
         * ``cmd`` - Literal value for the ``CMD`` instruction file directive.
           The default value is ``["bash"]``.
         * ``entrypoint`` - Literal value for the ``ENTRYPOINT`` instruction file directive.
-          The default value is ``["dumb-init"]``.
+          The default value is ``["/output/scripts/entrypoint", "dumb-init"]``.
         * ``package_pip`` - Package to install via pip for entrypoint support. This
           package will be installed in the final build image. The default value is
           ``dumb-init==1.2.5``.
@@ -306,6 +309,13 @@ builder runtime functionality. Valid keys for this section are:
       of Ansible and Ansible Runner is performed on the final image. Set this
       value to ``True`` to not perform this check. The default is ``False``.
 
+    ``workdir`` - Default current working directory for new processes started under
+      the final container image. Some container runtimes also use this value as ``HOME``
+      for dynamically-created users in the ``root`` (GID 0) group. When this value is
+      specified, the directory will be created (if it doesn't already exist), set to ``root``
+      group ownership, and ``rwx`` group permissions recursively applied to it.
+      The default value is ``/runner``.
+
 Example ``options`` section:
 
 .. code:: yaml
@@ -316,7 +326,8 @@ Example ``options`` section:
             entrypoint: '["dumb-init"]'
             cmd: '["csh"]'
         package_manager_path: /usr/bin/microdnf
-        skip_ansible_check: True
+        skip_ansible_check: true
+        workdir: /myworkdir
 
 version
 *******
