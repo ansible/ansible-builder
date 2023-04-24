@@ -32,19 +32,18 @@
 
 set -eu
 
-: "${EP_BASH_DEBUG:=0}"
+if (( "${EP_BASH_DEBUG:=0}" == 1 )); then
+  set -x
+fi
+
 : "${EP_DEBUG_TRACE:=0}"
 : "${EP_ON_ERROR:=warn}"
 : "${HOME:=}"
-: "${CUR_USERNAME:=`id -u -n 2> /dev/null || id -u`}"  # whoami-free way to get current username, falling back to current uid
-: "${CUR_UID:=`id -u`}"
+CUR_UID=$(id -u)
+CUR_USERNAME=$(id -u -n 2> /dev/null || true)  # whoami-free way to get current username, falls back to current uid
 
 DEFAULT_HOME="/runner"
 DEFAULT_SHELL="/bin/bash"
-
-if (( "$EP_BASH_DEBUG" == 1 )); then
-  set -x
-fi
 
 if (( "$EP_DEBUG_TRACE" == 1 )); then
   function log_debug() { echo "EP_DEBUG: $1" 1>&2; }
@@ -67,15 +66,15 @@ case "$EP_ON_ERROR" in
 esac
 
 function is_dir_writable() {
-  [ -d $1 ] && [ -w $1 ] && [ -x $1 ]
+  [ -d "$1" ] && [ -w "$1" ] && [ -x "$1" ]
 }
 
 function ensure_current_uid_in_passwd() {
   log_debug "is current uid ${CUR_UID} in /etc/passwd?"
   
-  if ! getent passwd ${CUR_USERNAME} &> /dev/null ; then
+  if ! getent passwd "${CUR_USERNAME}" &> /dev/null ; then
     if [ -w "/etc/passwd" ]; then
-      log_debug "appending missing uid $(id -u) into /etc/passwd"
+      log_debug "appending missing uid ${CUR_UID} into /etc/passwd"
       # use the default homedir; we may have to rewrite it to another value later if it's inaccessible
       echo "${CUR_UID}:x:${CUR_UID}:0:container user ${CUR_UID}:${DEFAULT_HOME}:${DEFAULT_SHELL}" >> /etc/passwd
     else
@@ -87,20 +86,20 @@ function ensure_current_uid_in_passwd() {
 }
 
 function ensure_writeable_homedir() {
-  if (is_dir_writable ${CANDIDATE_HOME}) ; then
-    log_debug "homedir ${CANDIDATE_HOME} is valid and writeable"
+  if (is_dir_writable "${CANDIDATE_HOME}") ; then
+    log_debug "candidate homedir ${CANDIDATE_HOME} is valid and writeable"
   else
-    if [ ${CANDIDATE_HOME} == "/" ]; then
+    if [ "${CANDIDATE_HOME}" == "/" ]; then
       log_debug "skipping attempt to fix permissions on / as homedir"
       return 1
     fi
 
-    log_debug "homedir ${CANDIDATE_HOME} is missing or not writeable; attempt to fix"
-    if ! (mkdir -p ${CANDIDATE_HOME} >& /dev/null && chmod -R ug+rwx ${CANDIDATE_HOME} >& /dev/null) ; then
-      log_debug "homedir ${CANDIDATE_HOME} cannot be made writeable"
+    log_debug "candidate homedir ${CANDIDATE_HOME} is missing or not writeable; attempt to fix"
+    if ! (mkdir -p "${CANDIDATE_HOME}" >& /dev/null && chmod -R ug+rwx "${CANDIDATE_HOME}" >& /dev/null) ; then
+      log_debug "candidate homedir ${CANDIDATE_HOME} cannot be made writeable"
       return 1
     else
-      log_debug "homedir ${CANDIDATE_HOME} was successfully made writeable"
+      log_debug "candidate homedir ${CANDIDATE_HOME} was successfully made writeable"
     fi
   fi
 
@@ -109,7 +108,7 @@ function ensure_writeable_homedir() {
   export HOME=${CANDIDATE_HOME}
 
   if [ "${CANDIDATE_HOME}" == "${PASSWD_HOME}" ] ; then
-    log_debug "homedir ${CANDIDATE_HOME} matches /etc/passwd"
+    log_debug "candidate homedir ${CANDIDATE_HOME} matches /etc/passwd"
     return 0
   fi
 
@@ -130,7 +129,7 @@ ensure_current_uid_in_passwd
 
 log_debug "current value of HOME is ${HOME}"
 
-PASSWD_HOME=`getent passwd ${CUR_USERNAME} | cut -d: -f6`
+PASSWD_HOME=$(getent passwd "${CUR_USERNAME}" | cut -d: -f6)
 log_debug "user ${CUR_USERNAME} homedir from /etc/passwd is ${PASSWD_HOME}"
 
 CANDIDATE_HOMES=("${PASSWD_HOME}" "${HOME}" "${DEFAULT_HOME}" "/tmp")
@@ -138,7 +137,7 @@ CANDIDATE_HOMES=("${PASSWD_HOME}" "${HOME}" "${DEFAULT_HOME}" "/tmp")
 # we'll set this in the loop as soon as we find a writeable dir
 unset HOME
 
-for CANDIDATE_HOME in ${CANDIDATE_HOMES[@]}; do
+for CANDIDATE_HOME in "${CANDIDATE_HOMES[@]}"; do
   if ensure_writeable_homedir ; then
     break
   fi
@@ -149,6 +148,5 @@ if ! [ -v HOME ] ; then
 fi
 
 # chain exec whatever we were asked to run (ideally an init system) to keep any envvar state we've set
-log_debug "chain exec-ing requested command ${@}"
+log_debug "chain exec-ing requested command $*"
 exec "${@}"
-
