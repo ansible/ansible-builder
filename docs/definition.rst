@@ -289,20 +289,24 @@ builder runtime functionality. Valid keys for this section are:
       task, and may result in subtle, difficult-to-debug failures. As the provided defaults for
       this section control a number of intertwined behaviors, overriding any value will skip all
       remaining defaults in this dictionary.
-        Valid keys are:
-        * ``cmd`` - Literal value for the ``CMD`` Containerfile directive.
-          The default value is ``["bash"]``.
-        * ``entrypoint`` - Literal value for the ``ENTRYPOINT`` Containerfile directive. The
-          default entrypoint behavior handles signal propagation to subprocesses, as well as attempting to
-          ensure at runtime that the container user has a proper environment with a valid writeable
-          home directory, represented in ``/etc/passwd``, with the ``HOME`` envvar set to match. The default
-          entrypoint script may emit warnings to ``stderr`` in cases where it is unable to suitably adjust the
-          user runtime environment. This behavior can be ignored or elevated to a fatal error; consult the
-          source for the ``entrypoint`` target script for more details. The default value is
-          ``["/output/scripts/entrypoint", "dumb-init"]``.
-        * ``package_pip`` - Package to install via pip for entrypoint support. This
-          package will be installed in the final build image. The default value is
-          ``dumb-init==1.2.5``.
+      Valid keys are:
+
+      ``cmd``
+        Literal value for the ``CMD`` Containerfile directive. The default value is ``["bash"]``.
+
+      ``entrypoint``
+        Literal value for the ``ENTRYPOINT`` Containerfile directive. The
+        default entrypoint behavior handles signal propagation to subprocesses, as well as attempting to
+        ensure at runtime that the container user has a proper environment with a valid writeable
+        home directory, represented in ``/etc/passwd``, with the ``HOME`` envvar set to match. The default
+        entrypoint script may emit warnings to ``stderr`` in cases where it is unable to suitably adjust the
+        user runtime environment. This behavior can be ignored or elevated to a fatal error; consult the
+        source for the ``entrypoint`` target script for more details. The default value is
+        ``["/output/scripts/entrypoint", "dumb-init"]``.
+
+      ``package_pip``
+        Package to install via pip for entrypoint support. This package will be installed in the final build image.
+        The default value is ``dumb-init==1.2.5``.
 
     ``package_manager_path``
       A string with the path to the package manager (dnf or microdnf) to use.
