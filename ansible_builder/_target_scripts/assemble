@@ -114,15 +114,6 @@ function install_wheels {
         $PIPCMD uninstall -y /output/wheels/*.whl
         $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels /output/wheels/*whl
     fi
-
-    # Install each of the extras so that we collect all possibly
-    # needed wheels in the wheel cache. get-extras-packages also
-    # writes out the req files into /output/$extra/requirements.txt.
-
-    # FIXME: this doesn't error out the build when it fails, yay
-    for req in $(/build/get-extras-packages) ; do
-        $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels "$req"
-    done
 }
 
 PACKAGES=$*
