@@ -1,12 +1,37 @@
 ---
-# Version
-version: 1
+version: 3
 
-# Base Execution Environment name with tag
-build_arg_defaults:
-  EE_BASE_IMAGE: 'quay.io/ansible/ansible-runner:latest'
+images:
+  base_image:
+    name: quay.io/centos/centos:stream8  # vanilla image!
+    # name: quay.io/centos/centos:stream9  # vanilla image!
+    # name: registry.fedoraproject.org/fedora:38  # vanilla image!
+    # name: registry.access.redhat.com/ubi9/ubi:latest  # vanilla image!
 
-# Dependencies that needs to be installed
 dependencies:
-  galaxy: requirements.yml
-  python: requirements.txt
+  python_interpreter:
+    package_system: python39  # (optional) name of a Python interpreter OS package to install
+    python_path: /usr/bin/python3.9  # (optional) path to the Python interpreter to use
+
+  ansible_core:
+    package_pip: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz   # install from a GH ref tarball
+
+  ansible_runner:
+    package_pip: ansible-runner==2.2.1   # install from PyPI
+
+  # list of Ansible collections to install
+  # note that this is a YAML folded string ("YAML in YAML" in this case); this allows inline comments to be easily preserved
+  # in the generated context
+  galaxy: |
+    collections:
+    - ansible.windows  # base windows support
+    - community.windows  # community windows additions
+    - ansible.utils
+
+  # explicit list of Python dependencies to install (in addition to those declared by collections)
+  python:
+    - pywinrm
+
+  # explicit list of bindep entries for OS packages to install (in addition to those declared by collections)
+  system:
+    - iputils [platform:rpm]
