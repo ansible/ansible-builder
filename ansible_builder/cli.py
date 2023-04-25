@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 import os
-import pkg_resources
+import importlib.metadata
 
 from . import constants
 
@@ -43,7 +43,7 @@ def run():
 
 
 def get_version():
-    return pkg_resources.get_distribution('ansible_builder').version
+    return importlib.metadata.version('ansible_builder')
 
 
 def add_container_options(parser):

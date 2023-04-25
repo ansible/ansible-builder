@@ -5,7 +5,7 @@ import sys
 import yaml
 
 import requirements
-from pkg_resources import safe_name
+import importlib.metadata
 
 base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
@@ -330,7 +330,7 @@ def sanitize_requirements(collection_py_reqs):
         try:
             for req in requirements.parse('\n'.join(lines)):
                 if req.specifier:
-                    req.name = safe_name(req.name)
+                    req.name = importlib.metadata.Prepared(req.name).normalized
                 req.collections = [collection]  # add backref for later
                 if req.name is None:
                     consolidated.append(req)
