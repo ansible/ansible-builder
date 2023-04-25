@@ -16,4 +16,3 @@ RUN /output/scripts/install-from-bindep && find /output/* -not -name install-fro
 
 # copy the assemble scripts themselves into this container
 COPY ./ansible_builder/_target_scripts/assemble /usr/local/bin/assemble
-COPY ./ansible_builder/_target_scripts/get-extras-packages /usr/local/bin/get-extras-packages
