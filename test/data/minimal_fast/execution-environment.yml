@@ -1,5 +1,10 @@
 version: 3
 
+additional_build_steps:
+  prepend_base:
+  # a quick value we can check for cached output
+  - RUN echo "$(echo hi) $(echo mom)"
+
 images:
   base_image:
     name: centos:stream9
@@ -7,7 +12,7 @@ images:
 dependencies:
   python_interpreter:
     python_path: '/usr/libexec/platform-python'
-  system: bindep.txt
 
 options:
+  package_manager_path: '/bin/true'
   skip_ansible_check: yes

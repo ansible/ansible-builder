@@ -28,7 +28,7 @@ def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
 def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     """Just makes sure that the build process does not require any particular input"""
     bc = tmp_path
-    ee_def = data_dir / 'blank' / 'execution-environment.yml'
+    ee_def = data_dir / 'minimal_fast' / 'execution-environment.yml'
     cli(
         f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime}'
     )
@@ -84,12 +84,14 @@ def test_user_python_requirement(cli, runtime, ee_tag, tmp_path, data_dir):
     command = f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime}'
     cli(command)
     result = cli(
-        f'{runtime} run --rm {ee_tag} pip3 show awxkit'
+        f'{runtime} run --rm {ee_tag} /usr/libexec/platform-python -m pip show awxkit'
     )
     assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
+
+    # TODO: not sure why we're checking for this be missing...
     for py_library in ('requirements-parser'):
         result = cli(
-            f'{runtime} run --rm {ee_tag} pip3 show {py_library}', allow_error=True
+            f'{runtime} run --rm {ee_tag} /usr/libexec/platform-python -m pip show {py_library}', allow_error=True
         )
         assert result.rc != 0, py_library
 
@@ -163,7 +165,6 @@ def test_base_image_build_arg(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
-@pytest.mark.xfail(reason='Unreliable on podman')
 def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / 'pytz' / 'execution-environment.yml'
     cli(f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
@@ -173,22 +174,22 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
 
 
 @pytest.mark.test_all_runtimes
-@pytest.mark.xfail(reason='Unreliable on podman')
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
-    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
+    ee_def = data_dir / 'minimal_fast' / 'execution-environment.yml'
 
     if runtime == 'docker':
         # Prune the build cache. This command does not exist for podman.
         cli(f'{runtime} builder prune --force')
 
-    cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
-    result = cli(f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
+    build_cmd = f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3 --squash off'
+    cli(build_cmd)
+    result = cli(build_cmd)
 
     # Get the range of lines that contain the step we want to ensure used the cached layer
     out_lines = result.stdout.splitlines()
-    test_index = [idx for idx, value in enumerate(out_lines) if 'RUN /output/install-from-bindep && rm -rf /output/wheels' in value][0]
+    test_index = [idx for idx, value in enumerate(out_lines) if 'RUN echo "$(echo hi) $(echo mom)"' in value][0]
 
-    assert 'Collecting pytz' not in result.stdout, result.stdout
+    assert 'hi mom' not in result.stdout, result.stdout
     assert any('cache' in line.lower() for line in out_lines[test_index:])
 
 
@@ -197,7 +198,8 @@ def test_collection_verification_off(cli, runtime, data_dir, ee_tag, tmp_path):
     """
     Test that, by default, collection verification is off via the env var.
     """
-    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+    # FIXME: we could still make this even a lot faster with `minimal_fast` plus aliasing `ansible-galaxy` to `/bin/true`
+    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
     result = cli(f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3')
     assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" in result.stdout
 
@@ -209,7 +211,9 @@ def test_collection_verification_on(cli, runtime, data_dir, ee_tag, tmp_path):
     """
     keyring = tmp_path / "mykeyring.gpg"
     keyring.touch()
-    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+
+    # FIXME: we could still make this even a lot faster with `minimal_fast` plus aliasing `ansible-galaxy` to `/bin/true`
+    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
 
     # ansible-galaxy might error (older Ansible), but that should be ok
     result = cli(f'ansible-builder build --no-cache --galaxy-keyring {keyring} -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3',
@@ -222,21 +226,21 @@ def test_collection_verification_on(cli, runtime, data_dir, ee_tag, tmp_path):
     assert f"--keyring \"{constants.default_keyring_name}\"" in result.stdout
 
 
-@pytest.mark.xfail(reason="Needs ansible 2.13")
 @pytest.mark.test_all_runtimes
 def test_galaxy_signing_extra_args(cli, runtime, data_dir, ee_tag, tmp_path):
     """
     Test that all extra signing args for gpg are passed into the container file.
     """
-    pytest.xfail("failing configuration (but should work)")
 
     keyring = tmp_path / "mykeyring.gpg"
     keyring.touch()
-    ee_def = data_dir / 'ansible.posix.at' / 'execution-environment.yml'
+
+    # FIXME: we could still make this even a lot faster with `minimal_fast` plus aliasing `ansible-galaxy` to `/bin/true`
+    ee_def = data_dir / 'pytz' / 'execution-environment.yml'
 
     result = cli(f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3 '
-                 f'--galaxy-keyring {keyring} --galaxy-ignore-signature-status-code 500 '
+                 f'--galaxy-keyring {keyring} --galaxy-ignore-signature-status-code NODATA '
                  f'--galaxy-required-valid-signature-count 3', allow_error=True)
 
-    assert "--galaxy-ignore-signature-status-code 500" in result.stdout
-    assert "--galaxy-required-valid-signature-count 3" in result.stdout
+    assert "--ignore-signature-status-code NODATA" in result.stdout
+    assert "--required-valid-signature-count 3" in result.stdout
