@@ -1,5 +1,7 @@
 import os
 import pytest
+import runpy
+
 
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
@@ -274,3 +276,15 @@ def test_squash_ignored(exec_env_definition_file, tmp_path):
                    '--squash', 'all'
                    ])
     assert '--squash' not in aee.build_command
+
+
+def test_as_executable_module(capsys):
+    """
+    Test __main__ shim as if invoked by `python -m ansible_builder`
+    """
+    with pytest.raises(SystemExit) as sysexit:
+        runpy.run_module('ansible_builder', run_name='__main__', alter_sys=True)
+
+    assert sysexit.value.code == 2  # default rc for "usage"
+    captured = capsys.readouterr()
+    assert "usage" in captured.err
