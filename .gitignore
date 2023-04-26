@@ -5,6 +5,8 @@ docs/_build/
 docs/build/
 pytestdebug.log
 test/coverage/
+.coverage
+coverage.xml
 
 # Byte-complied files
 *.py[cod]

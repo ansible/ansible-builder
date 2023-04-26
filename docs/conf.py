@@ -41,7 +41,6 @@ def _get_version():
 extensions = [
     'sphinx.ext.autosectionlabel',
     "sphinx_ansible_theme",
-    'pbr.sphinxext',
 ]
 
 autosectionlabel_prefix_document = True
