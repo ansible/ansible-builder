@@ -5,6 +5,7 @@ docs/_build/
 docs/build/
 pytestdebug.log
 test/coverage/
+test/data/**/context
 .coverage
 coverage.xml
 

@@ -1,4 +1,13 @@
----
-version: 1
+version: 3
+
+images:
+  base_image:
+    name: quay.io/centos/centos:stream9
+
 dependencies:
+  python_interpreter:
+    python_path: '/usr/libexec/platform-python'
   system: bindep.txt
+
+options:
+  skip_ansible_check: yes
