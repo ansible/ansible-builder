@@ -163,7 +163,25 @@ def copy_directory(source_dir: Path, dest: Path):
             copy_file(str(child), str(copy_location))
 
 
-def copy_file(source: str, dest: str) -> bool:
+def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
+    """
+    Used to copy a source file to a destination file in the container runtime
+    context subfolder.
+
+    This utility function helps in maintaining the build cache. We only want
+    to copy the file if it doesn't exist, or if it has changed between builds.
+    See the `copy_directory()` function for the directory copy equivalent.
+
+    :param source str: Path to a source file.
+    :param dest str: Path to a destination file within the context subdir.
+    :param ignore_mtime bool: Whether or not mtime should be considered.
+
+    :returns: True if the file was copied, False if not.
+
+    :raises: Exception if called with the path to a directory. This helps to
+        catch programming errors.
+    """
+
     should_copy = False
 
     if os.path.abspath(source) == os.path.abspath(dest):
@@ -179,7 +197,7 @@ def copy_file(source: str, dest: str) -> bool:
     elif not filecmp.cmp(source, dest, shallow=False):
         logger.warning('File %s had modifications and will be rewritten', dest)
         should_copy = True
-    elif os.path.getmtime(source) > os.path.getmtime(dest):
+    elif not ignore_mtime and os.path.getmtime(source) > os.path.getmtime(dest):
         logger.warning('File %s updated time increased and will be rewritten', dest)
         should_copy = True
 

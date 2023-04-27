@@ -55,6 +55,15 @@ def test_copy_touched_file(dest_file, source_file):
     assert not copy_file(source_file, dest_file)
 
 
+def test_copy_touched_file_ignore_mtime(dest_file, source_file):
+    stat = pathlib.Path(source_file).stat()
+    new_atime = stat.st_atime + 1
+    new_mtime = stat.st_mtime + 1
+    os.utime(source_file, (new_atime, new_mtime))
+
+    assert not copy_file(source_file, dest_file, ignore_mtime=True)
+
+
 def test_copy_file_with_destination_directory(dest_file, source_file):
     # Change source file to trigger copy_file
     source_file.write_text('foo\nbar\nzoo')
