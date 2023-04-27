@@ -156,12 +156,12 @@ def test_base_image_build_arg(cli, runtime, ee_tag, tmp_path, data_dir):
     os.environ['FOO'] = 'secretsecret'
 
     # Build with custom image tag, then use that as input to --build-arg EE_BASE_IMAGE
-    cli(f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag}-custom --container-runtime {runtime} -v3')
-    cli(f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag}-custom '
-        f'--container-runtime {runtime} --build-arg EE_BASE_IMAGE={ee_tag}-custom -v3')
+    cli(f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3')
+    cli(f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag} '
+        f'--container-runtime {runtime} --build-arg EE_BASE_IMAGE={ee_tag} -v3')
 
-    result = cli(f"{runtime} run --rm {ee_tag}-custom cat /base_image")
-    assert f"{ee_tag}-custom" in result.stdout
+    result = cli(f"{runtime} run --rm {ee_tag} cat /base_image")
+    assert f"{ee_tag}" in result.stdout
 
 
 @pytest.mark.test_all_runtimes
