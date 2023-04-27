@@ -19,6 +19,7 @@ BACKUP_REGISTRIES_PATH = f'~/.config/containers/registries.conf.{RUN_UUID}'
 
 
 @pytest.mark.serial
+@pytest.mark.destructive
 class TestPolicies:
     """
     All tests within this class must run serially since they all make use of

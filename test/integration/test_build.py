@@ -173,6 +173,9 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     assert 'World timezone definitions, modern and historical' in result.stdout
 
 
+# can trash the build cache, must be run independently and with the user's explicit consent
+@pytest.mark.serial
+@pytest.mark.destructive
 @pytest.mark.test_all_runtimes
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / 'minimal_fast' / 'execution-environment.yml'
@@ -182,7 +185,7 @@ def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
         cli(f'{runtime} builder prune --force')
 
     build_cmd = f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3 --squash off'
-    cli(build_cmd)
+    cli(build_cmd + ' --no-cache')
     result = cli(build_cmd)
 
     # Get the range of lines that contain the step we want to ensure used the cached layer

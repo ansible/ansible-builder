@@ -101,7 +101,7 @@ jobs:
 
       - name: Run pulp integration tests
         run: |
-          tox
+          tox -- --run-destructive
 
 
   integration:
@@ -144,9 +144,9 @@ jobs:
         run: |
           tox --notest
 
-      - name: Run integration tests
+      - name: Run integration tests (including destructive)
         run: |
-          tox
+          tox -- --run-destructive
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v3

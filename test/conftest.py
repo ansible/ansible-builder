@@ -34,6 +34,15 @@ def data_dir():
     return pathlib.Path(pathlib.Path(__file__).parent).joinpath('data')
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        '--run-destructive',
+        action='store_true',
+        default=False,
+        help='Run tests that may be destructive to the host'
+    )
+
+
 @pytest.fixture
 def exec_env_definition_file(tmp_path):
 
@@ -84,6 +93,18 @@ def galaxy_requirements_file(tmp_path):
         return path
 
     return _write_file
+
+
+def pytest_collection_modifyitems(session, config, items):
+    # mark destructive items as skipped if `--run-destructive` was not specified
+    if not config.getoption('--run-destructive'):
+        for destructive_item in (i for i in items if any(i.iter_markers(name='destructive'))):
+            destructive_item.add_marker(pytest.mark.skip(reason='test is potentially destructive to the host (add --run-destructive to allow)'))
+
+    # mark serial items as skipped if it looks like we're running with some obvious kinds of parallelism
+    if getattr(config.option, 'numprocesses', None):
+        for serial_item in (i for i in items if any(i.iter_markers(name='serial'))):
+            serial_item.add_marker(pytest.mark.skip(reason='test requires serial execution (add --numprocesses 0 to allow)'))
 
 
 def pytest_generate_tests(metafunc):
