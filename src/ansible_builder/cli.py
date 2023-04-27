@@ -123,7 +123,7 @@ def add_container_options(parser):
     build_command_parser.add_argument(
         '--squash',
         choices=['new', 'all', 'off'],
-        default='new',
+        default='off',
         help='Squash layers in the final image (choices: %(choices)s). Defaults to "%(default)s". (podman only)'
     )
 

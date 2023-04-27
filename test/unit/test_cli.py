@@ -222,22 +222,21 @@ def test_squash_default(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with default.
     '''
-    content = {'version': 2}
+    content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
                    '-c', str(tmp_path),
                    '--container-runtime', 'podman',
                    ])
-    assert '--squash' in aee.build_command
-    assert '--squash-all' not in aee.build_command
+    assert '--squash' not in aee.build_command
 
 
 def test_squash_all(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with 'all'.
     '''
-    content = {'version': 2}
+    content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -252,7 +251,7 @@ def test_squash_off(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with 'off'.
     '''
-    content = {'version': 2}
+    content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -263,11 +262,27 @@ def test_squash_off(exec_env_definition_file, tmp_path):
     assert '--squash' not in aee.build_command
 
 
+def test_squash_new(exec_env_definition_file, tmp_path):
+    '''
+    Test the squash CLI option with 'new'.
+    '''
+    content = {'version': 3}
+    path = str(exec_env_definition_file(content=content))
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--container-runtime', 'podman',
+                   '--squash', 'new'
+                   ])
+    assert '--squash' in aee.build_command
+    assert '--squash-all' not in aee.build_command
+
+
 def test_squash_ignored(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option is ignored with docker.
     '''
-    content = {'version': 2}
+    content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
