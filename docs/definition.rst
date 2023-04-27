@@ -5,7 +5,7 @@ The execution environment (EE) definition file supports multiple versions.
 
   * Version 1: Supported by all ``ansible-builder`` versions.
   * Version 2: Supported by ``ansible-builder`` versions ``1.2`` and later.
-  * Version 3: Supported by ``ansible-builder`` versions after ``1.2``.
+  * Version 3: Supported by ``ansible-builder`` versions ``3.0`` and later.
 
 If the EE file does not specify a version, version 1 will be assumed.
 
