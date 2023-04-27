@@ -229,7 +229,11 @@ class Containerfile:
                 continue
             dest = os.path.join(
                 self.build_context, constants.user_content_subfolder, new_name)
-            copy_file(requirement_path, dest)
+
+            # Ignore modification time of the requirement file because we could
+            # be writing it out dynamically (inline EE reqs), and we only care
+            # about the contents anyway.
+            copy_file(requirement_path, dest, ignore_mtime=True)
 
         if self.original_galaxy_keyring:
             copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, constants.default_keyring_name))
