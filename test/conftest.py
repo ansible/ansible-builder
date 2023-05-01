@@ -11,10 +11,6 @@ import yaml
 TAG_PREFIX = 'quay.io/example/builder-test'
 KEEP_IMAGES = bool(os.environ.get('KEEP_IMAGES', False))
 
-CONTAINER_RUNTIMES = (
-    'docker',
-    'podman',
-)
 
 
 @pytest.fixture(autouse=True)
@@ -115,17 +111,28 @@ def pytest_generate_tests(metafunc):
     Based on examples from https://docs.pytest.org/en/latest/example/parametrize.html.
     """
 
+    runtimes = dict(docker=False, podman=False)
+
+    # figure out which runtimes are available
+    for runtime in runtimes.keys():
+        if shutil.which(runtime):
+            if runtime == 'docker':
+                try:
+                    output = subprocess.run([runtime, 'version'], capture_output=True, text=True)
+                    if output.returncode == 0 and ('podman' in output.stdout.lower()):
+                        continue
+                except Exception:
+                    pass
+            runtimes[runtime] = True
+
     for mark in getattr(metafunc.function, 'pytestmark', []):
         if getattr(mark, 'name', '') == 'test_all_runtimes':
             args = tuple(
                 pytest.param(
                     runtime,
-                    marks=pytest.mark.skipif(
-                        shutil.which(runtime) is None,
-                        reason=f'{runtime} is not installed',
-                    ),
+                    marks=pytest.mark.skipif(not runtime_is_available, reason=f'{runtime} is not installed'),
                 )
-                for runtime in CONTAINER_RUNTIMES
+                for runtime, runtime_is_available in runtimes.items()
             )
             metafunc.parametrize('runtime', args)
             break
