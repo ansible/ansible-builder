@@ -45,6 +45,12 @@ def pytest_addoption(parser):
         default=False,
         help='Run tests that may be destructive to the host'
     )
+    parser.addoption(
+        '--skip-runtime',
+        choices=CONTAINER_RUNTIMES,
+        action='append',
+        help='Skip tests for a container runtime engine'
+    )
 
 
 @pytest.fixture
@@ -100,8 +106,9 @@ def galaxy_requirements_file(tmp_path):
 # https://pytest-xdist.readthedocs.io/en/stable/how-it-works.html#how-it-works
 def pytest_sessionstart(session):
     """Find the available runtimes only once per test session."""
+    skip_runtimes = session.config.getoption('--skip-runtime') or []
     for runtime in CONTAINER_RUNTIMES:
-        if shutil.which(runtime):
+        if shutil.which(runtime) and runtime not in skip_runtimes:
             FOUND_RUNTIMES.add(runtime)
 
 
@@ -129,7 +136,15 @@ def pytest_generate_tests(metafunc):
     """
     for mark in getattr(metafunc.function, 'pytestmark', []):
         if getattr(mark, 'name', '') == 'test_all_runtimes':
-            metafunc.parametrize('runtime', tuple(FOUND_RUNTIMES))
+            args = tuple(
+                pytest.param(
+                    runtime,
+                    marks=pytest.mark.skipif(
+                        runtime not in FOUND_RUNTIMES,
+                        reason=f'{runtime} skipped or not found'),
+                ) for runtime in CONTAINER_RUNTIMES
+            )
+            metafunc.parametrize('runtime', args)
             break
 
 
