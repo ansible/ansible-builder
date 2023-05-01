@@ -4,9 +4,13 @@ images:
   base_image:
     name: quay.io/centos/centos:stream9
 
+build_arg_defaults:
+  PKGMGR_PRESERVE_CACHE: always
+
 dependencies:
   python_interpreter:
-    python_path: '/usr/libexec/platform-python'
+    python_path: /usr/bin/python3.9
+    package_system: python3.9
   system: bindep.txt
 
 options:

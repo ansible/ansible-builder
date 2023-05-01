@@ -26,6 +26,7 @@ RELEASE=$(source /etc/os-release; echo $ID)
 # manager.
 PKGMGR="${PKGMGR:-}"
 PKGMGR_OPTS="${PKGMGR_OPTS:-}"
+PKGMGR_PRESERVE_CACHE="${PKGMGR_PRESERVE_CACHE:-}"
 
 PYCMD="${PYCMD:=/usr/bin/python3}"
 PIPCMD="${PIPCMD:=$PYCMD -m pip}"
@@ -57,8 +58,6 @@ mkdir -p /output/wheels
 mkdir -p /tmp/src
 
 cd /tmp/src
-
-$PKGMGR upgrade -y
 
 function install_bindep {
     # Protect from the bindep builder image use of the assemble script
@@ -162,8 +161,11 @@ for sibling in ${ZUUL_SIBLINGS:-}; do
     popd
 done
 
-$PKGMGR clean all
-rm -rf /var/cache/{dnf,yum}
+if [ -z $PKGMGR_PRESERVE_CACHE ]; then
+  $PKGMGR clean all
+  rm -rf /var/cache/{dnf,yum}
+fi
+
 rm -rf /var/lib/dnf/history.*
 rm -rf /var/log/{dnf.*,hawkey.log}
 rm -rf /tmp/venv

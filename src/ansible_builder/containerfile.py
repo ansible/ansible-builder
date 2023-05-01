@@ -72,7 +72,7 @@ class Containerfile:
 
         if not self.definition.builder_image:
             if self.definition.python_package_system:
-                self.steps.append('RUN $PKGMGR install $PYPKG -y && $PKGMGR clean all')
+                self.steps.append('RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi')
 
             # We should always make sure pip is available for later stages.
             self.steps.append('RUN $PYCMD -m ensurepip')
@@ -196,6 +196,7 @@ class Containerfile:
             'EE_BUILDER_IMAGE': self.definition.build_arg_defaults['EE_BUILDER_IMAGE'],
             'PYCMD': self.definition.python_path or '/usr/bin/python3',
             'PYPKG': self.definition.python_package_system,
+            'PKGMGR_PRESERVE_CACHE': self.definition.build_arg_defaults['PKGMGR_PRESERVE_CACHE'],
             'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
@@ -208,7 +209,8 @@ class Containerfile:
             if include_values and value:
                 # quote the value in case it includes spaces
                 self.steps.append(f'ARG {arg}="{value}"')
-            elif value:
+            #elif value:
+            else:
                 self.steps.append(f"ARG {arg}")
         self.steps.append("")
 
@@ -251,7 +253,6 @@ class Containerfile:
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
         for script in ('assemble', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible', 'entrypoint'):
             with importlib.resources.as_file(scriptres / script) as script_path:
-                # FIXME: just use builtin copy?
                 copy_file(str(script_path), os.path.join(scripts_dir, script))
 
         # later steps depend on base image containing these scripts

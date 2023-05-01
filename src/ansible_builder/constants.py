@@ -16,7 +16,8 @@ build_arg_defaults = dict(
     ANSIBLE_GALAXY_CLI_COLLECTION_OPTS='',
     ANSIBLE_GALAXY_CLI_ROLE_OPTS='',
     EE_BASE_IMAGE='quay.io/ansible/ansible-runner:latest',
-    EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest'
+    EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest',
+    PKGMGR_PRESERVE_CACHE='',
 )
 
 user_content_subfolder = '_build'

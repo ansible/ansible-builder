@@ -39,6 +39,8 @@ class TestPolicies:
             target = Path(BACKUP_POLICY_PATH).expanduser()
             user_policy.rename(target)
 
+            # cmd = 'podman image prune --force'
+            # subprocess.run(cmd.split())
     @classmethod
     def teardown_class(cls):
         """
