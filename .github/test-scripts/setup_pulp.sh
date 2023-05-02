@@ -37,10 +37,29 @@ EOF
 
 
 ##############################################################################
+# Set up for an insecure registry. Back it up only once for local testing.
+##############################################################################
+
+REGISTRY_FILE="$HOME/.config/containers/registries.conf"
+REGISTRY_FILE_BACKUP="${REGISTRY_FILE}.ORIG"
+if [ -e "$REGISTRY_FILE" ] && [ ! -e "$REGISTRY_FILE_BACKUP" ]
+then
+    echo "Backing up user's Podman registry to $REGISTRY_FILE_BACKUP"
+    mv $REGISTRY_FILE $REGISTRY_FILE_BACKUP
+fi
+
+cat <<EOF > "$REGISTRY_FILE"
+[[registry]]
+location="localhost:8080"
+insecure=true
+EOF
+
+##############################################################################
 # Pull and run the pulp container
 ##############################################################################
 
-podman pull docker.io/pulp/pulp:3.19
+PULP_IMAGE="pulp:3.23.3"
+podman pull docker.io/pulp/$PULP_IMAGE
 
 mkdir pulp
 cd pulp
@@ -59,7 +78,7 @@ podman run --detach \
            --volume "$(pwd)/pgsql":/var/lib/pgsql \
            --volume "$(pwd)/containers":/var/lib/containers \
            --device /dev/fuse \
-           pulp/pulp
+           $PULP_IMAGE
 
 ##############################################################################
 # Iteratively query the REST API until we get a JSON response (http code will
