@@ -392,5 +392,5 @@ def test_v3_no_workdir(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "WORKDIR" not in text
+    assert "WORKDIR" not in text.replace('WORKDIR /build', '')  # intermediate stages set WORKDIR- ignore those
     assert "mkdir -p /runner" not in text
