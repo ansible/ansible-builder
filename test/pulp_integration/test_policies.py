@@ -14,17 +14,14 @@ pytestmark = pytest.mark.skipif(shutil.which("podman") is None, reason="podman n
 RUN_UUID = str(uuid.uuid4())
 USER_POLICY_PATH = '~/.config/containers/policy.json'
 BACKUP_POLICY_PATH = f'~/.config/containers/policy.json.{RUN_UUID}'
-USER_REGISTRIES_PATH = '~/.config/containers/registries.conf'
-BACKUP_REGISTRIES_PATH = f'~/.config/containers/registries.conf.{RUN_UUID}'
 
 
 @pytest.mark.serial
-@pytest.mark.destructive
 class TestPolicies:
     """
     All tests within this class must run serially since they all make use of
     the test user's policy.json file which is acting as our system-level
-    podman policy file. The user's registries.conf is also altered.
+    podman policy file.
     """
 
     @classmethod
@@ -34,10 +31,6 @@ class TestPolicies:
         In order to assist developers with local testing, we'll move this file
         out of the way (BACKUP_POLICY_PATH) and restore it during test teardown.
 
-        Our pulp-based test registry does not use secure connections, so we must
-        modify our registries.conf file so that podman commands will not fail.
-        The original registries.conf file should be restored during teardown.
-
         After all tests are done, remove images downloaded from pulp repo and
         dangling (<none>) images.
         """
@@ -45,24 +38,6 @@ class TestPolicies:
         if user_policy.exists():
             target = Path(BACKUP_POLICY_PATH).expanduser()
             user_policy.rename(target)
-
-        user_registries = Path(USER_REGISTRIES_PATH).expanduser()
-        if user_registries.exists():
-            target = Path(BACKUP_REGISTRIES_PATH).expanduser()
-            user_registries.rename(target)
-
-        data = '[[registry]]\nlocation="localhost:8080"\ninsecure=true\n'
-        conf = Path(USER_REGISTRIES_PATH).expanduser()
-        conf.parent.mkdir(parents=True, exist_ok=True)
-        conf.write_text(data)
-
-        try:
-            cmd = 'podman image prune --force'
-            subprocess.run(cmd.split())
-            cmd = 'podman rmi localhost:8080/testrepo/ansible-builder-rhel8:latest'
-            subprocess.run(cmd.split())
-        except Exception:
-            pass
 
     @classmethod
     def teardown_class(cls):
@@ -73,11 +48,6 @@ class TestPolicies:
         if renamed_policy.exists():
             target = Path(USER_POLICY_PATH).expanduser()
             renamed_policy.rename(target)
-
-        renamed_registries = Path(BACKUP_REGISTRIES_PATH).expanduser()
-        if renamed_registries.exists():
-            target = Path(USER_REGISTRIES_PATH).expanduser()
-            renamed_registries.rename(target)
 
     def write_policy(self, data):
         policy = Path(USER_POLICY_PATH).expanduser()
