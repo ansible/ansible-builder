@@ -58,7 +58,7 @@ EOF
 # Pull and run the pulp container
 ##############################################################################
 
-PULP_IMAGE="pulp:3.19"
+PULP_IMAGE="pulp:3.23.3"
 podman pull docker.io/pulp/$PULP_IMAGE
 
 mkdir pulp
