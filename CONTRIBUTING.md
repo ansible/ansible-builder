@@ -69,6 +69,16 @@ a single test, with a single thread, and with increased verbosity, as above.
 Be aware that if you are going invoke `pytest` directly to run multiple tests,
 we do mark several tests as `serial` so those should never be run in parallel.
 
+### Skipping a Container Runtime
+
+Tests marked with `test_all_runtimes` will be run with any container runtime
+engine it can identify (for example, podman or docker). If you want to skip
+one or more runtimes, use the `--skip-runtime` pytest option:
+
+```bash
+  (ansible-builder) $ tox -e integration-py311 -- --skip-runtime docker
+```
+
 ## Gating and Merging
 
 We require at least one approval on a pull request before it can be merged.

@@ -16,6 +16,10 @@ CONTAINER_RUNTIMES = (
     'podman',
 )
 
+FOUND_RUNTIMES = set()
+
+GOOD_CONTENT = {'version': 1}
+
 
 @pytest.fixture(autouse=True)
 def do_not_run_commands(request, mocker):
@@ -41,6 +45,12 @@ def pytest_addoption(parser):
         default=False,
         help='Run tests that may be destructive to the host'
     )
+    parser.addoption(
+        '--skip-runtime',
+        choices=CONTAINER_RUNTIMES,
+        action='append',
+        help='Skip tests for a container runtime engine'
+    )
 
 
 @pytest.fixture
@@ -64,9 +74,6 @@ def exec_env_definition_file(tmp_path):
     return _write_file
 
 
-good_content = {'version': 1}
-
-
 @pytest.fixture
 def good_exec_env_definition_path(tmp_path):
     path = tmp_path / 'aee'
@@ -74,7 +81,7 @@ def good_exec_env_definition_path(tmp_path):
     path = path / 'execution-env.yml'
 
     with path.open('w') as outfile:
-        yaml.dump(good_content, outfile)
+        yaml.dump(GOOD_CONTENT, outfile)
 
     return path
 
@@ -93,6 +100,16 @@ def galaxy_requirements_file(tmp_path):
         return path
 
     return _write_file
+
+
+# This will be called once for every xdist worker session. For more info, see:
+# https://pytest-xdist.readthedocs.io/en/stable/how-it-works.html#how-it-works
+def pytest_sessionstart(session):
+    """Find the available runtimes only once per test session."""
+    skip_runtimes = session.config.getoption('--skip-runtime') or []
+    for runtime in CONTAINER_RUNTIMES:
+        if shutil.which(runtime) and runtime not in skip_runtimes:
+            FOUND_RUNTIMES.add(runtime)
 
 
 def pytest_collection_modifyitems(session, config, items):
@@ -114,20 +131,20 @@ def pytest_generate_tests(metafunc):
     for all supported container runtimes. The requires the test to accept
     and use the ``runtime`` argument.
 
+    This also serves to identify the runtime being tested through the pytest
+    output by appending "[<runtime>]" to the test name.
+
     Based on examples from https://docs.pytest.org/en/latest/example/parametrize.html.
     """
-
     for mark in getattr(metafunc.function, 'pytestmark', []):
         if getattr(mark, 'name', '') == 'test_all_runtimes':
             args = tuple(
                 pytest.param(
                     runtime,
                     marks=pytest.mark.skipif(
-                        shutil.which(runtime) is None,
-                        reason=f'{runtime} is not installed',
-                    ),
-                )
-                for runtime in CONTAINER_RUNTIMES
+                        runtime not in FOUND_RUNTIMES,
+                        reason=f'{runtime} skipped or not found'),
+                ) for runtime in CONTAINER_RUNTIMES
             )
             metafunc.parametrize('runtime', args)
             break
@@ -136,13 +153,10 @@ def pytest_generate_tests(metafunc):
 @pytest.fixture
 def build_dir_and_ee_yml(tmp_path):
     """Fixture to return temporary file maker."""
-
     def tmp_dir_and_file(ee_contents):
         tmp_file = tmp_path / 'ee.txt'
         tmp_file.write_text(ee_contents)
-
         return tmp_path, tmp_file
-
     return tmp_dir_and_file
 
 
