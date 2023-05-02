@@ -15,7 +15,18 @@ TYPE_StringOrListOfStrings = {
     ]
 }
 
-
+TYPE_DictOrStringOrListOfStrings = {
+    "anyOf": [
+        {"type": "object"},
+        {"type": "string"},
+        {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    ]
+}
 ############
 # Version 1
 ############
@@ -207,10 +218,7 @@ schema_v3 = {
             "additionalProperties": False,
             "properties": {
                 "python": TYPE_StringOrListOfStrings,
-                "galaxy": {
-                    "description": "The Galaxy dependency file",
-                    "type": "string",
-                },
+                "galaxy": TYPE_DictOrStringOrListOfStrings,
                 "system": TYPE_StringOrListOfStrings,
                 "python_interpreter": {
                     "description": "Python package name and path",

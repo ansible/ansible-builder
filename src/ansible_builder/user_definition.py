@@ -169,8 +169,14 @@ class UserDefinition:
         if not req_file:
             return None
 
-        # HACK: jamming in prototype support for inline deps listing, tempfile handling is ass
-        if (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
+        # dump inline-declared deps to files that will be injected directly into the generated context
+        if isinstance(req_file, dict):
+            tf = tempfile.NamedTemporaryFile('w')
+            tf.write(yaml.safe_dump(req_file))
+            tf.flush()  # don't close, it'll clean up on GC
+            _tempfiles.append(tf)
+            req_file = tf.name
+        elif (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
             tf = tempfile.NamedTemporaryFile('w')
             if is_list:
                 tf.write('\n'.join(req_file))

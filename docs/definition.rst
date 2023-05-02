@@ -185,8 +185,9 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible-runner/archive/refs/heads/ansible-runner.tar.gz
 
     ``galaxy``
-      Galaxy installation requirements. This may either be a filename, or a string
-      representation of the file contents (see below for an example).
+      Galaxy installation requirements. This may either be a filename, a
+      dictionary, or a multi-line string representation of an Ansible Galaxy
+      ``requirements.yml`` file (see below for examples).
 
     ``python``
       The Python installation requirements. This may either be a filename, or a
@@ -226,7 +227,7 @@ And this example uses inline values:
           - pywinrm
         system:
           - iputils [platform:rpm]
-        galaxy: |
+        galaxy:
           collections:
             - community.windows
             - ansible.utils
@@ -238,12 +239,6 @@ And this example uses inline values:
             package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
-.. note::
-
-  The ``|`` symbol is a YAML operator that allows you to define a block of text
-  that may contain newline characters as a literal string. Because the ``galaxy``
-  requirements content is expressed in YAML, we need this value to be a string
-  of YAML so that we can pass it along to ``ansible-galaxy``.
 
 images
 ******
