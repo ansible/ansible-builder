@@ -190,9 +190,11 @@ class Containerfile:
         An ARG with a None or empty value will not be included.
         """
 
-        # ARGs will be output in the order listed below.
+        # ARGs will be output in the order listed below. Keys with value `None` will be omitted, but empty string values
+        # will still appear in the output (this allows them to be set at runtime).
         global_args = {
             'EE_BASE_IMAGE': self.definition.build_arg_defaults['EE_BASE_IMAGE'],
+            # this is only applicable for < v3 definitions and will be removed elsewhere for newer schema
             'EE_BUILDER_IMAGE': self.definition.build_arg_defaults['EE_BUILDER_IMAGE'],
             'PYCMD': self.definition.python_path or '/usr/bin/python3',
             'PYPKG': self.definition.python_package_system,
@@ -206,10 +208,11 @@ class Containerfile:
             global_args['PKGMGR'] = self.definition.options['package_manager_path']
 
         for arg, value in global_args.items():
-            if include_values and value:
+            if value is None:
+                continue  # an optional or N/A `ARG` we don't even want to emit
+            if include_values:  # emit `ARG` directives for empty strings so they can be overridden at build-time
                 # quote the value in case it includes spaces
                 self.steps.append(f'ARG {arg}="{value}"')
-            #elif value:
             else:
                 self.steps.append(f"ARG {arg}")
         self.steps.append("")
