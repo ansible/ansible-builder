@@ -1,7 +1,6 @@
 import os
 
-from ansible_builder._target_scripts.introspect import process, process_collection, simple_combine
-from ansible_builder.requirements import sanitize_requirements
+from ansible_builder._target_scripts.introspect import process, process_collection, simple_combine, sanitize_requirements
 
 
 def test_multiple_collection_metadata(data_dir):

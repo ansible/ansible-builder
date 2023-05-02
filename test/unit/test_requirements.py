@@ -1,4 +1,4 @@
-from ansible_builder.requirements import sanitize_requirements
+from ansible_builder._target_scripts.introspect import sanitize_requirements
 
 
 def test_combine_entries():
