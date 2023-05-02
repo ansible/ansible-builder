@@ -123,6 +123,7 @@ class Containerfile:
             "",
             "# Builder build stage",
             f"FROM {image} as builder",
+            "WORKDIR /build",
         ])
 
         self._insert_global_args()
