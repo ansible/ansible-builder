@@ -107,6 +107,16 @@ def test_build_args_basic(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
+def test_build_args_empty_value(cli, runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'build_args' / 'execution-environment.yml'
+    result = cli(
+        f'ansible-builder build --no-cache -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} --build-arg FOO= -v3'
+    )
+    assert "FOO=''" in result.stdout
+
+
+@pytest.mark.test_all_runtimes
 def test_build_args_from_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     bc = tmp_path
     ee_def = data_dir / 'build_args' / 'execution-environment.yml'

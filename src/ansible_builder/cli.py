@@ -202,7 +202,7 @@ def parse_args(args=sys.argv[1:]):
 
 class BuildArgAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        key, *value = values.split('=')
+        key, *value = values.split('=', 1)
         attr = getattr(namespace, self.dest)
 
         # None signifies that the build-arg will come from the environment.
