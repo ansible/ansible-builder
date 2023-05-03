@@ -1,5 +1,7 @@
 import os
 
+import yaml
+
 from ansible_builder import constants
 
 
@@ -52,6 +54,54 @@ def test_create_streams_output_with_invalid_verbosity(cli, build_dir_and_ee_yml)
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml} -v 6", allow_error=True)
     assert result.rc != 0
     assert 'invalid choice: 6 (choose from 0, 1, 2, 3)' in (result.stdout + result.stderr)
+
+
+def test_inline_str_galaxy_requirements(cli, build_dir_and_ee_yml):
+    """
+    Ensure that galaxy requirements specified as an inline multi-line string appear in the generated build context
+    """
+    ee_str = """
+    version: 3
+    dependencies:
+      galaxy: |
+        collections:  # a comment
+        - name: community.general
+        roles:
+        - name: foo.bar  # another comment
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(ee_str)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    req_out = tmpdir / '_build/requirements.yml'
+
+    assert req_out.exists()
+    req_out_content = req_out.read_text()
+    assert "# a comment" in req_out_content
+    assert "# another comment" in req_out_content
+    assert yaml.safe_load(req_out_content) == {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
+
+
+def test_inline_mapping_galaxy_requirements(cli, build_dir_and_ee_yml):
+    """
+    Ensure that galaxy requirements specified as an inline mapping appear in the generated build context
+    """
+    ee_str = """
+    version: 3
+    dependencies:
+      galaxy:
+        collections:
+        - name: community.general
+        roles:
+        - name: foo.bar
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(ee_str)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    req_out = tmpdir / '_build/requirements.yml'
+
+    assert req_out.exists()
+    req_out_content = req_out.read_text()
+    assert yaml.safe_load(req_out_content) == {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
 
 
 def test_collection_verification_off(cli, build_dir_and_ee_yml):

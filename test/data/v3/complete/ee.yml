@@ -17,9 +17,12 @@ dependencies:
   python_interpreter:
     package_system: "mypython3"
     python_path: "/usr/local/bin/mypython"
-  galaxy: |
+  galaxy:
     collections:
       - ansible.utils
+    roles:
+      - blar
+      - blar2
   python:
     - six
     - PyYaml==6.0
