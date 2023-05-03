@@ -13,25 +13,26 @@ dependencies:
     package_system: python39  # (optional) name of a Python interpreter OS package to install
     python_path: /usr/bin/python3.9  # (optional) path to the Python interpreter to use
 
-  ansible_core:
+  ansible_core:  # (optional) install ansible-core if the base image doesn't already contain it
     package_pip: https://github.com/ansible/ansible/archive/refs/tags/v2.13.2.tar.gz   # install from a GH ref tarball
 
-  ansible_runner:
-    package_pip: ansible-runner==2.2.1   # install from PyPI
+  ansible_runner:  # (optional) install ansible-runner if the base image doesn't already contain it
+    package_pip: ansible-runner==2.2.1   # install specific version from PyPI
 
-  # list of Ansible collections to install
-  # note that this is a YAML folded string ("YAML in YAML" in this case); this allows inline comments to be easily preserved
-  # in the generated context
-  galaxy: |
+  # lists of Ansible collections and/or roles to install (or the filename of an Ansible Galaxy CLI requirements YAML file)
+
+  # the contents of this key are not validated by ansible-builder itself; they will be written to `requirements.yml` in
+  # the root of the generated build context and consumed directly by the ansible-galaxy CLI during the build
+  galaxy:
     collections:
     - ansible.windows  # base windows support
     - community.windows  # community windows additions
     - ansible.utils
 
-  # explicit list of Python dependencies to install (in addition to those declared by collections)
+  # explicit list of Python dependencies to install (in addition to those declared by the collections above)
   python:
-    - pywinrm
+  - pywinrm
 
-  # explicit list of bindep entries for OS packages to install (in addition to those declared by collections)
+  # explicit list of bindep entries for OS packages to install (in addition to those declared by the collections above)
   system:
-    - iputils [platform:rpm]
+  - iputils [platform:rpm]
