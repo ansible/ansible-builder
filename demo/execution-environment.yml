@@ -8,6 +8,9 @@ images:
     # name: registry.fedoraproject.org/fedora:38  # vanilla image!
     # name: registry.access.redhat.com/ubi9/ubi:latest  # vanilla image!
 
+options:
+  user: '1000'  # (optional) sets the username or UID
+
 dependencies:
   python_interpreter:
     package_system: python39  # (optional) name of a Python interpreter OS package to install
