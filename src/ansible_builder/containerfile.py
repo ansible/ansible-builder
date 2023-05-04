@@ -169,6 +169,8 @@ class Containerfile:
 
         self._insert_custom_steps('append_final')
         self._prepare_label_steps()
+        if self.definition.version >= 3 and (uid := self.definition.options['user']):
+            self._prepare_user_steps(uid)
         self._prepare_entrypoint_steps()
 
     def write(self):
@@ -419,3 +421,6 @@ class Containerfile:
             self.steps.append(f"ENTRYPOINT {ep}")
         if cmd := self.definition.container_init.get('cmd'):
             self.steps.append(f"CMD {cmd}")
+
+    def _prepare_user_steps(self, uid):
+        self.steps.append(f"USER {uid}")

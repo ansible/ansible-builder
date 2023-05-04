@@ -334,6 +334,10 @@ schema_v3 = {
                     "description": "Path to the system package manager to use",
                     "type": "string",
                 },
+                "user": {
+                    "description": "Sets the username or UID",
+                    "type": "string",
+                },
                 "container_init": {
                     "description": "Customize container startup behavior",
                     "type": "object",
@@ -422,3 +426,4 @@ def _handle_options_defaults(ee_def: dict):
         'entrypoint': '["/output/scripts/entrypoint", "dumb-init"]',
         'cmd': '["bash"]',
     })
+    options.setdefault('user', '1000')

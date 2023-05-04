@@ -215,6 +215,32 @@ class TestUserDefinition:
         value = definition.raw.get('options', {}).get('skip_ansible_check')
         assert value is False
 
+    def test_v3_user_id(self, exec_env_definition_file):
+        """
+        Test that options.user defaults to 1000
+        """
+        path = exec_env_definition_file(
+            "{'version': 3}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('user')
+        assert value == '1000'
+
+    def test_v3_set_user_name(self, exec_env_definition_file):
+        """
+        Test that options.user sets to username
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'options': {'user': 'bob'}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('user')
+        assert value == 'bob'
+
 
 class TestImageDescription:
 

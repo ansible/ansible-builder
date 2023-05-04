@@ -335,6 +335,10 @@ builder runtime functionality. Valid keys for this section are:
       created (if it doesn't already exist), set to ``root`` group ownership, and ``rwx`` group
       permissions recursively applied to it. The default value is ``/runner``.
 
+    ``user``
+      This sets the username or UID to use as the default user for the final container image.
+      The default value ``1000``.
+
 
 Example ``options`` section:
 
@@ -349,6 +353,7 @@ Example ``options`` section:
         relax_password_permissions: false
         skip_ansible_check: true
         workdir: /myworkdir
+        user: bob
 
 version
 *******
