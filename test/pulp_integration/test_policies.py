@@ -16,7 +16,8 @@ USER_POLICY_PATH = '~/.config/containers/policy.json'
 BACKUP_POLICY_PATH = f'~/.config/containers/policy.json.{RUN_UUID}'
 
 
-@pytest.mark.serial
+@pytest.mark.serial  # operations on global shared state in setup (system container policy, image store)
+@pytest.mark.destructive  # messes with the system container policy files and prunes container image store
 class TestPolicies:
     """
     All tests within this class must run serially since they all make use of
@@ -39,8 +40,9 @@ class TestPolicies:
             target = Path(BACKUP_POLICY_PATH).expanduser()
             user_policy.rename(target)
 
-            # cmd = 'podman image prune --force'
-            # subprocess.run(cmd.split())
+            cmd = 'podman image prune --force'
+            subprocess.run(cmd.split())
+
     @classmethod
     def teardown_class(cls):
         """

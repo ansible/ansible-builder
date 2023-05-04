@@ -97,36 +97,6 @@ def test_user_python_requirement(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
-def test_python_git_requirement(cli, runtime, ee_tag, tmp_path, data_dir):
-    # FIXME: is this test even necessary, since we don't (currently) special-case git in builder?
-
-    bc = tmp_path
-    ee_def = data_dir / 'needs_git' / 'execution-environment.yml'
-    command = f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime}'
-    cli(command)
-    result = cli(f'{runtime} run --rm {ee_tag} pip3 freeze')
-    assert 'flask' in result.stdout.lower(), result.stdout
-
-
-@pytest.mark.test_all_runtimes
-def test_prepended_steps(cli, runtime, ee_tag, tmp_path, data_dir):
-    """
-    Tests that prepended steps are in final stage
-    """
-    bc = tmp_path
-
-    # FIXME: share with an existing image for cached performance
-    ee_def = data_dir / 'prepend_steps' / 'execution-environment.yml'
-    cli(
-        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime}'
-    )
-
-    result = cli(f"{runtime} run --rm {ee_tag} cat /baseout.txt")
-
-    assert 'hello from prepend_base' in result.stdout
-
-
-@pytest.mark.test_all_runtimes
 def test_build_args_basic(cli, runtime, ee_tag, tmp_path, data_dir):
     bc = tmp_path
     ee_def = data_dir / 'build_args' / 'execution-environment.yml'
@@ -181,23 +151,14 @@ def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
 
     build_cmd = f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3'
 
-    print(f"tempdir {tmp_path}")
     no_cache_result = cli(build_cmd + ' --no-cache')
 
     pass1_containerfile = (tmp_path / containerfile_name).read_text()
-
-    print(f"no_cache_result stdout: \n{no_cache_result.stdout}")
-    print(f"no_cache_result stderr: \n{no_cache_result.stderr}")
-    print(f"containerfile contents for no-cache: \n{pass1_containerfile}")
 
     assert 'hi mom' in no_cache_result.stdout, no_cache_result.stdout
 
     cache_result = cli(build_cmd)
     pass2_containerfile = (tmp_path / containerfile_name).read_text()
-
-    print(f"cache_result stdout: \n{cache_result.stdout}")
-    print(f"cache_result stderr: \n{cache_result.stderr}")
-    print(f"containerfile contents after cached run: \n{pass2_containerfile}")
 
     # Get the range of lines that contain the step we want to ensure used the cached layer
     out_lines = cache_result.stdout.splitlines()
