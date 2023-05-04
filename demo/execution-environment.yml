@@ -9,7 +9,7 @@ images:
     # name: registry.access.redhat.com/ubi9/ubi:latest  # vanilla image!
 
 options:
-  user: 1001  # (optional) sets the username or UID
+  user: 1000  # (optional) sets the username or UID
 
 dependencies:
   python_interpreter:

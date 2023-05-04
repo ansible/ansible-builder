@@ -248,6 +248,7 @@ def test_v3_complete(cli, data_dir, tmp_path):
     assert 'RUN chmod ug+rw /etc/passwd' in text
     assert 'RUN mkdir -p /runner' in text
     assert 'ENTRYPOINT ["/output/scripts/entrypoint", "dumb-init"]' in text
+    assert 'USER 1001' in text
 
     # check additional_build_files
     myconfigs_path = tmp_path / constants.user_content_subfolder / "myconfigs"
@@ -394,3 +395,23 @@ def test_v3_no_workdir(cli, build_dir_and_ee_yml):
 
     assert "WORKDIR" not in text
     assert "mkdir -p /runner" not in text
+
+
+def test_v3_set_user_id(cli, build_dir_and_ee_yml):
+    """
+    Test that a custom 'options.user' sets it
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        options:
+          user: bob
+        """
+    )
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    assert "USER bob" not in text
