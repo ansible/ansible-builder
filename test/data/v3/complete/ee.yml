@@ -10,7 +10,7 @@ build_arg_defaults:
   ANSIBLE_GALAXY_CLI_ROLE_OPTS: '--bar'
 
 options:
-  user: 1001
+  user: '1001'
 
 dependencies:
   ansible_core:

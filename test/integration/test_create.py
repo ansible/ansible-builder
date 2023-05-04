@@ -414,4 +414,4 @@ def test_v3_set_user_id(cli, build_dir_and_ee_yml):
     assert containerfile.exists()
     text = containerfile.read_text()
 
-    assert "USER bob" not in text
+    assert "USER bob" in text
