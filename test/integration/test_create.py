@@ -184,6 +184,30 @@ def test_galaxy_signing_extra_args(cli, build_dir_and_ee_yml):
     assert "--required-valid-signature-count 3" in text
 
 
+def test_v1v2_prepended_steps(cli, build_dir_and_ee_yml):
+    """
+    Tests that prepended steps are in final stage
+    """
+    custom_step_text = 'RUN echo "hi mom from a prepended step"'
+
+    ee = f"""
+        additional_build_steps:
+          prepend: |
+            {custom_step_text}
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(ee)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+
+    # ensure the custom step text is present and comes before the copy from build stage
+    parts = text.partition(custom_step_text)
+    assert parts[1] == custom_step_text
+    assert "COPY --from=builder" in parts[2]
+
+
 def test_v2_default_images(cli, build_dir_and_ee_yml):
     """
     Test that the base and builder images will use the defaults if not given.

@@ -1,5 +1,19 @@
 ---
+version: 3
+
+images:
+  base_image:
+    name: quay.io/centos/centos:stream9
+
+dependencies:
+  python_interpreter:
+    python_path: '/usr/libexec/platform-python'
+
+options:
+  package_manager_path: '/bin/true'
+  skip_ansible_check: yes
+
 additional_build_steps:
-  prepend:
+  prepend_base:
     - ARG EE_BASE_IMAGE
     - RUN echo $EE_BASE_IMAGE > /base_image

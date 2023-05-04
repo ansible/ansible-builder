@@ -13,10 +13,13 @@ base_roles_path = '/usr/share/ansible/roles'
 base_collections_path = '/usr/share/ansible/collections'
 
 build_arg_defaults = dict(
+    # empty string values here still allow the build arg to be emitted into the generated Containerfile
     ANSIBLE_GALAXY_CLI_COLLECTION_OPTS='',
     ANSIBLE_GALAXY_CLI_ROLE_OPTS='',
     EE_BASE_IMAGE='quay.io/ansible/ansible-runner:latest',
-    EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest'
+    # this value is removed elsewhere for v3+ schemas
+    EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest',
+    PKGMGR_PRESERVE_CACHE='',
 )
 
 user_content_subfolder = '_build'

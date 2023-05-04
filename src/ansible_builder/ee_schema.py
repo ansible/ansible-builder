@@ -209,6 +209,9 @@ schema_v3 = {
                 "ANSIBLE_GALAXY_CLI_ROLE_OPTS": {
                     "type": "string",
                 },
+                "PKGMGR_PRESERVE_CACHE": {
+                    "type": "string",
+                },
             },
         },
 
