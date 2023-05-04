@@ -43,3 +43,5 @@ CONTEXT_FILES = {
     'python': 'requirements.txt',
     'system': 'bindep.txt',
 }
+
+FINAL_IMAGE_BIN_PATH = "/opt/builder/bin"

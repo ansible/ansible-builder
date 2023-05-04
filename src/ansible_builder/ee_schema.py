@@ -1,5 +1,8 @@
+import os
+
 from jsonschema import validate, SchemaError, ValidationError
 
+import ansible_builder.constants as constants
 from ansible_builder.exceptions import DefinitionError
 
 
@@ -27,6 +30,7 @@ TYPE_DictOrStringOrListOfStrings = {
         }
     ]
 }
+
 ############
 # Version 1
 ############
@@ -428,13 +432,15 @@ def _handle_options_defaults(ee_def: dict):
     """
     options = ee_def.setdefault('options', {})
 
+    entrypoint_path = os.path.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
+
     options.setdefault('skip_ansible_check', False)
     options.setdefault('relax_passwd_permissions', True)
     options.setdefault('workdir', '/runner')
     options.setdefault('package_manager_path', '/usr/bin/dnf')
     options.setdefault('container_init', {
         'package_pip': 'dumb-init==1.2.5',
-        'entrypoint': '["/output/scripts/entrypoint", "dumb-init"]',
+        'entrypoint': f'["{entrypoint_path}", "dumb-init"]',
         'cmd': '["bash"]',
     })
     options.setdefault('user', '1000')

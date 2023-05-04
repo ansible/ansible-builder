@@ -169,6 +169,10 @@ class Containerfile:
             self.steps.append(f"RUN $PYCMD -m pip install --no-cache-dir '{init_pip_pkg}'")
 
         self._insert_custom_steps('append_final')
+
+        # Purge the temporary /output directory used in intermediate stages
+        self.steps.append("RUN rm -rf /output")
+
         self._prepare_label_steps()
         if self.definition.version >= 3 and (uid := self.definition.options['user']):
             self._prepare_user_steps(uid)
@@ -260,9 +264,14 @@ class Containerfile:
             with importlib.resources.as_file(scriptres / script) as script_path:
                 copy_file(str(script_path), os.path.join(scripts_dir, script))
 
-        # later steps depend on base image containing these scripts
+        # Later intermediate stages depend on base image containing these scripts.
+        # Copy them to a location that we do not need in the final image.
         context_dir = Path(self.build_outputs_dir).stem
         self.steps.append(f'COPY {context_dir}/scripts/ /output/scripts/')
+
+        # The final image will have /output purged, but certain scripts we want
+        # to retain in that image.
+        self.steps.append(f'COPY {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint')
 
     def _handle_additional_build_files(self):
         """
