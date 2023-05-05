@@ -154,9 +154,7 @@ class AnsibleBuilder:
             command.extend(["-t", tag])
 
         for key, value in self.build_args.items():
-            if value == '':
-                build_arg = f"--build-arg={key}=''"
-            elif value:
+            if value:
                 build_arg = f"--build-arg={key}={value}"
             else:
                 build_arg = f"--build-arg={key}"

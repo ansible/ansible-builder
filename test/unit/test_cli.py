@@ -46,6 +46,28 @@ def test_build_args_empty_value(exec_env_definition_file, tmp_path):
     assert aee.build_args == {'ANSIBLE_GALAXY_CLI_ROLE_OPTS': ''}
 
 
+def test_build_args_no_trailing_equal(exec_env_definition_file, tmp_path):
+    content = {'version': 3}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS', '-c', str(tmp_path)])
+    assert aee.build_args == {'ANSIBLE_GALAXY_CLI_ROLE_OPTS': None}
+
+
+def test_build_args_multiple_equal_sign_value(exec_env_definition_file, tmp_path):
+    content = {'version': 3}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['build', '-f', path,
+                   '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS=',
+                   '--build-arg', 'PYTHON_CONFIG_SETTINGS=--config-setting=--global-option=--tag-build=SUFFIX',
+                   '-c', str(tmp_path)])
+    assert aee.build_args == {
+        'PYTHON_CONFIG_SETTINGS': '--config-setting=--global-option=--tag-build=SUFFIX',
+        'ANSIBLE_GALAXY_CLI_ROLE_OPTS': ''
+    }
+
+
 def test_build_context(good_exec_env_definition_path, tmp_path):
     path = str(good_exec_env_definition_path)
     build_context = str(tmp_path)
