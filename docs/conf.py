@@ -24,9 +24,9 @@ from ansible_builder.cli import get_version as ab_get_version
 
 
 def _get_version():
-    version_parts = ab_get_version().split('.', 3)[:3]
+    version_parts = ab_get_version().split(".", 3)[:3]
 
-    return '.'.join(version_parts)
+    return ".".join(version_parts)
 
 
 # -- General configuration ------------------------------------------------
@@ -39,28 +39,28 @@ def _get_version():
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autosectionlabel',
+    "sphinx.ext.autosectionlabel",
     "sphinx_ansible_theme",
 ]
 
 autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'ansible-builder'
-copyright = f'2020-{datetime.datetime.today().year}, Red Hat, Inc'
-author = 'Red Hat, Inc.'
+project = "ansible-builder"
+copyright = f"2020-{datetime.datetime.today().year}, Red Hat, Inc"
+author = "Red Hat, Inc."
 version = _get_version()
 
 
@@ -69,15 +69,15 @@ version = _get_version()
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
@@ -88,7 +88,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_ansible_theme'
+html_theme = "sphinx_ansible_theme"
 html_title = "Ansible Builder Documentation"
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -96,21 +96,21 @@ html_title = "Ansible Builder Documentation"
 # documentation.
 #
 html_theme_options = {
-    'display_version': False,
-    'titles_only': False,
-    'documentation_home_url': 'https://ansible-builder.readthedocs.io/en/latest/',
+    "display_version": False,
+    "titles_only": False,
+    "documentation_home_url": "https://ansible-builder.readthedocs.io/en/latest/",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ansible-builderdoc'
+htmlhelp_basename = "ansible-builderdoc"
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -119,15 +119,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -137,8 +134,13 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ansible-builder.tex', 'ansible-builder Documentation',
-     'Red Hat Ansible', 'manual'),
+    (
+        master_doc,
+        "ansible-builder.tex",
+        "ansible-builder Documentation",
+        "Red Hat Ansible",
+        "manual",
+    ),
 ]
 
 
@@ -147,8 +149,13 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'ansible-builder', 'ansible-builder Documentation',
-     [author], 1)
+    (
+        master_doc,
+        "ansible-builder",
+        "ansible-builder Documentation",
+        [author],
+        1,
+    ),
 ]
 
 
@@ -158,7 +165,13 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ansible-builder', 'ansible-builder Documentation',
-     author, 'ansible-builder', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "ansible-builder",
+        "ansible-builder Documentation",
+        author,
+        "ansible-builder",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]

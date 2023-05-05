@@ -38,20 +38,20 @@ class ImageDescription:
         self.name = None
         self.signature_original_name = None
 
-        if image_key not in ('base_image', 'builder_image'):
+        if image_key not in ("base_image", "builder_image"):
             raise ValueError(f"Invalid image key used for initialization: {image_key}")
 
         image = ee_images.get(image_key)
         if image:
-            self.name = image.get('name')
+            self.name = image.get("name")
             if not self.name:
                 raise DefinitionError(f"'name' is a required field for '{image_key}'")
-            self.signature_original_name = image.get('signature_original_name')
+            self.signature_original_name = image.get("signature_original_name")
 
         # Validate that the images look like they have a tag.
         for image in (self.name, self.signature_original_name):
             if image:
-                data = image.split(':', maxsplit=1)
+                data = image.split(":", maxsplit=1)
                 if len(data) != 2 or not data[1]:
                     raise DefinitionError(f"Container image requires a tag: {image}")
 
@@ -75,17 +75,22 @@ class UserDefinition:
         self.reference_path = os.path.dirname(filename)
 
         try:
-            with open(filename, 'r') as ee_file:
+            with open(filename, "r") as ee_file:
                 data = yaml.safe_load(ee_file)
                 self.raw = data if data else {}
         except FileNotFoundError as exc:
-            raise DefinitionError(textwrap.dedent(
-                f"""
+            raise DefinitionError(
+                textwrap.dedent(
+                    f"""
                 Could not detect '{filename}' file in this directory.
                 Use -f to specify a different location.
-                """)) from exc
+                """,
+                ),
+            ) from exc
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
-            raise DefinitionError(f"An error occurred while parsing the definition file:\n{str(exc)}") from exc
+            raise DefinitionError(
+                f"An error occurred while parsing the definition file:\n{str(exc)}"
+            ) from exc
 
         if not isinstance(self.raw, dict):
             raise DefinitionError(f"Definition must be a dictionary, not {type(self.raw).__name__}")
@@ -96,7 +101,7 @@ class UserDefinition:
         if self.version > 2:
             # v3 and higher no longer supports a builder image so make
             # sure this value is cleared of the default value.
-            self.build_arg_defaults['EE_BUILDER_IMAGE'] = None
+            self.build_arg_defaults["EE_BUILDER_IMAGE"] = None
 
         # Attributes used for creating podman container policies. These will be None
         # if no 'images' section is present in the EE, or an ImageDescription object otherwise.
@@ -110,76 +115,83 @@ class UserDefinition:
 
         If no version is specified, assume version 1 (for backward compat).
         """
-        version = self.raw.get('version', 1)
+        version = self.raw.get("version", 1)
         return version
 
     @property
     def ansible_config(self):
-        """ Path to the user specified ansible.cfg file """
-        ansible_config = self.raw.get('ansible_config')
+        """Path to the user specified ansible.cfg file"""
+        ansible_config = self.raw.get("ansible_config")
         if not ansible_config:
             return None
         return str(ansible_config)
 
     @property
     def additional_build_steps(self):
-        """Gets additional commands from the exec env file, if any are specified.
-        """
-        return self.raw.get('additional_build_steps')
+        """Gets additional commands from the exec env file, if any are specified."""
+        return self.raw.get("additional_build_steps")
 
     @property
     def python_package_system(self):
-        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('package_system', None)
+        return (
+            self.raw.get("dependencies", {})
+            .get("python_interpreter", {})
+            .get("package_system", None)
+        )
 
     @property
     def python_path(self):
-        return self.raw.get('dependencies', {}).get('python_interpreter', {}).get('python_path', None)
+        return (
+            self.raw.get("dependencies", {}).get("python_interpreter", {}).get("python_path", None)
+        )
 
     @property
     def ansible_core_ref(self):
-        return self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
+        return self.raw.get("dependencies", {}).get("ansible_core", {}).get("package_pip", None)
 
     @property
     def ansible_runner_ref(self):
-        return self.raw.get('dependencies', {}).get('ansible_runner', {}).get('package_pip', None)
+        return self.raw.get("dependencies", {}).get("ansible_runner", {}).get("package_pip", None)
 
     @property
     def ansible_ref_install_list(self):
-        return ' '.join([r for r in (self.ansible_core_ref, self.ansible_runner_ref) if r]) or None
+        return " ".join([r for r in (self.ansible_core_ref, self.ansible_runner_ref) if r]) or None
 
     @property
     def additional_build_files(self):
-        return self.raw.get('additional_build_files', [])
+        return self.raw.get("additional_build_files", [])
 
     @property
     def container_init(self):
-        return self.raw.get('options', {}).get('container_init', {})
+        return self.raw.get("options", {}).get("container_init", {})
 
     @property
     def options(self):
-        return self.raw.get('options', {})
+        return self.raw.get("options", {})
 
     def get_dep_abs_path(self, entry):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
         This method will return the absolute path.
         """
-        req_file = self.raw.get('dependencies', {}).get(entry)
+        req_file = self.raw.get("dependencies", {}).get(entry)
 
         if not req_file:
             return None
 
         # dump inline-declared deps to files that will be injected directly into the generated context
         if isinstance(req_file, dict):
-            tf = tempfile.NamedTemporaryFile('w')
+            tf = tempfile.NamedTemporaryFile("w")
             tf.write(yaml.safe_dump(req_file))
             tf.flush()  # don't close, it'll clean up on GC
             _tempfiles.append(tf)
             req_file = tf.name
-        elif (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
-            tf = tempfile.NamedTemporaryFile('w')
+        elif (is_list := isinstance(req_file, list)) or (
+            isinstance(req_file, str) and "\n" in req_file
+        ):
+            tf = tempfile.NamedTemporaryFile("w")
             if is_list:
-                tf.write('\n'.join(req_file))
+                tf.write("\n".join(req_file))
             else:
                 tf.write(req_file)
             _tempfiles.append(tf)
@@ -203,9 +215,11 @@ class UserDefinition:
         :raises: DefinitionError exception if any errors are found.
         """
         for entry in self.additional_build_files:
-            dest = Path(entry['dest'])
-            if dest.is_absolute() or '..' in dest.parts:
-                raise DefinitionError(f"'dest' must not be an absolute path or contain '..': {dest}")
+            dest = Path(entry["dest"])
+            if dest.is_absolute() or ".." in dest.parts:
+                raise DefinitionError(
+                    f"'dest' must not be an absolute path or contain '..': {dest}"
+                )
 
     def validate(self):
         """
@@ -225,21 +239,21 @@ class UserDefinition:
                     raise DefinitionError(f"Dependency file {requirement_path} does not exist.")
 
         # Validate and set any user-specified build arguments
-        build_arg_defaults = self.raw.get('build_arg_defaults')
+        build_arg_defaults = self.raw.get("build_arg_defaults")
         if build_arg_defaults:
             for key, user_value in build_arg_defaults.items():
                 self.build_arg_defaults[key] = user_value
 
         if self.version > 1:
-            images = self.raw.get('images', {})
+            images = self.raw.get("images", {})
             if images:
-                self.base_image = ImageDescription(images, 'base_image')
+                self.base_image = ImageDescription(images, "base_image")
 
                 # Must set these values so that Containerfile uses the proper images
                 if self.base_image.name:
-                    self.build_arg_defaults['EE_BASE_IMAGE'] = self.base_image.name
-                if 'builder_image' in images:
-                    self.builder_image = ImageDescription(images, 'builder_image')
-                    self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
+                    self.build_arg_defaults["EE_BASE_IMAGE"] = self.base_image.name
+                if "builder_image" in images:
+                    self.builder_image = ImageDescription(images, "builder_image")
+                    self.build_arg_defaults["EE_BUILDER_IMAGE"] = self.builder_image.name
 
             self._validate_additional_build_files()

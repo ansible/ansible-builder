@@ -12,10 +12,10 @@ TYPE_StringOrListOfStrings = {
         {
             "type": "array",
             "items": {
-                "type": "string"
-            }
-        }
-    ]
+                "type": "string",
+            },
+        },
+    ],
 }
 
 TYPE_DictOrStringOrListOfStrings = {
@@ -25,10 +25,10 @@ TYPE_DictOrStringOrListOfStrings = {
         {
             "type": "array",
             "items": {
-                "type": "string"
-            }
-        }
-    ]
+                "type": "string",
+            },
+        },
+    ],
 }
 
 ############
@@ -43,11 +43,9 @@ schema_v1 = {
             "description": "The EE schema version number",
             "type": "number",
         },
-
         "ansible_config": {
             "type": "string",
         },
-
         "build_arg_defaults": {
             "type": "object",
             "additionalProperties": False,
@@ -66,7 +64,6 @@ schema_v1 = {
                 },
             },
         },
-
         "dependencies": {
             "description": "The dependency stuff",
             "type": "object",
@@ -86,7 +83,6 @@ schema_v1 = {
                 },
             },
         },
-
         "additional_build_steps": {
             "type": "object",
             "additionalProperties": False,
@@ -111,11 +107,9 @@ schema_v2 = {
             "description": "The EE schema version number",
             "type": "number",
         },
-
         "ansible_config": {
             "type": "string",
         },
-
         "build_arg_defaults": {
             "type": "object",
             "additionalProperties": False,
@@ -128,7 +122,6 @@ schema_v2 = {
                 },
             },
         },
-
         "dependencies": {
             "description": "The dependency stuff",
             "type": "object",
@@ -148,7 +141,6 @@ schema_v2 = {
                 },
             },
         },
-
         "additional_build_steps": {
             "type": "object",
             "additionalProperties": False,
@@ -157,7 +149,6 @@ schema_v2 = {
                 "append": TYPE_StringOrListOfStrings,
             },
         },
-
         "images": {
             "type": "object",
             "additionalProperties": False,
@@ -183,7 +174,7 @@ schema_v2 = {
                             "type": "string",
                         },
                     },
-                }
+                },
             },
         },
     },
@@ -202,7 +193,6 @@ schema_v3 = {
             "description": "The EE schema version number",
             "type": "number",
         },
-
         "build_arg_defaults": {
             "type": "object",
             "additionalProperties": False,
@@ -218,7 +208,6 @@ schema_v3 = {
                 },
             },
         },
-
         "dependencies": {
             "description": "The dependency stuff",
             "type": "object",
@@ -274,7 +263,6 @@ schema_v3 = {
                 },
             },
         },
-
         "images": {
             "type": "object",
             "additionalProperties": False,
@@ -292,7 +280,6 @@ schema_v3 = {
                 },
             },
         },
-
         "additional_build_steps": {
             "type": "object",
             "additionalProperties": False,
@@ -307,7 +294,6 @@ schema_v3 = {
                 "append_final": TYPE_StringOrListOfStrings,
             },
         },
-
         "additional_build_files": {
             "description": "Describes files to add to the build context",
             "type": "array",
@@ -327,7 +313,6 @@ schema_v3 = {
                 "required": ["src", "dest"],
             },
         },
-
         "options": {
             "description": "Options that effect runtime behavior",
             "type": "object",
@@ -380,9 +365,9 @@ schema_v3 = {
 
 def validate_schema(ee_def: dict):
     schema_version = 1
-    if 'version' in ee_def:
+    if "version" in ee_def:
         try:
-            schema_version = int(ee_def['version'])
+            schema_version = int(ee_def["version"])
         except ValueError:
             raise DefinitionError(f"Schema version not an integer: {ee_def['version']}")
 
@@ -414,14 +399,18 @@ def _handle_aliasing(ee_def: dict):
     accessing the values, just do the key name upgrades/aliasing here.
     """
 
-    if 'additional_build_steps' in ee_def:
+    if "additional_build_steps" in ee_def:
         # V1/V2 'prepend' == V3 'prepend_final'
-        if 'prepend' in ee_def['additional_build_steps']:
-            ee_def['additional_build_steps']['prepend_final'] = ee_def['additional_build_steps']['prepend']
+        if "prepend" in ee_def["additional_build_steps"]:
+            ee_def["additional_build_steps"]["prepend_final"] = ee_def["additional_build_steps"][
+                "prepend"
+            ]
 
         # V1/V2 'append' == V3 'append_final'
-        if 'append' in ee_def['additional_build_steps']:
-            ee_def['additional_build_steps']['append_final'] = ee_def['additional_build_steps']['append']
+        if "append" in ee_def["additional_build_steps"]:
+            ee_def["additional_build_steps"]["append_final"] = ee_def["additional_build_steps"][
+                "append"
+            ]
 
 
 def _handle_options_defaults(ee_def: dict):
@@ -430,17 +419,20 @@ def _handle_options_defaults(ee_def: dict):
     This method is used to set any default values for the "options" dictionary
     properties.
     """
-    options = ee_def.setdefault('options', {})
+    options = ee_def.setdefault("options", {})
 
     entrypoint_path = os.path.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
 
-    options.setdefault('skip_ansible_check', False)
-    options.setdefault('relax_passwd_permissions', True)
-    options.setdefault('workdir', '/runner')
-    options.setdefault('package_manager_path', '/usr/bin/dnf')
-    options.setdefault('container_init', {
-        'package_pip': 'dumb-init==1.2.5',
-        'entrypoint': f'["{entrypoint_path}", "dumb-init"]',
-        'cmd': '["bash"]',
-    })
-    options.setdefault('user', '1000')
+    options.setdefault("skip_ansible_check", False)
+    options.setdefault("relax_passwd_permissions", True)
+    options.setdefault("workdir", "/runner")
+    options.setdefault("package_manager_path", "/usr/bin/dnf")
+    options.setdefault(
+        "container_init",
+        {
+            "package_pip": "dumb-init==1.2.5",
+            "entrypoint": f'["{entrypoint_path}", "dumb-init"]',
+            "cmd": '["bash"]',
+        },
+    )
+    options.setdefault("user", "1000")

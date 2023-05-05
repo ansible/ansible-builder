@@ -12,8 +12,8 @@ from ansible_builder.policies import RejectAll, IgnoreAll
 pytestmark = pytest.mark.skipif(shutil.which("podman") is None, reason="podman not installed")
 
 RUN_UUID = str(uuid.uuid4())
-USER_POLICY_PATH = '~/.config/containers/policy.json'
-BACKUP_POLICY_PATH = f'~/.config/containers/policy.json.{RUN_UUID}'
+USER_POLICY_PATH = "~/.config/containers/policy.json"
+BACKUP_POLICY_PATH = f"~/.config/containers/policy.json.{RUN_UUID}"
 
 
 @pytest.mark.serial  # operations on global shared state in setup (system container policy, image store)
@@ -40,7 +40,7 @@ class TestPolicies:
             target = Path(BACKUP_POLICY_PATH).expanduser()
             user_policy.rename(target)
 
-            cmd = 'podman image prune --force'
+            cmd = "podman image prune --force"
             subprocess.run(cmd.split())
 
     @classmethod
@@ -67,7 +67,7 @@ class TestPolicies:
         ignore_all, we use an execution environment file that would normally
         fail with signature validation.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-no-orig.yml'
+        ee_def = data_dir / "v2" / "sig_req" / "ee-no-orig.yml"
 
         # Make a system policy that rejects everything.
         policy = RejectAll()
@@ -75,8 +75,8 @@ class TestPolicies:
 
         # Use the ignore_all policy to override the system policy.
         result = cli(
-            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
-            f'--container-runtime=podman --container-policy=ignore_all -v3'
+            f"ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} "
+            f"--container-runtime=podman --container-policy=ignore_all -v3",
         )
 
         assert result.rc == 0
@@ -91,7 +91,7 @@ class TestPolicies:
         Expect `--pull-always` to be present in the podman command and that
         a policy.json file is not present with the podman command.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
+        ee_def = data_dir / "v2" / "sig_req" / "ee-good.yml"
 
         # Make a system policy that accepts everything.
         policy = IgnoreAll()
@@ -99,8 +99,8 @@ class TestPolicies:
 
         # Use the system policy
         result = cli(
-            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
-            f'--container-runtime=podman --container-policy=system -v3'
+            f"ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} "
+            f"--container-runtime=podman --container-policy=system -v3",
         )
 
         assert result.rc == 0
@@ -114,11 +114,11 @@ class TestPolicies:
 
         ee-good.yml is valid and should pass with the RPM-GPG-KEY-redhat-release keyring.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
-        keyring = data_dir / 'v2' / 'RPM-GPG-KEY-redhat-release'
+        ee_def = data_dir / "v2" / "sig_req" / "ee-good.yml"
+        keyring = data_dir / "v2" / "RPM-GPG-KEY-redhat-release"
         result = cli(
-            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
-            f'--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3'
+            f"ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} "
+            f"--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3",
         )
 
         assert result.rc == 0
@@ -134,13 +134,13 @@ class TestPolicies:
 
         We force failure by supplying an empty keyring.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
-        keyring = data_dir / 'v2' / 'invalid-keyring'
+        ee_def = data_dir / "v2" / "sig_req" / "ee-good.yml"
+        keyring = data_dir / "v2" / "invalid-keyring"
 
         with pytest.raises(subprocess.CalledProcessError) as einfo:
             cli(
-                f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
-                f'--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3'
+                f"ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} "
+                f"--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3",
             )
 
         assert "Source image rejected: None of the signatures were accepted" in einfo.value.stdout
@@ -151,13 +151,13 @@ class TestPolicies:
 
         ee-no-orig.yml is identical to ee-good.yml, except the signature_original_name is missing on an image.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-no-orig.yml'
-        keyring = data_dir / 'v2' / 'invalid-keyring'
+        ee_def = data_dir / "v2" / "sig_req" / "ee-no-orig.yml"
+        keyring = data_dir / "v2" / "invalid-keyring"
 
         with pytest.raises(subprocess.CalledProcessError) as einfo:
             cli(
-                f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
-                f'--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3'
+                f"ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} "
+                f"--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3",
             )
 
         assert "Source image rejected: None of the signatures were accepted" in einfo.value.stdout

@@ -8,14 +8,14 @@ from ansible_builder.utils import write_file, copy_file, run_command
 
 
 def test_write_file(tmp_path):
-    path = tmp_path / 'foo.txt'
+    path = tmp_path / "foo.txt"
     text = [
-        'foo  # from some collection',
-        'bar',
-        '# a comment',
-        '',
-        'zoo',
-        ''  # trailing line
+        "foo  # from some collection",
+        "bar",
+        "# a comment",
+        "",
+        "zoo",
+        "",  # trailing line
     ]
     assert write_file(path, text)  # does not exist, write
     assert not write_file(path, text)  # already correct, do not write
@@ -23,23 +23,23 @@ def test_write_file(tmp_path):
 
 @pytest.fixture
 def source_file(tmp_path):
-    source = tmp_path / 'bar.txt'
-    with open(source, 'w') as f:
-        f.write('foo\nbar\n')
+    source = tmp_path / "bar.txt"
+    with open(source, "w") as f:
+        f.write("foo\nbar\n")
     return source
 
 
 @pytest.fixture
 def dest_file(tmp_path, source_file):
-    '''Returns a file that has been copied from source file'''
-    dest = tmp_path / 'foo.txt'
+    """Returns a file that has been copied from source file"""
+    dest = tmp_path / "foo.txt"
     shutil.copy2(source_file, dest)
     return dest
 
 
 def test_copy_file(dest_file, source_file):
     # modify source file, which should trigger a re-copy
-    source_file.write_text('foo\nbar\nzoo')
+    source_file.write_text("foo\nbar\nzoo")
 
     assert copy_file(source_file, dest_file)
     assert not copy_file(source_file, dest_file)
@@ -66,14 +66,14 @@ def test_copy_touched_file_ignore_mtime(dest_file, source_file):
 
 def test_copy_file_with_destination_directory(dest_file, source_file):
     # Change source file to trigger copy_file
-    source_file.write_text('foo\nbar\nzoo')
+    source_file.write_text("foo\nbar\nzoo")
 
     with pytest.raises(Exception) as err:
-        copy_file(source_file, '/tmp')
+        copy_file(source_file, "/tmp")
     assert "can not be a directory" in str(err.value.args[0])
 
     with pytest.raises(Exception) as err:
-        copy_file('/tmp', dest_file)
+        copy_file("/tmp", dest_file)
     assert "can not be a directory" in str(err.value.args[0])
 
     assert copy_file(source_file, dest_file)
@@ -81,17 +81,17 @@ def test_copy_file_with_destination_directory(dest_file, source_file):
 
 @pytest.mark.run_command
 def test_failed_command(mocker):
-    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+    mocker.patch("ansible_builder.utils.subprocess.Popen.wait", return_value=1)
     with pytest.raises(SystemExit):
-        run_command(['sleep', '--invalidargument'])
+        run_command(["sleep", "--invalidargument"])
 
 
 @pytest.mark.run_command
 def test_failed_command_with_allow_error(mocker):
-    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+    mocker.patch("ansible_builder.utils.subprocess.Popen.wait", return_value=1)
 
     rc, out = run_command(
-        ['sleep', '--invalidargument'],
+        ["sleep", "--invalidargument"],
         allow_error=True,
     )
 
@@ -101,27 +101,27 @@ def test_failed_command_with_allow_error(mocker):
 
 @pytest.mark.run_command
 def test_invalid_non_docker_command(caplog, mocker):
-    mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+    mocker.patch("ansible_builder.utils.subprocess.Popen.wait", return_value=1)
 
-    command = 'thisisnotacommand'
+    command = "thisisnotacommand"
     with pytest.raises(SystemExit):
         run_command([command], capture_output=True)
 
     record = caplog.records[-1]  # final log message emitted
 
-    assert f'You do not have {command} installed' in record.msg
-    assert 'container-runtime' not in record.msg
+    assert f"You do not have {command} installed" in record.msg
+    assert "container-runtime" not in record.msg
 
 
 @pytest.mark.run_command
 def test_invalid_docker_command(caplog, mocker):
-    mocker.patch('ansible_builder.utils.subprocess.Popen', side_effect=FileNotFoundError)
-    mocker.patch('ansible_builder.utils.shutil.which', return_value=False)
+    mocker.patch("ansible_builder.utils.subprocess.Popen", side_effect=FileNotFoundError)
+    mocker.patch("ansible_builder.utils.shutil.which", return_value=False)
 
     with pytest.raises(SystemExit):
-        run_command(['docker', 'history', 'quay.io/foo/fooooo'], capture_output=True)
+        run_command(["docker", "history", "quay.io/foo/fooooo"], capture_output=True)
 
     record = caplog.records[-1]  # final log message emitted
 
-    assert 'You do not have docker installed' in record.msg
-    assert 'podman: not installed, docker: not installed' in record.msg
+    assert "You do not have docker installed" in record.msg
+    assert "podman: not installed, docker: not installed" in record.msg

@@ -7,96 +7,113 @@ from ansible_builder.user_definition import UserDefinition, ImageDescription
 
 
 class TestUserDefinition:
-
     def test_definition_syntax_error(self, data_dir):
-        path = os.path.join(data_dir, 'definition_files/bad.yml')
+        path = os.path.join(data_dir, "definition_files/bad.yml")
 
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
 
-        assert 'An error occurred while parsing the definition file:' in str(error.value.args[0])
+        assert "An error occurred while parsing the definition file:" in str(error.value.args[0])
 
-    @pytest.mark.parametrize('yaml_text,expect', [
-        ('1', 'Definition must be a dictionary, not int'),  # integer
-        (
-            "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
-            'not-exists.yml does not exist'
-        ),  # missing file
-        (
-            "{'version': 1, 'additional_build_steps': 'RUN me'}",
-            "'RUN me' is not of type 'object'"
-        ),  # not right format for additional_build_steps
-        (
-            "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
-            "Additional properties are not allowed ('middle' was unexpected)"
-        ),  # there are no "middle" build steps
-        (
-            "{'version': 1, 'build_arg_defaults': {'EE_BASE_IMAGE': ['foo']}}",
-            "['foo'] is not of type 'string'"
-        ),  # image itself is wrong type
-        (
-            "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
-            "Additional properties are not allowed ('BUILD_ARRRRRG' was unexpected)"
-        ),  # image itself is wrong type
-        (
-            "{'version': 1, 'ansible_config': ['ansible.cfg']}",
-            "['ansible.cfg'] is not of type 'string'"
-        ),
-        (
-            "{'version': 1, 'images': 'bar'}",
-            "Additional properties are not allowed ('images' was unexpected)"
-        ),
-        (
-            "{'version': 2, 'foo': 'bar'}",
-            "Additional properties are not allowed ('foo' was unexpected)"
-        ),
-        (
-            "{'version': 2, 'build_arg_defaults': {'EE_BASE_IMAGE': 'foo'}, 'images': {}}",
-            "Additional properties are not allowed ('EE_BASE_IMAGE' was unexpected)"
-        ),  # v1 base image defined in v2 file
-        (
-            "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
-            "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)"
-        ),  # v1 builder image defined in v2 file
-        (
-            "{'version': 3, 'additional_build_steps': {'prepend': ''}}",
-            "Additional properties are not allowed ('prepend' was unexpected)"
-        ),  # 'prepend' is renamed in v2
-        (
-            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
-            "'dest' must not be an absolute path or contain '..': ../b"
-        ),  # destination cannot contain ..
-        (
-            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
-            "'dest' must not be an absolute path or contain '..': /b"
-        ),  # destination cannot be absolute
-        (
-            "{'version': 3, 'additional_build_files': [ {'dest': 'b'} ]}",
-            "'src' is a required property"
-        ),  # source is required
-        (
-            "{'version': 3, 'additional_build_files': [ {'src': 'a'} ]}",
-            "'dest' is a required property"
-        ),  # destination is required
-        (
-            "{'version': 3, 'ansible_config': 'ansible.cfg' }",
-            "Additional properties are not allowed ('ansible_config' was unexpected)"
-        ),  # ansible_config not supported in v3
-        (
-            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
-            "Additional properties are not allowed ('builder_image' was unexpected)"
-        ),  # builder_image not suppored in v3
-        (
-            "{'version': 3, 'options': { 'skip_ansible_check': 'True' } }",
-            "'True' is not of type 'boolean'"
-        ),
-    ], ids=[
-        'integer', 'missing_file', 'additional_steps_format', 'additional_unknown',
-        'build_args_value_type', 'unexpected_build_arg', 'config_type', 'v1_contains_v2_key',
-        'v2_unknown_key', 'v1_base_image_in_v2', 'v1_builder_image_in_v2', 'prepend_in_v3',
-        'dest_has_dot_dot', 'dest_is_absolute', 'src_req', 'dest_req', 'ansible_cfg',
-        'builder_in_v3', 'opt_skip_ans_chk',
-    ])
+    @pytest.mark.parametrize(
+        "yaml_text,expect",
+        [
+            ("1", "Definition must be a dictionary, not int"),  # integer
+            (
+                "{'version': 1, 'dependencies': {'python': 'foo/not-exists.yml'}}",
+                "not-exists.yml does not exist",
+            ),  # missing file
+            (
+                "{'version': 1, 'additional_build_steps': 'RUN me'}",
+                "'RUN me' is not of type 'object'",
+            ),  # not right format for additional_build_steps
+            (
+                "{'version': 1, 'additional_build_steps': {'middle': 'RUN me'}}",
+                "Additional properties are not allowed ('middle' was unexpected)",
+            ),  # there are no "middle" build steps
+            (
+                "{'version': 1, 'build_arg_defaults': {'EE_BASE_IMAGE': ['foo']}}",
+                "['foo'] is not of type 'string'",
+            ),  # image itself is wrong type
+            (
+                "{'version': 1, 'build_arg_defaults': {'BUILD_ARRRRRG': 'swashbuckler'}}",
+                "Additional properties are not allowed ('BUILD_ARRRRRG' was unexpected)",
+            ),  # image itself is wrong type
+            (
+                "{'version': 1, 'ansible_config': ['ansible.cfg']}",
+                "['ansible.cfg'] is not of type 'string'",
+            ),
+            (
+                "{'version': 1, 'images': 'bar'}",
+                "Additional properties are not allowed ('images' was unexpected)",
+            ),
+            (
+                "{'version': 2, 'foo': 'bar'}",
+                "Additional properties are not allowed ('foo' was unexpected)",
+            ),
+            (
+                "{'version': 2, 'build_arg_defaults': {'EE_BASE_IMAGE': 'foo'}, 'images': {}}",
+                "Additional properties are not allowed ('EE_BASE_IMAGE' was unexpected)",
+            ),  # v1 base image defined in v2 file
+            (
+                "{'version': 2, 'build_arg_defaults': {'EE_BUILDER_IMAGE': 'foo'}, 'images': {}}",
+                "Additional properties are not allowed ('EE_BUILDER_IMAGE' was unexpected)",
+            ),  # v1 builder image defined in v2 file
+            (
+                "{'version': 3, 'additional_build_steps': {'prepend': ''}}",
+                "Additional properties are not allowed ('prepend' was unexpected)",
+            ),  # 'prepend' is renamed in v2
+            (
+                "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
+                "'dest' must not be an absolute path or contain '..': ../b",
+            ),  # destination cannot contain ..
+            (
+                "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
+                "'dest' must not be an absolute path or contain '..': /b",
+            ),  # destination cannot be absolute
+            (
+                "{'version': 3, 'additional_build_files': [ {'dest': 'b'} ]}",
+                "'src' is a required property",
+            ),  # source is required
+            (
+                "{'version': 3, 'additional_build_files': [ {'src': 'a'} ]}",
+                "'dest' is a required property",
+            ),  # destination is required
+            (
+                "{'version': 3, 'ansible_config': 'ansible.cfg' }",
+                "Additional properties are not allowed ('ansible_config' was unexpected)",
+            ),  # ansible_config not supported in v3
+            (
+                "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
+                "Additional properties are not allowed ('builder_image' was unexpected)",
+            ),  # builder_image not suppored in v3
+            (
+                "{'version': 3, 'options': { 'skip_ansible_check': 'True' } }",
+                "'True' is not of type 'boolean'",
+            ),
+        ],
+        ids=[
+            "integer",
+            "missing_file",
+            "additional_steps_format",
+            "additional_unknown",
+            "build_args_value_type",
+            "unexpected_build_arg",
+            "config_type",
+            "v1_contains_v2_key",
+            "v2_unknown_key",
+            "v1_base_image_in_v2",
+            "v1_builder_image_in_v2",
+            "prepend_in_v3",
+            "dest_has_dot_dot",
+            "dest_is_absolute",
+            "src_req",
+            "dest_req",
+            "ansible_cfg",
+            "builder_in_v3",
+            "opt_skip_ans_chk",
+        ],
+    )
     def test_yaml_error(self, exec_env_definition_file, yaml_text, expect):
         path = exec_env_definition_file(yaml_text)
         with pytest.raises(DefinitionError) as exc:
@@ -111,7 +128,10 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
 
-        assert "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location." in str(error.value.args[0])
+        assert (
+            "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location."
+            in str(error.value.args[0])
+        )
 
     def test_ee_validated_early(self, exec_env_definition_file):
         """
@@ -120,28 +140,34 @@ class TestUserDefinition:
         path = exec_env_definition_file("{'version': 1, 'bad_key': 1}")
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
-        assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(error.value.args[0])
+        assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(
+            error.value.args[0]
+        )
 
     def test_ee_missing_image_name(self, exec_env_definition_file):
-        path = exec_env_definition_file("{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}")
+        path = exec_env_definition_file(
+            "{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}"
+        )
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "'name' is a required field for 'base_image'" in str(error.value.args[0])
 
     def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):
-        """ Test that EE schema keys are upgraded from version V1 to V2. """
-        path = exec_env_definition_file("{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}")
+        """Test that EE schema keys are upgraded from version V1 to V2."""
+        path = exec_env_definition_file(
+            "{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}"
+        )
         definition = UserDefinition(path)
         definition.validate()
-        add_bld_steps = definition.raw['additional_build_steps']
-        assert 'prepend' in add_bld_steps
-        assert 'append' in add_bld_steps
-        assert add_bld_steps['prepend'] == 'value1'
-        assert add_bld_steps['append'] == 'value2'
-        assert 'prepend_final' in add_bld_steps
-        assert 'append_final' in add_bld_steps
-        assert add_bld_steps['prepend_final'] == add_bld_steps['prepend']
-        assert add_bld_steps['append_final'] == add_bld_steps['append']
+        add_bld_steps = definition.raw["additional_build_steps"]
+        assert "prepend" in add_bld_steps
+        assert "append" in add_bld_steps
+        assert add_bld_steps["prepend"] == "value1"
+        assert add_bld_steps["append"] == "value2"
+        assert "prepend_final" in add_bld_steps
+        assert "append_final" in add_bld_steps
+        assert add_bld_steps["prepend_final"] == add_bld_steps["prepend"]
+        assert add_bld_steps["append_final"] == add_bld_steps["append"]
 
     def test_v2_images(self, exec_env_definition_file):
         """
@@ -149,15 +175,15 @@ class TestUserDefinition:
         to the build_arg_defaults equivalents.
         """
         path = exec_env_definition_file(
-            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}"
+            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
         assert definition.base_image.name == "base_image:latest"
         assert definition.builder_image.name == "builder_image:latest"
-        assert definition.build_arg_defaults['EE_BASE_IMAGE'] == "base_image:latest"
-        assert definition.build_arg_defaults['EE_BUILDER_IMAGE'] == "builder_image:latest"
+        assert definition.build_arg_defaults["EE_BASE_IMAGE"] == "base_image:latest"
+        assert definition.build_arg_defaults["EE_BUILDER_IMAGE"] == "builder_image:latest"
 
     def test_v3_ansible_install_refs(self, exec_env_definition_file):
         path = exec_env_definition_file(
@@ -168,7 +194,7 @@ class TestUserDefinition:
                 'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
              }
             }
-            """
+            """,
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -181,38 +207,38 @@ class TestUserDefinition:
         Test that inline values for dependencies.python work.
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'dependencies': {'python': ['req1', 'req2']}}"
+            "{'version': 3, 'dependencies': {'python': ['req1', 'req2']}}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
-        python_req = definition.raw.get('dependencies', {}).get('python')
-        assert python_req == ['req1', 'req2']
+        python_req = definition.raw.get("dependencies", {}).get("python")
+        assert python_req == ["req1", "req2"]
 
     def test_v3_inline_system(self, exec_env_definition_file):
         """
         Test that inline values for dependencies.system work.
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'dependencies': {'system': ['req1', 'req2']}}"
+            "{'version': 3, 'dependencies': {'system': ['req1', 'req2']}}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
-        system_req = definition.raw.get('dependencies', {}).get('system')
-        assert system_req == ['req1', 'req2']
+        system_req = definition.raw.get("dependencies", {}).get("system")
+        assert system_req == ["req1", "req2"]
 
     def test_v3_skip_ansible_check_default(self, exec_env_definition_file):
         """
         Test that options.skip_ansible_check defaults to False
         """
         path = exec_env_definition_file(
-            "{'version': 3}"
+            "{'version': 3}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
-        value = definition.raw.get('options', {}).get('skip_ansible_check')
+        value = definition.raw.get("options", {}).get("skip_ansible_check")
         assert value is False
 
     def test_v3_user_id(self, exec_env_definition_file):
@@ -220,64 +246,71 @@ class TestUserDefinition:
         Test that options.user defaults to 1000
         """
         path = exec_env_definition_file(
-            "{'version': 3}"
+            "{'version': 3}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
-        value = definition.raw.get('options', {}).get('user')
-        assert value == '1000'
+        value = definition.raw.get("options", {}).get("user")
+        assert value == "1000"
 
     def test_v3_set_user_name(self, exec_env_definition_file):
         """
         Test that options.user sets to username
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'options': {'user': 'bob'}}"
+            "{'version': 3, 'options': {'user': 'bob'}}",
         )
         definition = UserDefinition(path)
         definition.validate()
 
-        value = definition.raw.get('options', {}).get('user')
-        assert value == 'bob'
+        value = definition.raw.get("options", {}).get("user")
+        assert value == "bob"
 
 
 class TestImageDescription:
-
     def test_bad_programmer(self):
         with pytest.raises(ValueError) as error:
-            ImageDescription({}, 'invalid_image_key')
+            ImageDescription({}, "invalid_image_key")
         assert "Invalid image key used for initialization: invalid_image_key" in str(error)
 
-    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
+    @pytest.mark.parametrize("key", ["base_image", "builder_image"])
     def test_missing_name(self, key):
-        ee_section = {key: {'signature_original_name': ''}}
+        ee_section = {key: {"signature_original_name": ""}}
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"'name' is a required field for '{key}'" in str(error.value.args[0])
 
-    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
-    @pytest.mark.parametrize('image', ['registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8',
-                                       'registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:'
-                                       ])
+    @pytest.mark.parametrize("key", ["base_image", "builder_image"])
+    @pytest.mark.parametrize(
+        "image",
+        [
+            "registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8",
+            "registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:",
+        ],
+    )
     def test_missing_name_tag(self, key, image):
         """
         Test that image.name fails when it doesn't have a tag.
         """
-        ee_section = {key: {'name': image}}
+        ee_section = {key: {"name": image}}
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"Container image requires a tag: {image}" in str(error.value.args[0])
 
-    @pytest.mark.parametrize('key', ['base_image', 'builder_image'])
-    @pytest.mark.parametrize('image', ['registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8',
-                                       'registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:'
-                                       ])
+    @pytest.mark.parametrize("key", ["base_image", "builder_image"])
+    @pytest.mark.parametrize(
+        "image",
+        [
+            "registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8",
+            "registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:",
+        ],
+    )
     def test_missing_orig_name_tag(self, key, image):
         """
         Test that image.signature_original_name fails when it doesn't have a tag.
         """
-        ee_section = {key: {'name': 'my-mirror/aap/ee:latest', 'signature_original_name': image}}
+        ee_section = {key: {"name": "my-mirror/aap/ee:latest", "signature_original_name": image}}
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"Container image requires a tag: {image}" in str(error.value.args[0])

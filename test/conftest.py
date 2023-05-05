@@ -8,58 +8,64 @@ import uuid
 import yaml
 
 
-TAG_PREFIX = 'quay.io/example/builder-test'
-KEEP_IMAGES = bool(os.environ.get('KEEP_IMAGES', False))
+TAG_PREFIX = "quay.io/example/builder-test"
+KEEP_IMAGES = bool(os.environ.get("KEEP_IMAGES", False))
 
 CONTAINER_RUNTIMES = (
-    'docker',
-    'podman',
+    "docker",
+    "podman",
 )
 
 FOUND_RUNTIMES = set()
 
-GOOD_CONTENT = {'version': 1}
+GOOD_CONTENT = {"version": 1}
 
 
 @pytest.fixture(autouse=True)
 def do_not_run_commands(request, mocker):
-    if 'run_command' in request.keywords:
+    if "run_command" in request.keywords:
         yield
         return
-    cmd_mock = mocker.MagicMock(return_value=[1, [
-        'python:', '  foo: []', 'system: {}',
-    ]])
-    mocker.patch('ansible_builder.main.run_command', new=cmd_mock)
+    cmd_mock = mocker.MagicMock(
+        return_value=[
+            1,
+            [
+                "python:",
+                "  foo: []",
+                "system: {}",
+            ],
+        ],
+    )
+    mocker.patch("ansible_builder.main.run_command", new=cmd_mock)
     yield cmd_mock
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def data_dir():
-    return pathlib.Path(pathlib.Path(__file__).parent).joinpath('data')
+    return pathlib.Path(pathlib.Path(__file__).parent).joinpath("data")
 
 
 def pytest_addoption(parser):
     parser.addoption(
-        '--run-destructive',
-        action='store_true',
+        "--run-destructive",
+        action="store_true",
         default=False,
-        help='Run tests that may be destructive to the host'
+        help="Run tests that may be destructive to the host",
     )
     parser.addoption(
-        '--skip-runtime',
+        "--skip-runtime",
         choices=CONTAINER_RUNTIMES,
-        action='append',
-        help='Skip tests for a container runtime engine'
+        action="append",
+        help="Skip tests for a container runtime engine",
     )
 
 
 @pytest.fixture
 def exec_env_definition_file(tmp_path):
-
     def _write_file(content=None):
-        path = tmp_path / 'aee'
+        path = tmp_path / "aee"
         path.mkdir()
-        path = path / 'execution-env.yml'
+        path = path / "execution-env.yml"
 
         write_str = {}
         if isinstance(content, dict):
@@ -76,11 +82,11 @@ def exec_env_definition_file(tmp_path):
 
 @pytest.fixture
 def good_exec_env_definition_path(tmp_path):
-    path = tmp_path / 'aee'
+    path = tmp_path / "aee"
     path.mkdir()
-    path = path / 'execution-env.yml'
+    path = path / "execution-env.yml"
 
-    with path.open('w') as outfile:
+    with path.open("w") as outfile:
         yaml.dump(GOOD_CONTENT, outfile)
 
     return path
@@ -88,13 +94,12 @@ def good_exec_env_definition_path(tmp_path):
 
 @pytest.fixture
 def galaxy_requirements_file(tmp_path):
-
     def _write_file(content={}):
-        path = tmp_path / 'galaxy'
+        path = tmp_path / "galaxy"
         path.mkdir()
-        path = path / 'requirements.yml'
+        path = path / "requirements.yml"
 
-        with path.open('w') as outfile:
+        with path.open("w") as outfile:
             yaml.dump(content, outfile)
 
         return path
@@ -106,7 +111,7 @@ def galaxy_requirements_file(tmp_path):
 # https://pytest-xdist.readthedocs.io/en/stable/how-it-works.html#how-it-works
 def pytest_sessionstart(session):
     """Find the available runtimes only once per test session."""
-    skip_runtimes = session.config.getoption('--skip-runtime') or []
+    skip_runtimes = session.config.getoption("--skip-runtime") or []
     for runtime in CONTAINER_RUNTIMES:
         if shutil.which(runtime) and runtime not in skip_runtimes:
             FOUND_RUNTIMES.add(runtime)
@@ -114,16 +119,24 @@ def pytest_sessionstart(session):
 
 def pytest_collection_modifyitems(session, config, items):
     # mark destructive items as skipped if `--run-destructive` was not specified
-    if not config.getoption('--run-destructive'):
-        for destructive_item in (i for i in items if any(i.iter_markers(name='destructive'))):
-            destructive_item.add_marker(pytest.mark.skip(reason='test is potentially destructive to the host (add --run-destructive to allow)'))
+    if not config.getoption("--run-destructive"):
+        for destructive_item in (i for i in items if any(i.iter_markers(name="destructive"))):
+            destructive_item.add_marker(
+                pytest.mark.skip(
+                    reason="test is potentially destructive to the host (add --run-destructive to allow)"
+                )
+            )
 
     # mark serial items as skipped if it looks like we're running with some obvious kinds of parallelism
-    numproc = getattr(config.known_args_namespace, 'numprocesses', None)
+    numproc = getattr(config.known_args_namespace, "numprocesses", None)
 
     if isinstance(numproc, int) and numproc > 1:
-        for serial_item in (i for i in items if any(i.iter_markers(name='serial'))):
-            serial_item.add_marker(pytest.mark.skip(reason='test requires serial execution (add --numprocesses 0 to allow)'))
+        for serial_item in (i for i in items if any(i.iter_markers(name="serial"))):
+            serial_item.add_marker(
+                pytest.mark.skip(
+                    reason="test requires serial execution (add --numprocesses 0 to allow)"
+                )
+            )
 
 
 def pytest_generate_tests(metafunc):
@@ -136,27 +149,31 @@ def pytest_generate_tests(metafunc):
 
     Based on examples from https://docs.pytest.org/en/latest/example/parametrize.html.
     """
-    for mark in getattr(metafunc.function, 'pytestmark', []):
-        if getattr(mark, 'name', '') == 'test_all_runtimes':
+    for mark in getattr(metafunc.function, "pytestmark", []):
+        if getattr(mark, "name", "") == "test_all_runtimes":
             args = tuple(
                 pytest.param(
                     runtime,
                     marks=pytest.mark.skipif(
                         runtime not in FOUND_RUNTIMES,
-                        reason=f'{runtime} skipped or not found'),
-                ) for runtime in CONTAINER_RUNTIMES
+                        reason=f"{runtime} skipped or not found",
+                    ),
+                )
+                for runtime in CONTAINER_RUNTIMES
             )
-            metafunc.parametrize('runtime', args)
+            metafunc.parametrize("runtime", args)
             break
 
 
 @pytest.fixture
 def build_dir_and_ee_yml(tmp_path):
     """Fixture to return temporary file maker."""
+
     def tmp_dir_and_file(ee_contents):
-        tmp_file = tmp_path / 'ee.txt'
+        tmp_file = tmp_path / "ee.txt"
         tmp_file.write_text(ee_contents)
         return tmp_path, tmp_file
+
     return tmp_dir_and_file
 
 
@@ -176,7 +193,7 @@ def run(args, *a, allow_error=False, **kw):
     for i, arg in enumerate(args):
         if not isinstance(arg, str):
             raise pytest.fail(
-                f'Argument {arg} in {i} position is not string, args:\n{args}'
+                f"Argument {arg} in {i} position is not string, args:\n{args}",
             )
 
     try:
@@ -186,9 +203,9 @@ def run(args, *a, allow_error=False, **kw):
             # Previously used pytest.fail here, but that missed some error details
             print(f"Running following command resulted in a non-zero return code: {err.returncode}")
             print(err.cmd)
-            print('stdout:')
+            print("stdout:")
             print(err.stdout)
-            print('stderr:')
+            print("stderr:")
             print(err.stderr)
             raise
         err.rc = err.returncode  # lazyily make it look like a CompletedProcessProxy
@@ -200,11 +217,13 @@ def run(args, *a, allow_error=False, **kw):
 
 
 def gen_image_name(request):
-    return '_'.join([
-        TAG_PREFIX,
-        request.node.name.lower().replace('[', '_').replace(']', '_'),
-        str(uuid.uuid4())[:10]
-    ])
+    return "_".join(
+        [
+            TAG_PREFIX,
+            request.node.name.lower().replace("[", "_").replace("]", "_"),
+            str(uuid.uuid4())[:10],
+        ]
+    )
 
 
 def delete_image(runtime, image_name):
@@ -212,13 +231,15 @@ def delete_image(runtime, image_name):
         return
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
-    regexp = re.compile(r'(no such image)|(image not known)|(image is in use by a container)', re.IGNORECASE)
-    r = run(f'{runtime} rmi -f {image_name}', allow_error=True)
+    regexp = re.compile(
+        r"(no such image)|(image not known)|(image is in use by a container)", re.IGNORECASE
+    )
+    r = run(f"{runtime} rmi -f {image_name}", allow_error=True)
     if r.rc != 0:
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
         else:
-            raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+            raise Exception(f"Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}")
 
 
 @pytest.fixture
