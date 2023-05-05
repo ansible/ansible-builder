@@ -142,6 +142,12 @@ By default, the Containerfile / Dockerfile outputted by Ansible Builder contains
 
    $ ansible-builder build --build-arg FOO=bar
 
+To use different build arguments, you can specify ``--build-arg`` multiple times:
+
+.. code::
+
+   $ ansible-builder build --build-arg FOO=bar --build-arg SIMPLE=sample
+
 To use a custom base image:
 
 .. code::
@@ -249,7 +255,7 @@ Examples
 
 The example in ``test/data/pytz`` requires the ``awx.awx`` collection in
 the execution environment definition. The lookup plugin
-``awx.awx.tower_schedule_rrule`` requires the PyPI ``pytz`` and another
+``awx.awx.schedule_rrule`` requires the PyPI ``pytz`` and another
 library to work. If ``test/data/pytz/execution-environment.yml`` file is
 given to the ``ansible-builder build`` command, then it will install the
 collection inside the image, read ``requirements.txt`` inside of the
@@ -269,7 +275,7 @@ the private data directory.
 
 The ``awx.awx`` collection is a subset of content included in the default
 AWX execution environment. More details can be found at the
-`awx-ee <https://github.com/ansible/awx-ee>`__ repository.
+`awx-ee <https://github.com/ansible/awx-ee>`_ repository.
 
 
 Deprecated Features

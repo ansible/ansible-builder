@@ -202,13 +202,15 @@ def parse_args(args=sys.argv[1:]):
 
 class BuildArgAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        key, *value = values.split('=')
+        key, sep, value = values.partition("=")
         attr = getattr(namespace, self.dest)
 
         # None signifies that the build-arg will come from the environment.
         # This is currently only supported by Docker. Podman will treat any
         # usage of the $VALUE as a literal string.
         if value:
-            attr[key] = value[0]
+            attr[key] = value
+        elif sep == '=' and value == '':
+            attr[key] = ''
         else:
             attr[key] = None
