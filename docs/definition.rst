@@ -297,7 +297,7 @@ builder runtime functionality. Valid keys for this section are:
         entrypoint script may emit warnings to ``stderr`` in cases where it is unable to suitably adjust the
         user runtime environment. This behavior can be ignored or elevated to a fatal error; consult the
         source for the ``entrypoint`` target script for more details. The default value is
-        ``["/output/scripts/entrypoint", "dumb-init"]``.
+        ``["/opt/builder/bin/entrypoint", "dumb-init"]``.
 
       ``package_pip``
         Package to install via pip for entrypoint support. This package will be installed in the final build image.

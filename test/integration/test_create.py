@@ -316,12 +316,15 @@ def test_v3_complete(cli, data_dir, tmp_path):
     # verify that the ansible/runner check is performed
     assert 'RUN /output/scripts/check_ansible' in text
 
+    # /output should be removed in final image
+    assert 'RUN rm -rf /output' in text
+
     # verify that the default init is being installed and that ENTRYPOINT is set
     assert "RUN $PYCMD -m pip install --no-cache-dir 'dumb-init==" in text
     assert 'WORKDIR /runner' in text
     assert 'RUN chmod ug+rw /etc/passwd' in text
     assert 'RUN mkdir -p /runner' in text
-    assert 'ENTRYPOINT ["/output/scripts/entrypoint", "dumb-init"]' in text
+    assert f'ENTRYPOINT ["{constants.FINAL_IMAGE_BIN_PATH}/entrypoint", "dumb-init"]' in text
     assert 'USER 1001' in text
 
     # check additional_build_files
