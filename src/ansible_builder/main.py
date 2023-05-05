@@ -42,7 +42,7 @@ class AnsibleBuilder:
             galaxy_required_valid_signature_count or galaxy_ignore_signature_status_codes
         ):
             raise ValueError(
-                "--galaxy-required-valid-signature-count and --galaxy-ignore-signature-status-code may not be set without --galaxy-keyring"
+                "--galaxy-required-valid-signature-count and --galaxy-ignore-signature-status-code may not be set without --galaxy-keyring",
             )
 
         self.action = action
@@ -72,7 +72,8 @@ class AnsibleBuilder:
         )
         self.verbosity = verbosity
         self.container_policy, self.container_keyring = self._handle_image_validation_opts(
-            container_policy, container_keyring
+            container_policy,
+            container_keyring,
         )
         self.squash = squash
 
@@ -109,7 +110,7 @@ class AnsibleBuilder:
             # Require keyring if we write a policy file
             if resolved_policy == PolicyChoices.SIG_REQ and keyring is None:
                 raise ValueError(
-                    f"--container-policy={resolved_policy.value} requires --container-keyring"
+                    f"--container-policy={resolved_policy.value} requires --container-keyring",
                 )
 
             # Do not allow images to be defined with --build-arg CLI option if
@@ -117,7 +118,7 @@ class AnsibleBuilder:
             for key, _ in self.build_args.items():
                 if key in ("EE_BASE_IMAGE", "EE_BUILDER_IMAGE"):
                     raise ValueError(
-                        f"{key} not allowed in --build-arg option with version 2 format"
+                        f"{key} not allowed in --build-arg option with version 2 format",
                     )
 
         if keyring is not None:
@@ -126,7 +127,7 @@ class AnsibleBuilder:
                 raise ValueError("--container-keyring requires --container-policy")
             elif resolved_policy != PolicyChoices.SIG_REQ:
                 raise ValueError(
-                    f"--container-keyring is not valid with --container-policy={resolved_policy.value}"
+                    f"--container-keyring is not valid with --container-policy={resolved_policy.value}",
                 )
 
             # Set the keyring to an absolute path to be referenced in the policy file.
@@ -215,7 +216,8 @@ class AnsibleBuilder:
             # files work correctly if they require validating signatures.
             if self.container_policy != PolicyChoices.SYSTEM:
                 policy_file_path = os.path.join(
-                    self.build_context, constants.default_policy_file_name
+                    self.build_context,
+                    constants.default_policy_file_name,
                 )
                 logger.debug("Writing podman policy file %s", policy_file_path)
                 policy.write_policy(policy_file_path)

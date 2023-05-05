@@ -7,7 +7,10 @@ def make_containerfile(tmpdir, ee_path, **cf_kwargs):
     definition = UserDefinition(ee_path)
     build_context = str(tmpdir / "_build")
     c = Containerfile(
-        definition, build_context=build_context, container_runtime="podman", **cf_kwargs
+        definition,
+        build_context=build_context,
+        container_runtime="podman",
+        **cf_kwargs,
     )
     return c
 

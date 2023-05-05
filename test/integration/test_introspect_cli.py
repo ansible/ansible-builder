@@ -26,7 +26,7 @@ def test_introspect_write_bindep(cli, data_dir, tmp_path):
             "subversion [platform:rpm]  # from collection test.bindep",
             "subversion [platform:dpkg]  # from collection test.bindep",
             "",
-        ]
+        ],
     )
 
 
@@ -43,7 +43,7 @@ def test_introspect_write_python(cli, data_dir, tmp_path):
             "tacacs_plus  # from collection test.reqfile",
             "pyvcloud>=18.0.10  # from collection test.reqfile",
             "",
-        ]
+        ],
     )
 
 
@@ -59,7 +59,7 @@ def test_introspect_write_python_and_sanitize(cli, data_dir, tmp_path):
             "jinja2>=3.0  # from collection test.reqfile",
             "tacacs_plus  # from collection test.reqfile",
             "",
-        ]
+        ],
     )
 
 

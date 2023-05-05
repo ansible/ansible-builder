@@ -336,7 +336,7 @@ EXCLUDE_REQUIREMENTS = frozenset(
         "yaml",
         "pyyaml",
         "json",
-    )
+    ),
 )
 
 
@@ -377,7 +377,9 @@ def sanitize_requirements(collection_py_reqs):
                 seen_pkgs.add(req.name)
         except Exception as e:
             logger.warning(
-                "Warning: failed to parse requirements from %s, error: %s", collection, e
+                "Warning: failed to parse requirements from %s, error: %s",
+                collection,
+                e,
             )
 
     # removal of unwanted packages

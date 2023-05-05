@@ -18,7 +18,10 @@ def test_definition_version_missing(exec_env_definition_file):
 
 @pytest.mark.parametrize("path_spec", ("absolute", "relative"))
 def test_galaxy_requirements(
-    exec_env_definition_file, galaxy_requirements_file, path_spec, tmp_path
+    exec_env_definition_file,
+    galaxy_requirements_file,
+    path_spec,
+    tmp_path,
 ):
     galaxy_requirements_content = {
         "collections": [

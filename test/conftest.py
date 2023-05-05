@@ -123,8 +123,8 @@ def pytest_collection_modifyitems(session, config, items):
         for destructive_item in (i for i in items if any(i.iter_markers(name="destructive"))):
             destructive_item.add_marker(
                 pytest.mark.skip(
-                    reason="test is potentially destructive to the host (add --run-destructive to allow)"
-                )
+                    reason="test is potentially destructive to the host (add --run-destructive to allow)",
+                ),
             )
 
     # mark serial items as skipped if it looks like we're running with some obvious kinds of parallelism
@@ -134,8 +134,8 @@ def pytest_collection_modifyitems(session, config, items):
         for serial_item in (i for i in items if any(i.iter_markers(name="serial"))):
             serial_item.add_marker(
                 pytest.mark.skip(
-                    reason="test requires serial execution (add --numprocesses 0 to allow)"
-                )
+                    reason="test requires serial execution (add --numprocesses 0 to allow)",
+                ),
             )
 
 
@@ -222,7 +222,7 @@ def gen_image_name(request):
             TAG_PREFIX,
             request.node.name.lower().replace("[", "_").replace("]", "_"),
             str(uuid.uuid4())[:10],
-        ]
+        ],
     )
 
 
@@ -232,7 +232,8 @@ def delete_image(runtime, image_name):
     # delete given image, if the test happened to make one
     # allow error in case that image was not created
     regexp = re.compile(
-        r"(no such image)|(image not known)|(image is in use by a container)", re.IGNORECASE
+        r"(no such image)|(image not known)|(image is in use by a container)",
+        re.IGNORECASE,
     )
     r = run(f"{runtime} rmi -f {image_name}", allow_error=True)
     if r.rc != 0:

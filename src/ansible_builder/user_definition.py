@@ -89,7 +89,7 @@ class UserDefinition:
             ) from exc
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:
             raise DefinitionError(
-                f"An error occurred while parsing the definition file:\n{str(exc)}"
+                f"An error occurred while parsing the definition file:\n{str(exc)}",
             ) from exc
 
         if not isinstance(self.raw, dict):
@@ -218,7 +218,7 @@ class UserDefinition:
             dest = Path(entry["dest"])
             if dest.is_absolute() or ".." in dest.parts:
                 raise DefinitionError(
-                    f"'dest' must not be an absolute path or contain '..': {dest}"
+                    f"'dest' must not be an absolute path or contain '..': {dest}",
                 )
 
     def validate(self):

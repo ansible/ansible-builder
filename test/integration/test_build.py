@@ -140,7 +140,7 @@ def test_base_image_build_arg(cli, runtime, ee_tag, tmp_path, data_dir):
 def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     ee_def = data_dir / "pytz" / "execution-environment.yml"
     cli(
-        f"ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3"
+        f"ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3",
     )
     result = cli(f"{runtime} run --rm {ee_tag} pip3 show pytz")
 
@@ -185,7 +185,7 @@ def test_collection_verification_off(cli, runtime, data_dir, ee_tag, tmp_path):
     # FIXME: we could still make this even a lot faster with `minimal_fast` plus aliasing `ansible-galaxy` to `/bin/true`
     ee_def = data_dir / "pytz" / "execution-environment.yml"
     result = cli(
-        f"ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3"
+        f"ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v 3",
     )
     assert "RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy" in result.stdout
 

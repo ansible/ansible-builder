@@ -141,12 +141,12 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
         assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(
-            error.value.args[0]
+            error.value.args[0],
         )
 
     def test_ee_missing_image_name(self, exec_env_definition_file):
         path = exec_env_definition_file(
-            "{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}"
+            "{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}",
         )
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
@@ -155,7 +155,7 @@ class TestUserDefinition:
     def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):
         """Test that EE schema keys are upgraded from version V1 to V2."""
         path = exec_env_definition_file(
-            "{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}"
+            "{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}",
         )
         definition = UserDefinition(path)
         definition.validate()

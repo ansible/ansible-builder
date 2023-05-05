@@ -80,11 +80,11 @@ def run_command(command, capture_output=False, allow_error=False):
                     "{runtime}: {blurb}".format(
                         runtime=runtime,
                         blurb={True: "installed", False: "not installed"}.get(
-                            bool(shutil.which(runtime))
+                            bool(shutil.which(runtime)),
                         ),
                     )
                     for runtime in constants.runtime_files
-                ]
+                ],
             )
             msg += (
                 f"\nYou do not have {command[0]} installed.\n"
@@ -196,11 +196,11 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
         return False
     if Path(source).is_dir():
         raise Exception(
-            f"Source {source} can not be a directory. Please use copy_directory instead."
+            f"Source {source} can not be a directory. Please use copy_directory instead.",
         )
     if Path(dest).is_dir():
         raise Exception(
-            f"Destination {dest} can not be a directory. Please use copy_directory instead."
+            f"Destination {dest} can not be a directory. Please use copy_directory instead.",
         )
     if not os.path.exists(dest):
         logger.debug("File %s will be created.", dest)

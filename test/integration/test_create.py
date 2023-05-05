@@ -157,7 +157,7 @@ def test_collection_verification_on(cli, build_dir_and_ee_yml):
     keyring = tmpdir / "mykeyring.gpg"
     keyring.touch()
     cli(
-        f"ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile --galaxy-keyring {keyring}"
+        f"ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile --galaxy-keyring {keyring}",
     )
 
     containerfile = tmpdir / "Containerfile"
@@ -491,7 +491,8 @@ def test_v3_no_workdir(cli, build_dir_and_ee_yml):
     text = containerfile.read_text()
 
     assert "WORKDIR" not in text.replace(
-        "WORKDIR /build", ""
+        "WORKDIR /build",
+        "",
     )  # intermediate stages set WORKDIR- ignore those
     assert "mkdir -p /runner" not in text
 

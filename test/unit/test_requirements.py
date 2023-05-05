@@ -6,7 +6,7 @@ def test_combine_entries():
         {
             "foo.bar": ["foo>1.0"],
             "bar.foo": ["foo>=2.0"],
-        }
+        },
     ) == ["foo>1.0,>=2.0  # from collection foo.bar,bar.foo"]
 
 
@@ -23,7 +23,7 @@ def test_remove_unwanted_requirements():
                 "bar",
                 "zoo",
             ],
-        }
+        },
     ) == [
         "foo  # from collection foo.bar",
         "bar  # from collection foo.bar,bar.foo",
@@ -40,7 +40,7 @@ def test_skip_bad_formats():
                 "bar",
             ],
             "foo.bad": ["zizzer zazzer zuzz"],  # not okay
-        }
+        },
     ) == ["foo  # from collection foo.bar", "bar  # from collection foo.bar"]
 
 

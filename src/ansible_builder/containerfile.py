@@ -71,7 +71,7 @@ class Containerfile:
                 "# Base build stage",
                 "FROM $EE_BASE_IMAGE as base",
                 "USER root",
-            ]
+            ],
         )
 
         self._insert_global_args()
@@ -80,7 +80,7 @@ class Containerfile:
         if not self.definition.builder_image:
             if self.definition.python_package_system:
                 self.steps.append(
-                    "RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi"
+                    "RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi",
                 )
 
             # We should always make sure pip is available for later stages.
@@ -104,7 +104,7 @@ class Containerfile:
                     "",
                     "# Galaxy build stage",
                     "FROM base as galaxy",
-                ]
+                ],
             )
 
             self._insert_global_args()
@@ -136,14 +136,14 @@ class Containerfile:
                 "# Builder build stage",
                 f"FROM {image} as builder",
                 "WORKDIR /build",
-            ]
+            ],
         )
 
         self._insert_global_args()
 
         if image == "base":
             self.steps.append(
-                "RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser"
+                "RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser",
             )
 
         self._insert_custom_steps("prepend_builder")
@@ -160,7 +160,7 @@ class Containerfile:
                 "",
                 "# Final build stage",
                 "FROM base as final",
-            ]
+            ],
         )
 
         self._insert_global_args()
@@ -308,7 +308,7 @@ class Containerfile:
         # The final image will have /output purged, but certain scripts we want
         # to retain in that image.
         self.steps.append(
-            f"COPY {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint"
+            f"COPY {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint",
         )
 
     def _handle_additional_build_files(self):
@@ -361,7 +361,7 @@ class Containerfile:
                 [
                     f"COPY {context_file_path} ~/.ansible.cfg",
                     "",
-                ]
+                ],
             )
 
     def _insert_custom_steps(self, section: str):
@@ -389,14 +389,14 @@ class Containerfile:
             [
                 f"RUN mkdir -p {workdir} && chgrp 0 {workdir} && chmod -R ug+rwx {workdir}",
                 f"WORKDIR {workdir}",
-            ]
+            ],
         )
 
     def _prepare_label_steps(self):
         self.steps.extend(
             [
                 "LABEL ansible-execution-environment=true",
-            ]
+            ],
         )
 
     def _prepare_build_context(self):
@@ -406,7 +406,7 @@ class Containerfile:
                     f"COPY {constants.user_content_subfolder} /build",
                     "WORKDIR /build",
                     "",
-                ]
+                ],
             )
 
     def _prepare_galaxy_install_steps(self):
@@ -437,7 +437,7 @@ class Containerfile:
             f' --roles-path "{constants.base_roles_path}"',
         )
         self.steps.append(
-            f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}"
+            f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}",
         )
 
     def _prepare_introspect_assemble_steps(self):
@@ -454,22 +454,24 @@ class Containerfile:
 
             if requirements_file_exists:
                 relative_requirements_path = os.path.join(
-                    constants.user_content_subfolder, constants.CONTEXT_FILES["python"]
+                    constants.user_content_subfolder,
+                    constants.CONTEXT_FILES["python"],
                 )
                 self.steps.append(
-                    f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}"
+                    f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}",
                 )
                 # WORKDIR is /build, so we use the (shorter) relative paths there
                 introspect_cmd += " --user-pip={0}".format(constants.CONTEXT_FILES["python"])
             bindep_exists = os.path.exists(
-                os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES["system"])
+                os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES["system"]),
             )
             if bindep_exists:
                 relative_bindep_path = os.path.join(
-                    constants.user_content_subfolder, constants.CONTEXT_FILES["system"]
+                    constants.user_content_subfolder,
+                    constants.CONTEXT_FILES["system"],
                 )
                 self.steps.append(
-                    f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}"
+                    f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}",
                 )
                 introspect_cmd += " --user-bindep={0}".format(constants.CONTEXT_FILES["system"])
 
@@ -485,7 +487,7 @@ class Containerfile:
             [
                 "COPY --from=builder /output/ /output/",
                 "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
-            ]
+            ],
         )
 
     def _prepare_galaxy_copy_steps(self):
@@ -495,11 +497,11 @@ class Containerfile:
                     "",
                     "COPY --from=galaxy {0} {0}".format(
                         os.path.dirname(
-                            constants.base_collections_path.rstrip("/")
+                            constants.base_collections_path.rstrip("/"),
                         ),  # /usr/share/ansible
                     ),
                     "",
-                ]
+                ],
             )
 
     def _prepare_entrypoint_steps(self):

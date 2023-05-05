@@ -19,7 +19,7 @@ def test_custom_image(exec_env_definition_file, tmp_path):
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(
-        ["build", "-f", path, "--build-arg", "EE_BASE_IMAGE=my-custom-image", "-c", str(tmp_path)]
+        ["build", "-f", path, "--build-arg", "EE_BASE_IMAGE=my-custom-image", "-c", str(tmp_path)],
     )
     assert aee.build_args == {"EE_BASE_IMAGE": "my-custom-image"}
 
@@ -37,7 +37,7 @@ def test_custom_ansible_galaxy_cli_collection_opts(exec_env_definition_file, tmp
             "ANSIBLE_GALAXY_CLI_COLLECTION_OPTS=--pre",
             "-c",
             str(tmp_path),
-        ]
+        ],
     )
     assert aee.build_args == {"ANSIBLE_GALAXY_CLI_COLLECTION_OPTS": "--pre"}
 
@@ -55,7 +55,7 @@ def test_custom_ansible_galaxy_cli_role_opts(exec_env_definition_file, tmp_path)
             "ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-errors",
             "-c",
             str(tmp_path),
-        ]
+        ],
     )
     assert aee.build_args == {"ANSIBLE_GALAXY_CLI_ROLE_OPTS": "--ignore-errors"}
 
@@ -65,7 +65,7 @@ def test_build_args_empty_value(exec_env_definition_file, tmp_path):
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(
-        ["build", "-f", path, "--build-arg", "ANSIBLE_GALAXY_CLI_ROLE_OPTS=", "-c", str(tmp_path)]
+        ["build", "-f", path, "--build-arg", "ANSIBLE_GALAXY_CLI_ROLE_OPTS=", "-c", str(tmp_path)],
     )
     assert aee.build_args == {"ANSIBLE_GALAXY_CLI_ROLE_OPTS": ""}
 
@@ -75,7 +75,7 @@ def test_build_args_no_trailing_equal(exec_env_definition_file, tmp_path):
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(
-        ["build", "-f", path, "--build-arg", "ANSIBLE_GALAXY_CLI_ROLE_OPTS", "-c", str(tmp_path)]
+        ["build", "-f", path, "--build-arg", "ANSIBLE_GALAXY_CLI_ROLE_OPTS", "-c", str(tmp_path)],
     )
     assert aee.build_args == {"ANSIBLE_GALAXY_CLI_ROLE_OPTS": None}
 
@@ -95,7 +95,7 @@ def test_build_args_multiple_equal_sign_value(exec_env_definition_file, tmp_path
             "PYTHON_CONFIG_SETTINGS=--config-setting=--global-option=--tag-build=SUFFIX",
             "-c",
             str(tmp_path),
-        ]
+        ],
     )
     assert aee.build_args == {
         "PYTHON_CONFIG_SETTINGS": "--config-setting=--global-option=--tag-build=SUFFIX",
@@ -191,7 +191,7 @@ def test_container_policy_signature_required(exec_env_definition_file, tmp_path)
             "podman",
             "--container-keyring",
             str(keyring),
-        ]
+        ],
     )
     assert aee.container_policy == PolicyChoices.SIG_REQ
     policy_path = os.path.join(str(tmp_path), constants.default_policy_file_name)
@@ -218,7 +218,7 @@ def test_container_policy_system(exec_env_definition_file, tmp_path):
             "system",
             "--container-runtime",
             "podman",
-        ]
+        ],
     )
     assert aee.container_policy == PolicyChoices.SYSTEM
     assert "--signature-policy=" not in aee.build_command
@@ -231,7 +231,8 @@ def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
     path = str(exec_env_definition_file(content=content))
 
     with pytest.raises(
-        ValueError, match="--container-policy is only valid with the podman runtime"
+        ValueError,
+        match="--container-policy is only valid with the podman runtime",
     ):
         prepare(
             [
@@ -246,7 +247,7 @@ def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
                 "docker",
                 "--container-keyring",
                 "TBD",
-            ]
+            ],
         )
 
 
@@ -255,7 +256,8 @@ def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
     content = {"version": 2}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(
-        ValueError, match="--container-policy=signature_required requires --container-keyring"
+        ValueError,
+        match="--container-policy=signature_required requires --container-keyring",
     ):
         prepare(
             [
@@ -268,7 +270,7 @@ def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
                 "signature_required",
                 "--container-runtime",
                 "podman",
-            ]
+            ],
         )
 
 
@@ -278,7 +280,8 @@ def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path
     content = {"version": 2}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(
-        ValueError, match=f"--container-keyring is not valid with --container-policy={policy}"
+        ValueError,
+        match=f"--container-keyring is not valid with --container-policy={policy}",
     ):
         prepare(
             [
@@ -293,7 +296,7 @@ def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path
                 "podman",
                 "--container-keyring",
                 "TBD",
-            ]
+            ],
         )
 
 
@@ -302,7 +305,8 @@ def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_
     content = {"version": 2}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(
-        ValueError, match="EE_BASE_IMAGE not allowed in --build-arg option with version 2 format"
+        ValueError,
+        match="EE_BASE_IMAGE not allowed in --build-arg option with version 2 format",
     ):
         prepare(
             [
@@ -319,7 +323,7 @@ def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_
                 "TBD",
                 "--build-arg",
                 "EE_BASE_IMAGE=blah",
-            ]
+            ],
         )
 
 
@@ -342,7 +346,7 @@ def test_container_policy_with_version_1(exec_env_definition_file, tmp_path):
                 "podman",
                 "--container-keyring",
                 "TBD",
-            ]
+            ],
         )
 
 
@@ -361,7 +365,7 @@ def test_squash_default(exec_env_definition_file, tmp_path):
             str(tmp_path),
             "--container-runtime",
             "podman",
-        ]
+        ],
     )
     assert "--squash" not in aee.build_command
 
@@ -383,7 +387,7 @@ def test_squash_all(exec_env_definition_file, tmp_path):
             "podman",
             "--squash",
             "all",
-        ]
+        ],
     )
     assert "--squash-all" in aee.build_command
 
@@ -405,7 +409,7 @@ def test_squash_off(exec_env_definition_file, tmp_path):
             "podman",
             "--squash",
             "off",
-        ]
+        ],
     )
     assert "--squash" not in aee.build_command
 
@@ -427,7 +431,7 @@ def test_squash_new(exec_env_definition_file, tmp_path):
             "podman",
             "--squash",
             "new",
-        ]
+        ],
     )
     assert "--squash" in aee.build_command
     assert "--squash-all" not in aee.build_command
@@ -450,7 +454,7 @@ def test_squash_ignored(exec_env_definition_file, tmp_path):
             "docker",
             "--squash",
             "all",
-        ]
+        ],
     )
     assert "--squash" not in aee.build_command
 
