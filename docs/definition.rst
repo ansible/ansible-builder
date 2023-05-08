@@ -142,6 +142,12 @@ string, or a list of strings.
     ``append_final``
       Commands to insert after building of the final image.
 
+.. note::
+
+    Please make sure that you do not specify `USER` directives in these build steps. This may lead to
+    failures while building the image.
+    If you want to override `USER` setting, consider using `options.user` setting mentioned below.
+
 build_arg_defaults
 ^^^^^^^^^^^^^^^^^^
 
