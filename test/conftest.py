@@ -1,9 +1,11 @@
+import filelock
 import os
 import pathlib
 import pytest
 import re
 import shutil
 import subprocess
+import tempfile
 import uuid
 import yaml
 
@@ -19,6 +21,33 @@ CONTAINER_RUNTIMES = (
 FOUND_RUNTIMES = set()
 
 GOOD_CONTENT = {'version': 1}
+
+# List of image names indexed by runtime name. E.g., {'podman', ['image1', ...]}
+WORKER_IMAGES = {}
+
+
+# This will be called once for each pytest-xdist worker (-n value).
+# The main worker driving the other workers (worker_id is None) will
+# have this called last so it will be responsible for the cleanup
+# work.
+def pytest_sessionfinish(session, exitstatus):
+    worker_id = os.environ.get("PYTEST_XDIST_WORKER")
+
+    for runtime in WORKER_IMAGES:
+        data_file = pathlib.Path(tempfile.gettempdir(), "builder_pytest_data_", runtime)
+
+        with filelock.FileLock(data_file + ".lock"):
+            # Append any images created in this runtime to the data file
+            if WORKER_IMAGES[runtime]:
+                with open(str(data_file), "a") as f:
+                    f.write("\n".join(WORKER_IMAGES[runtime]))
+            # If we are the main worker thread, we've been called last, so do the cleanup.
+            if worker_id is None:
+                for image_name in data_file.read_text():
+                    delete_image(runtime, image_name)
+
+        if worker_id is None:
+            data_file.unlink()
 
 
 @pytest.fixture(autouse=True)
@@ -218,24 +247,24 @@ def delete_image(runtime, image_name):
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
         else:
-            raise Exception(f'Teardown failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+            raise Exception(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture
 def podman_ee_tag(request):
     image_name = gen_image_name(request)
+    WORKER_IMAGES.setdefault('podman', [])
+    WORKER_IMAGES['podman'].append(image_name)
     yield image_name
-    # FIXME: defer to end?
-    # delete_image('podman', image_name)
 
 
 @pytest.fixture
 @pytest.mark.test_all_runtimes
 def ee_tag(request, runtime):
     image_name = gen_image_name(request)
+    WORKER_IMAGES.setdefault(runtime, [])
+    WORKER_IMAGES[runtime].append(image_name)
     yield image_name
-    # FIXME: defer to end?
-    # delete_image(runtime, image_name)
 
 
 class CompletedProcessProxy(object):
