@@ -4,7 +4,8 @@ import subprocess
 
 class TestV3:
 
-    def test_ansible_check_is_skipped(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.test_all_runtimes
+    def test_ansible_check_is_skipped(self, cli, runtime, tmp_path, data_dir, podman_ee_tag):
         """
         Test that the check_ansible script is skipped will NOT cause build failure.
         """
@@ -17,7 +18,8 @@ class TestV3:
 
         assert result.rc == 0
 
-    def test_missing_ansible(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.test_all_runtimes
+    def test_missing_ansible(self, cli, runtime, tmp_path, data_dir, podman_ee_tag):
         """
         Test that the check_ansible script will cause build failure if
         ansible-core is not installed.
@@ -32,7 +34,8 @@ class TestV3:
 
         assert "ERROR - Missing Ansible installation" in einfo.value.stdout
 
-    def test_missing_runner(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.test_all_runtimes
+    def test_missing_runner(self, cli, runtime, tmp_path, data_dir, podman_ee_tag):
         """
         Test that the check_ansible script will cause build failure if
         ansible-runner is not installed.

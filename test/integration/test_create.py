@@ -276,7 +276,7 @@ def test_v3_pre_post_commands(cli, data_dir, tmp_path):
     r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
     assert r.rc == 0
 
-    containerfile = tmp_path / "Containerfile"
+    containerfile = tmp_path / constants.runtime_files[constants.default_container_runtime]
     assert containerfile.exists()
     text = containerfile.read_text()
 
@@ -298,7 +298,7 @@ def test_v3_complete(cli, data_dir, tmp_path):
     r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
     assert r.rc == 0
 
-    containerfile = tmp_path / "Containerfile"
+    containerfile = tmp_path / constants.runtime_files[constants.default_container_runtime]
     assert containerfile.exists()
     text = containerfile.read_text()
 
