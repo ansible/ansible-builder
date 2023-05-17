@@ -43,7 +43,7 @@ fi
 
 if [ "$PKGMGR" = "/usr/bin/microdnf" ]
 then
-    if [ -z $PKGMGR_OPTS ]; then
+    if [ -z "${PKGMGR_OPTS}" ]; then
         # NOTE(pabelanger): skip install docs and weak dependencies to
         # make smaller images. Sadly, setting these in dnf.conf don't
         # appear to work.
