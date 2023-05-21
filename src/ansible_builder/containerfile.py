@@ -75,7 +75,7 @@ class Containerfile:
                 self.steps.append('RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi')
 
             # We should always make sure pip is available for later stages.
-            if not self.definition.options['disable_ensurepip']:
+            if not self.definition.options.get('disable_ensurepip'):
                 self.steps.append('RUN $PYCMD -m ensurepip')
 
             if self.definition.ansible_ref_install_list:
@@ -209,7 +209,7 @@ class Containerfile:
             'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
-            'PY_DISABLE_ENSUREPIP': 'true' if self.definition.options['disable_ensurepip'] else '',
+            'PY_DISABLE_ENSUREPIP': 'true' if self.definition.options.get('disable_ensurepip') else '',
         }
 
         if self.definition.version >= 3:
