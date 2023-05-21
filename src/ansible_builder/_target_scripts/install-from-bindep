@@ -25,7 +25,9 @@ PYCMD="${PYCMD:=/usr/bin/python3}"
 PIPCMD="${PIPCMD:=$PYCMD -m pip}"
 PIP_OPTS="${PIP_OPTS-}"
 
-$PYCMD -m ensurepip
+if [ $PY_DISABLE_ENSUREPIP != "true" ]; then
+    $PYCMD -m ensurepip
+fi
 
 if [ -z $PKGMGR ]; then
     # Expect dnf to be installed, however if we find microdnf default to it.

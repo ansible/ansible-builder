@@ -353,6 +353,10 @@ schema_v3 = {
                     "description": "Sets the username or UID",
                     "type": "string",
                 },
+                "disable_ensurepip": {
+                    "description": "Disable running ensurepip",
+                    "type": "boolean",
+                },
                 "container_init": {
                     "description": "Customize container startup behavior",
                     "type": "object",
@@ -435,6 +439,7 @@ def _handle_options_defaults(ee_def: dict):
     entrypoint_path = os.path.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
 
     options.setdefault('skip_ansible_check', False)
+    options.setdefault('disable_ensurepip', False)
     options.setdefault('relax_passwd_permissions', True)
     options.setdefault('workdir', '/runner')
     options.setdefault('package_manager_path', '/usr/bin/dnf')
