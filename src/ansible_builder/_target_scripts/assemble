@@ -25,6 +25,10 @@ RELEASE=$(source /etc/os-release; echo $ID)
 # NOTE(pabelanger): Allow users to force either microdnf or dnf as a package
 # manager.
 PKGMGR="${PKGMGR:-}"
+PKGMGR_CLEAN_ALL_COMMAND="${PKGMGR_CLEAN_ALL_COMMAND:-clean all}"
+PKGMGR_CACHE_LOCATION="${PKGMGR_CACHE_LOCATION:-/var/cache/{dnf,yum\}}"
+PKGMGR_CLEANUP_LOCATIONS="${PKGMGR_CLEANUP_LOCATIONS:-/var/lib/dnf/history.* /var/log/{dnf.*,hawkey.log\}}"
+PKGMGR_INSTALL_COMMAND="${PKGMGR_INSTALL_COMMAND:-install -y}"
 PKGMGR_OPTS="${PKGMGR_OPTS:-}"
 PKGMGR_PRESERVE_CACHE="${PKGMGR_PRESERVE_CACHE:-}"
 
@@ -74,7 +78,7 @@ function install_bindep {
         fi
         compile_packages=$(bindep -b compile || true)
         if [ ! -z "$compile_packages" ] ; then
-            $PKGMGR install -y $PKGMGR_OPTS ${compile_packages}
+            $PKGMGR $PKGMGR_INSTALL_COMMAND $PKGMGR_OPTS ${compile_packages}
         fi
     fi
 }
@@ -164,10 +168,9 @@ for sibling in ${ZUUL_SIBLINGS:-}; do
 done
 
 if [ -z $PKGMGR_PRESERVE_CACHE ]; then
-  $PKGMGR clean all
-  rm -rf /var/cache/{dnf,yum}
+  $PKGMGR $PKGMGR_CLEAN_ALL_COMMAND
+  rm -rf $PKGMGR_CACHE_LOCATION
 fi
 
-rm -rf /var/lib/dnf/history.*
-rm -rf /var/log/{dnf.*,hawkey.log}
+rm -rf $PKGMGR_CLEANUP_LOCATIONS
 rm -rf /tmp/venv

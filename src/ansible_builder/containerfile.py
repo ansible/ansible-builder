@@ -214,6 +214,10 @@ class Containerfile:
 
         if self.definition.version >= 3:
             global_args['PKGMGR'] = self.definition.options['package_manager_path']
+            global_args['PKGMGR_CLEAN_ALL_COMMAND'] = self.definition.build_arg_defaults['PKGMGR_CLEAN_ALL_COMMAND']
+            global_args['PKGMGR_CACHE_LOCATION'] = self.definition.build_arg_defaults['PKGMGR_CACHE_LOCATION']
+            global_args['PKGMGR_CLEANUP_LOCATIONS'] = self.definition.build_arg_defaults['PKGMGR_CLEANUP_LOCATIONS']
+            global_args['PKGMGR_INSTALL_COMMAND'] = self.definition.build_arg_defaults['PKGMGR_INSTALL_COMMAND']
 
         for arg, value in global_args.items():
             if value is None:

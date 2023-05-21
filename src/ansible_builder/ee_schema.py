@@ -216,6 +216,18 @@ schema_v3 = {
                 "PKGMGR_PRESERVE_CACHE": {
                     "type": "string",
                 },
+                "PKGMGR_CLEAN_ALL_COMMAND": {
+                    "type": "string",
+                },
+                "PKGMGR_CACHE_LOCATION": {
+                    "type": "string",
+                },
+                "PKGMGR_CLEANUP_LOCATIONS": {
+                    "type": "string",
+                },
+                "PKGMGR_INSTALL_COMMAND": {
+                    "type": "string",
+                },
             },
         },
 
