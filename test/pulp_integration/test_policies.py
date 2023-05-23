@@ -117,7 +117,7 @@ class TestPolicies:
         ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
         keyring = data_dir / 'v2' / 'RPM-GPG-KEY-redhat-release'
         result = cli(
-            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} --no-cache '
             f'--container-runtime=podman --container-policy=signature_required --container-keyring={keyring} -v3'
         )
 
