@@ -36,7 +36,7 @@ pyparsing==3.0.3
     # via packaging
 pytz==2021.3
     # via babel
-requests==2.26.0
+requests==2.31.0
     # via sphinx
 six==1.16.0
     # via -r requirements.in
