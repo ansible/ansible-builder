@@ -5,13 +5,7 @@
 Introduction
 ============
 
-Using Ansible content that depends on non-default dependencies can be tricky.
-Packages must be installed on each node, play nicely with other software installed
-on the host system, and be kept in sync.
-
-To help simplify this process, we have introduced the concept of Execution
-Environments, which you can create with Ansible Builder.
-
+With `ansible-builder` you can create portable, consistent, custom containers that function as Ansible control nodes. These containers are known as Execution Environments. You can use execution environments for local playbook development and testing, in your CI pipeline, on AWX or Ansible Controller, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and Ansible you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
 
 Execution Environments
 ----------------------
