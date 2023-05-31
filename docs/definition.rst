@@ -187,7 +187,8 @@ The following keys are valid for this section:
     ``galaxy``
       Galaxy installation requirements. This may either be a filename, a
       dictionary, or a multi-line string representation of an Ansible Galaxy
-      ``requirements.yml`` file (see below for examples).
+      ``requirements.yml`` file (see below for examples). Read more about
+      the requirements file format in the `Galaxy user guide <https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
 
     ``python``
       The Python installation requirements. This may either be a filename, or a
@@ -229,8 +230,9 @@ And this example uses inline values:
           - iputils [platform:rpm]
         galaxy:
           collections:
-            - community.windows
-            - ansible.utils
+            - name: community.windows
+            - name: ansible.utils
+              version: 2.10.1
         ansible_core:
             package_pip: ansible-core==2.14.2
         ansible_runner:
