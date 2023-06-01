@@ -5,42 +5,54 @@
 Introduction
 ============
 
-With `ansible-builder` you can create portable, consistent, custom containers that function as Ansible control nodes. These containers are known as Execution Environments. You can use execution environments for local playbook development and testing, in your CI pipeline, on AWX or Ansible Controller, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and Ansible you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
+With `ansible-builder` you can configure and build portable, consistent, customized Ansible control nodes that are packaged as containers by Podman or Docker. These containers are known as Execution Environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized Execution Environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
+
+.. contents::
+   :local:
+
+Container concepts and terms
+----------------------------
+
+Ansible Builder depends on more generalized containerization tools like Podman or Docker. Before you start using Ansible Builder, you should understand how containers and containerization tools work. Read the documentation for your preferred containerization tool.
+
+Here are a few terms you should know. These concepts and terms are relevant to any use of containers, not specific to Ansible Builder.
+
+  * Container: a package of code and dependencies that runs a service or an application across a variety of computing environments
+  * Containerfile (called a Dockerfile in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies  
+  * Image: a complete but inactive version of a container - you can distribute images and create one or more containers based on each image
 
 Execution Environments
 ----------------------
 
 Execution Environments are container images that serve as Ansible `control
-nodes`_. Starting in version 2.0, `ansible-runner
-<https://ansible-runner.readthedocs.io/en/latest/execution_environments.html>`__
-can make use of these images.
+nodes`_. An Execution Environment contains:
 
-An Execution Environment is expected to contain:
-
-- Ansible
-- Ansible Runner
-- Ansible Collections
-- Python and/or system dependencies of:
-   - modules/plugins in collections
-   - content in ``ansible-base``
-   - custom user needs
+- Python
+- Ansible-core
+- Ansible-runner
+- Ansible Collections, if needed
+- Python packages (anything you install with ``pip``)
+- System packages (anything you install with ``dnf``, ``yum``, ``apt``, or other package managers)
+- Other content you select and install
 
 .. _control nodes:
    https://docs.ansible.com/ansible/latest/network/getting_started/basic_concepts.html#control-node
-
-.. _ansible-runner: https://github.com/ansible/ansible-runner
 
 
 Getting Started
 ***************
 
-To get started with Ansible Builder, start by creating an
-:ref:`Execution Environment definition<Definition:Execution Environment Definition>`. This
-file allows you to specify which content you would like to include in your
-execution environment, such as collections, Python requirements, and
-system-level packages.
+To get started with Ansible Builder, you need to install ``ansible-builder`` and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is a :ref:`Execution Environment definition<Definition:Execution Environment Definition>`, where
+you can specify the exact content you want to include in your
+execution environment. You can specify these items:
+- system packages (any packages installed with ``apt`` or ``yum``)
+- the version of Python
+- all Python packages (any packages installed with ``pip``)
+- the version of ansible-core
+- all Ansible Collections (anything installed with ``ansible-galaxy``)
+- other items to download, install, or configure
 
-Once you have created a definition, read through the :ref:`Usage:CLI Usage`.
+Ansible Builder will use the ``execution_environment.yml`` file to create a Containerfile and build an image from it. For more details, read through the :ref:`Usage:CLI Usage`.
 
 Collection Developers
 ^^^^^^^^^^^^^^^^^^^^^

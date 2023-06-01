@@ -1,7 +1,7 @@
 Execution Environment Definition
 ================================
 
-The execution environment (EE) definition file supports multiple versions.
+Different versions of Ansible Builder use and support different The execution environment (EE) definition file supports multiple versions.
 
   * Version 1: Supported by all ``ansible-builder`` versions.
   * Version 2: Supported by ``ansible-builder`` versions ``1.2`` and later.
