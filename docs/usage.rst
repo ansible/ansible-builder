@@ -5,6 +5,9 @@ Ansible Builder does two things. First it creates a containerfile and a build co
 
 The ``ansible-builder build`` command executes both steps, giving you a containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a containerfile and a build context. 
 
+.. contents::
+   :local:
+
 The ``build`` command
 ---------------------
 
@@ -48,7 +51,7 @@ Flags for the ``build`` command
 ``--tag``
 *********
 
-To customize the tagged name applied to the built image:
+Customizes the tagged name applied to the built image. To create an image with a custom name:
 
 .. code::
 
@@ -63,29 +66,28 @@ More recent versions of ``ansible-builder`` support multiple tags:
 ``--file``
 **********
 
-To use a definition file named something other than
-``execution-environment.yml``:
+Specifies the execution environment file. To use a file named something other than ``execution-environment.yml``:
 
 .. code::
 
-   $ ansible-builder build --file=my-ee.yml
+   $ ansible-builder build --file=my-ee-def.yml
 
 ``--galaxy-keyring``
 ********************
 
-To have ``ansible-galaxy`` verify collection signatures during installation, pass the path to a keyring to use during verification:
+Specifies a keyring for ``ansible-galaxy`` to use to verify collection signatures during installation. To verify collection signatures:
 
 .. code::
 
    $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx
    $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx
 
-If you do not pass this option, no signature verification will be performed. If you do pass this option, but the version of Ansible is too old to support this feature, you will see an error during the image build process.
+If you do not pass this option, no signature verification is performed. If you do pass this option, but the version of Ansible is too old to support this feature, you will see an error during the image build process.
 
 ``--galaxy-ignore-signature-status-code``
 *****************************************
 
-When ``--galaxy-keyring`` is set, you can ignore certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
+When ``--galaxy-keyring`` is set, ignores certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -95,7 +97,7 @@ When ``--galaxy-keyring`` is set, you can ignore certain errors that may occur w
 ``--galaxy-required-valid-signature-count``
 *******************************************
 
-When ``--galaxy-keyring`` is set, you can override the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
+When ``--galaxy-keyring`` is set, overrides the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -108,7 +110,7 @@ When ``--galaxy-keyring`` is set, you can override the number of required valid 
 ``--context``
 *************
 
-By default, Ansible Builder creates a directory named ``context`` in the current working directory. To specify another location:
+Specifies the directory name for the build context Ansible Builder creates. Default directory name is ``context`` in the current working directory. To specify another location:
 
 .. code::
 
@@ -120,7 +122,7 @@ By default, Ansible Builder creates a directory named ``context`` in the current
 ``--build-arg``
 ***************
 
-To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
+Passes build-time arguments to Podman or Docker. Specify these flags or variables the same way you would with ``podman build`` or ``docker build``.
 
 By default, the Containerfile / Dockerfile created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
 
@@ -146,7 +148,7 @@ To use a custom base image:
 ``--container-runtime``
 ***********************
 
-Podman is used by default to build images. To use Docker:
+Specifies the containerization tool used to build images. Default is Podman. To use Docker:
 
 .. code::
 
@@ -183,7 +185,7 @@ Specifies the path to a GPG keyring file to use for validating container image s
 ``--verbosity``
 ***************
 
-To customize the level of verbosity:
+Customizes the level of verbosity:
 
 .. code::
 
@@ -193,7 +195,7 @@ To customize the level of verbosity:
 ``--prune-images``
 ******************
 
-To remove unused images created after the build process:
+Removes unused images created after the build process:
 
 .. code::
 
@@ -201,14 +203,13 @@ To remove unused images created after the build process:
 
 .. note::
 
-   This flag essentially removes all the dangling images on the given machine whether they
-   already exists or created by ansible-builder build process.
+   This flag removes all the dangling images on the given machine whether they already existed or were created by ansible-builder build process.
 
 
 ``--squash``
 ************
 
-This option controls the final image layer squashing. Valid values are:
+Controls the final image layer squashing. Valid values are:
 
 * ``new``: Squash all of the final image's new layers into a single new layer
   (preexisting layers are not squashed).
@@ -230,8 +231,7 @@ The ``ansible-builder create`` command accepts an execution environment definiti
 Examples
 --------
 
-The example in ``test/data/pytz`` requires the ``awx.awx`` collection in
-the execution environment definition. The lookup plugin
+The example in ``test/data/pytz`` requires the ``awx.awx`` collection in the execution environment definition. The lookup plugin
 ``awx.awx.schedule_rrule`` requires the PyPI ``pytz`` and another
 library to work. If ``test/data/pytz/execution-environment.yml`` file is
 given to the ``ansible-builder build`` command, then it will install the
