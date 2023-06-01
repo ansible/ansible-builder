@@ -52,14 +52,12 @@ execution environment. You can specify these items:
 - all Ansible Collections (anything installed with ``ansible-galaxy``)
 - other items to download, install, or configure
 
-Ansible Builder reads the ``execution_environment.yml`` file, only creating a Containerfile from it if you use the ``create`` command, or creating a Containerfile and then building an image from it if you use the ``build`` command. For more details, read through the :ref:`Usage:CLI Usage`.
+Ansible Builder reads the ``execution_environment.yml`` file and can execute two separate steps. The first step is to create a containerfile and a build context. The second step is to run a containerization tool (Podman or Docker) to build an image. You can use ``ansible-builder build`` to run both steps. Or you can use ``ansible-builder create`` to run only the first step. For more details, read through the :ref:`Usage:CLI Usage`.
 
 Collection Developers
 ^^^^^^^^^^^^^^^^^^^^^
 
-Collection developers can declare requirements for their content by providing
-the appropriate metadata. For more information, see
-:ref:`collection_metadata:Collection-level Metadata`.
+When Ansible Builder installs Collections into an Execution Environment, it also installs each Collection's dependencies. You can learn to correctly declare dependencies for your collection from the :ref:`collection_metadata:Collection-level Metadata` page.
 
 
 .. toctree::
