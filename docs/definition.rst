@@ -88,7 +88,7 @@ Example:
 Version 3 Format
 ----------------
 
-Below is an example version 3 EE file:
+This example file shows many more options from the version 3 EE file:
 
 .. code:: yaml
 
