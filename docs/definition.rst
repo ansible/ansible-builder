@@ -18,7 +18,7 @@ Example:
    version: 3
 
 .. note::
-   If you are running an older version of Ansible Builder, you may need an older schema version. Please consult older versions of the docs for more information.
+   If you are running an older version of Ansible Builder, you may need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
 
 If the EE file does not specify a version, version 1 will be assumed. (IS THIS STILL TRUE???)
 
@@ -87,9 +87,6 @@ Example:
 
 Version 3 Format
 ----------------
-
-This version of the EE definition file offers substantially more configurability
-and functionality over previous versions.
 
 Below is an example version 3 EE file:
 
