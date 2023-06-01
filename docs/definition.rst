@@ -1,19 +1,89 @@
 Execution Environment Definition
 ================================
 
-Different versions of Ansible Builder use and support different The execution environment (EE) definition file supports multiple versions.
+You define the content of your Execution Environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the Containerfile and build your container image. The Execution Environment definition file accepts four top-level sections: version, images, dependencies, and (optionally) additional_build_steps.
 
-  * Version 1: Supported by all ``ansible-builder`` versions.
-  * Version 2: Supported by ``ansible-builder`` versions ``1.2`` and later.
-  * Version 3: Supported by ``ansible-builder`` versions ``3.0`` and later.
+.. contents::
+   :local:
 
-If the EE file does not specify a version, version 1 will be assumed.
+version
+-------
+The schema version for Ansible Builder.
+Required.
+
+Example:
+
+.. code-block:: yaml
+
+   version: 3
 
 .. note::
+   If you are running an older version of Ansible Builder, you may need an older schema version. Please consult older versions of the docs for more information.
 
-    This version of the documentation discusses only the latest format version.
-    For further details on older formats, reference previous versions of the
-    documentation.
+If the EE file does not specify a version, version 1 will be assumed. (IS THIS STILL TRUE???)
+
+images
+------
+Information about the base image to use.
+Required.
+
+At a minimum you must specify a source, image, and tag for the base image. The base image provides the operating system and may also provide some packages. We recommend using the standard ``host/namespace/container:tag`` syntax to specify images. You may use Podman or Docker shortcut syntax instead, but the full definition is more reliable and portable.
+
+Example:
+
+.. code-block:: yaml
+
+   images:
+     base_image:
+       name: quay.io/centos/centos:stream9
+
+
+dependencies
+------------
+Packages to install, including system packages, Python/pip packages, Ansible Collections, and more.
+Optional, but almost always populated.
+
+Example:
+note:
+(This example is minimalistic. See the longer sample file section for more options.)
+
+.. code-block:: yaml
+
+   dependencies:
+     python_interpreter: 
+       python_path: /usr/bin/python3.11
+       package_system: python3.11
+     ansible_core:
+       package_pip: ansible<=8
+     ansible_runner:
+       package_pip: ansible-runner
+     galaxy:
+       collections:
+          - name: ansible.netcommon
+            version: 2.5.1
+          - name: ansible.posix
+            version: 1.3.0
+     python:
+       - pan-python
+       - pan-os-python
+     system:
+       - python3-dnf
+
+
+additional_build_steps
+----------------------
+Custom build steps.
+Optional.
+
+You can add build steps before or after any stage of the image creation process. Each step should be expressed as a containerfile directive. For example, if you need ``git`` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
+
+Example:
+
+.. code-block:: yaml
+
+   append_base:
+     - RUN dnf install git -y
+
 
 Version 3 Format
 ----------------
@@ -64,8 +134,7 @@ Below is an example version 3 EE file:
 Configuration
 ^^^^^^^^^^^^^
 
-Below are listed the configuration YAML keys that you may use in the v3
-format.
+Below are listed the configuration YAML keys that you may use in the v3 format.
 
 additional_build_files
 **********************

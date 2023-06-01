@@ -5,7 +5,7 @@
 Introduction
 ============
 
-With `ansible-builder` you can configure and build portable, consistent, customized Ansible control nodes that are packaged as containers by Podman or Docker. These containers are known as Execution Environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized Execution Environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
+With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as Execution Environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized Execution Environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
 
 .. contents::
    :local:
@@ -42,7 +42,7 @@ nodes`_. An Execution Environment contains:
 Getting Started
 ***************
 
-To get started with Ansible Builder, you need to install ``ansible-builder`` and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is a :ref:`Execution Environment definition<Definition:Execution Environment Definition>`, where
+To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is a :ref:`Execution Environment definition<Definition:Execution Environment Definition>`, where
 you can specify the exact content you want to include in your
 execution environment. You can specify these items:
 - system packages (any packages installed with ``apt`` or ``yum``)
@@ -52,7 +52,7 @@ execution environment. You can specify these items:
 - all Ansible Collections (anything installed with ``ansible-galaxy``)
 - other items to download, install, or configure
 
-Ansible Builder will use the ``execution_environment.yml`` file to create a Containerfile and build an image from it. For more details, read through the :ref:`Usage:CLI Usage`.
+Ansible Builder reads the ``execution_environment.yml`` file, only creating a Containerfile from it if you use the ``create`` command, or creating a Containerfile and then building an image from it if you use the ``build`` command. For more details, read through the :ref:`Usage:CLI Usage`.
 
 Collection Developers
 ^^^^^^^^^^^^^^^^^^^^^

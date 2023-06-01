@@ -1,8 +1,7 @@
 CLI Usage
 =========
 
-Once you have created a :ref:`definition<Definition:Execution Environment Definition>`, it's time to build
-your Execution Environment.
+Once you have created a :ref:`definition<Definition:Execution Environment Definition>`, you can use Ansible Builder to create a Containerfile from it, or to create a Containerfile and build a container image from it.
 
 
 The ``build`` command
