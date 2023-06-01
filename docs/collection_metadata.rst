@@ -1,9 +1,9 @@
 Collection-level Dependencies
 =============================
 
-When Ansible Builder installs Collections into an Execution Environment, it installs all the dependencies listed by each Collection as well.
+When Ansible Builder installs Collections into an Execution Environment, it also installs the dependencies listed by each Collection on Galaxy.
 
-For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these ways:
+For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
 
 -  A file named ``meta/execution-environment.yml`` for Python
    and/or bindep requirements files
@@ -11,7 +11,7 @@ For Ansible Builder to find and install collection dependencies, those dependenc
    collection
 -  A file named ``bindep.txt`` in the root level of the collection
 
-These files must be included in the packaged collection on Galaxy. Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files will not be uploaded to Galaxy.
+These files must be included in the packaged collection on Galaxy. Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
 
 Collection maintainers can verify that ``ansible-builder`` recognizes
 the requirements they expect by using the ``introspect`` command. For example:
