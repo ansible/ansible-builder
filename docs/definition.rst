@@ -48,6 +48,7 @@ Below is an example version 3 EE file:
         # Other available base images:
         #   - quay.io/rockylinux/rockylinux:9
         #   - quay.io/centos/centos:stream9
+        #   - registry.fedoraproject.org/fedora:38
         #   - registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
         #     (needs an account)
 
