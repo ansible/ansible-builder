@@ -44,7 +44,13 @@ Below is an example version 3 EE file:
 
     images:
       base_image:
-        name: registry.redhat.io/ansible-automation-platform-21/ee-minimal-rhel8:latest
+        name: docker.io/redhat/ubi9:latest
+        # Other available base images:
+        #   - quay.io/rockylinux/rockylinux:9
+        #   - quay.io/centos/centos:stream9
+        #   - registry.fedoraproject.org/fedora:38
+        #   - registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
+        #     (needs an account)
 
     additional_build_files:
         - src: files/ansible.cfg
