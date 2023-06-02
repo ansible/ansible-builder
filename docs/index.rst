@@ -24,13 +24,12 @@ Here are a few terms you should know. These concepts and terms are relevant to a
 Execution Environments
 ----------------------
 
-Execution environments are container images that serve as Ansible `control
-nodes`_. An execution environment contains:
+Execution environments are container images that serve as Ansible `control nodes`_. An execution environment contains:
 
 - Python
 - Ansible-core
 - Ansible-runner
-- Ansible Collections, if needed
+- Ansible Collections (anything you install with ``ansible-galaxy``)
 - Python packages (anything you install with ``pip``)
 - System packages (anything you install with ``dnf``, ``yum``, ``apt``, or other package managers)
 - Other content you select and install
@@ -42,22 +41,49 @@ nodes`_. An execution environment contains:
 Getting Started
 ***************
 
-To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is a :ref:`Execution Environment definition<Definition:Execution Environment Definition>`, where
+To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is an :ref:`execution environment definition<Definition:Execution Environment Definition>`, where
 you can specify the exact content you want to include in your
 execution environment. You can specify these items:
-- system packages (any packages installed with ``apt`` or ``yum``)
+- the base container image
 - the version of Python
-- all Python packages (any packages installed with ``pip``)
 - the version of ansible-core
-- all Ansible Collections (anything installed with ``ansible-galaxy``)
+- the version of ansible-runner
+- Ansible Collections, with version restrictions
+- system packages, with version restrictions
+- python packages, with version restrictions
 - other items to download, install, or configure
 
-Ansible Builder reads the ``execution_environment.yml`` file and can execute two separate steps. The first step is to create a Containerfile and a build context. The second step is to run a containerization tool (Podman or Docker) to build an image. You can use ``ansible-builder build`` to run both steps. Or you can use ``ansible-builder create`` to run only the first step. For more details, read through the :ref:`Usage:CLI Usage`.
+Version syntax
+^^^^^^^^^^^^^^
+
+In general Ansible Builder uses standard syntax to define versions.  You can use the syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility in your execution environment definition. You can also define your packages or collections in ``requirements.yml`` files and include those files in your execution environment definition file.
+
+Choosing a base image
+^^^^^^^^^^^^^^^^^^^^^
+
+You can use any base image you choose. The smaller the base image, generally, the smaller the final image. However, to make Ansible Builder more efficient, you should know what packages, if any, are already installed on the base image you use. For example, some base images already have Python installed. Others do not. If you use a base image that already has Python installed, you can omit Python in your execution environment definition file.
+
+How Ansible Builder executes
+****************************
+
+Ansible Builder can execute two separate steps. The first step is to create a containerfile and a build context based on the execution environment definition file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the containerfile and build context. You can use ``ansible-builder build`` to run both steps. Or you can use ``ansible-builder create`` to run only the first step. For more details, read through the :ref:`Usage:CLI Usage`.
+
+How Ansible Builder builds images
+---------------------------------
+
+Ansible Builder executes four stages when it runs the containerization tool you choose to build a container image. These steps are:
+- Base
+- Galaxy
+- Builder
+- Final
+In the Base stage, Ansible Builder uses Podman or Docker to pull the base image you defined. All three later stages of the build process are built on the output of the Base stage. In the Galaxy stage, Ansible Builder downloads the collections you defined from Galaxy and stashes them locally as files. In the Builder stage, Ansible Builder downloads the other packages (python packages and system packages) you defined and stashes the files locally. In the Final stage, Ansible Builder integrates the first three stages, installing all the stashed files on the base image and generating a new image that includes all the content.
+
+Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage. You may need to install certain packages or utilities before the Galaxy and Builder stages. For example, if you need to install a collection from GitHub, you must install git after the Base stage to make it available during the Galaxy stage. To add custom build steps, add an ``additional_build_steps`` section to your execution environment definition. For more details, read through the :ref:`Usage:CLI Usage`.
 
 Collection Developers
 ^^^^^^^^^^^^^^^^^^^^^
 
-When Ansible Builder installs Collections into an execution environment, it also installs each Collection's dependencies. You can learn to correctly declare dependencies for your collection from the :ref:`collection_metadata:Collection-level Metadata` page.
+When Ansible Builder installs Collections into an execution environment, it also installs each Collection's dependencies. Collection maintainers can learn to correctly declare dependencies for their collections from the :ref:`collection_metadata:Collection-level Metadata` page.
 
 
 .. toctree::
