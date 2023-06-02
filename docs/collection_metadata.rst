@@ -1,7 +1,7 @@
 Collection-level dependencies
 =============================
 
-When Ansible Builder installs Collections into an execution environment, it also installs the dependencies listed by each Collection on Galaxy.
+When Ansible Builder installs collections into an execution environment, it also installs the dependencies listed by each collection on Galaxy.
 
 For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
 
@@ -34,7 +34,7 @@ Ansible Builder combines all the Python requirements files from all collections 
 
 If multiple collections require the same *package name*, Ansible Builder combines them into a single entry and combines the constraints.
 
-Certain package names are specifically *ignored* by ``ansible-builder``, meaning that Ansible Builder does not include them in the combined file of Python dependencies, even if a collection lists them as dependencies. These include test packages and packages that provide Ansible itself. The full list can be found in ``EXCLUDE_REQUIREMENTS`` in the ``ansible_builder.requirements`` module.
+Certain package names are specifically *ignored* by ``ansible-builder``, meaning that Ansible Builder does not include them in the combined file of Python dependencies, even if a collection lists them as dependencies. These include test packages and packages that provide Ansible itself. The full list can be found in ``EXCLUDE_REQUIREMENTS`` in ``src/ansible_builder/_target_scripts/introspect.py``.
 
 If you need to include one of these ignored package names, use the ``--user-pip`` option of the ``introspect`` command to list it in the user requirements file. Packages supplied this way are not processed against the list of excluded Python packages.
 
@@ -43,4 +43,4 @@ System-level Dependencies
 
 For system packages, use the ``bindep`` format to specify cross-platform requirements, so they can be installed by whichever package management system the execution environment uses. Collections should specify necessary requirements for ``[platform:rpm]``.
 
-Ansible builder combines system package entries from multiple collections into a single file. Only requirements with *no* profiles (runtime requirements) are installed to the image. Entries from multiple collections which are outright duplicates of each other may be consolidated in the combined file.
+Ansible Builder combines system package entries from multiple collections into a single file. Only requirements with *no* profiles (runtime requirements) are installed to the image. Entries from multiple collections which are outright duplicates of each other may be consolidated in the combined file.

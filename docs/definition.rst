@@ -1,4 +1,4 @@
-Execution Environment Definition
+execution environment Definition
 ================================
 
 You define the content of your execution environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the Containerfile and build your container image. The execution environment definition file accepts four top-level sections: version, images, dependencies, and (optionally) additional_build_steps.
@@ -40,7 +40,7 @@ Example:
 
 dependencies
 ------------
-Packages to install, including system packages, Python/pip packages, Ansible Collections, and more.
+Packages to install, including system packages, Python/pip packages, Ansible collections, and more.
 Optional, but almost always populated.
 
 Example:

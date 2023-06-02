@@ -5,7 +5,7 @@
 Introduction
 ============
 
-With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible Collections you need for each playbook.
+With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible collections you need for each playbook.
 
 .. contents::
    :local:
@@ -21,7 +21,7 @@ Here are a few terms you should know. These concepts and terms are relevant to a
   * Containerfile (called a Dockerfile in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies  
   * Image: a complete but inactive version of a container - you can distribute images and create one or more containers based on each image
 
-Execution Environments
+execution environments
 ----------------------
 
 Execution environments are container images that serve as Ansible `control nodes`_. An execution environment contains:
@@ -29,7 +29,7 @@ Execution environments are container images that serve as Ansible `control nodes
 - Python
 - Ansible-core
 - Ansible-runner
-- Ansible Collections (anything you install with ``ansible-galaxy``)
+- Ansible collections (anything you install with ``ansible-galaxy``)
 - Python packages (anything you install with ``pip``)
 - System packages (anything you install with ``dnf``, ``yum``, ``apt``, or other package managers)
 - Other content you select and install
@@ -41,14 +41,14 @@ Execution environments are container images that serve as Ansible `control nodes
 Getting Started
 ***************
 
-To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is an :ref:`execution environment definition<Definition:Execution Environment Definition>`, where
+To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create a file called ``execution_environment.yml``. This file is an :ref:`execution environment definition<Definition:execution environment Definition>`, where
 you can specify the exact content you want to include in your
 execution environment. You can specify these items:
 - the base container image
 - the version of Python
 - the version of ansible-core
 - the version of ansible-runner
-- Ansible Collections, with version restrictions
+- Ansible collections, with version restrictions
 - system packages, with version restrictions
 - python packages, with version restrictions
 - other items to download, install, or configure
@@ -80,10 +80,10 @@ In the Base stage, Ansible Builder uses Podman or Docker to pull the base image 
 
 Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage. You may need to install certain packages or utilities before the Galaxy and Builder stages. For example, if you need to install a collection from GitHub, you must install git after the Base stage to make it available during the Galaxy stage. To add custom build steps, add an ``additional_build_steps`` section to your execution environment definition. For more details, read through the :ref:`Usage:CLI Usage`.
 
-Collection Developers
-^^^^^^^^^^^^^^^^^^^^^
+Collection maintainers
+^^^^^^^^^^^^^^^^^^^^^^
 
-When Ansible Builder installs Collections into an execution environment, it also installs each Collection's dependencies. Collection maintainers can learn to correctly declare dependencies for their collections from the :ref:`collection_metadata:Collection-level Metadata` page.
+When Ansible Builder installs collections into an execution environment, it also installs each collection's dependencies. collection maintainers can learn to correctly declare dependencies for their collections from the :ref:`collection_metadata:Collection-level Metadata` page.
 
 
 .. toctree::

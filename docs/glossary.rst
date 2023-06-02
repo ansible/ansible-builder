@@ -4,8 +4,8 @@ Glossary
 
 .. glossary::
 
-    Execution Environment
-      Execution Environments are container images intended to be used as Ansible control nodes.
+    execution environment
+      execution environments are container images intended to be used as Ansible control nodes.
       Starting in version 2.0, `ansible-runner <https://ansible-runner.readthedocs.io/en/latest/>`_.
       can make use of these images.
 

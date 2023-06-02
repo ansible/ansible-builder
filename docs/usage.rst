@@ -1,7 +1,7 @@
 CLI Usage
 =========
 
-Ansible Builder does two things. First it creates a Containerfile and a build context based on your :ref:`definition<Definition:Execution Environment Definition>`. Then it runs Podman or Docker to build an image based on the Containerfile and build context. If you wish, you can use Ansible Builder only for the first task, then create your images on the platform of your choice.
+Ansible Builder does two things. First it creates a Containerfile and a build context based on your :ref:`definition<Definition:execution environment Definition>`. Then it runs Podman or Docker to build an image based on the Containerfile and build context. If you wish, you can use Ansible Builder only for the first task, then create your images on the platform of your choice.
 
 The ``ansible-builder build`` command executes both steps, giving you a Containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a Containerfile and a build context. 
 
@@ -32,7 +32,7 @@ The content of ``requirements.yml``:
    collections:
      - name: awx.awx
 
-To build an Execution Environment using the files above, run:
+To build an execution environment using the files above, run:
 
 .. code::
 
