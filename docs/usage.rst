@@ -1,9 +1,7 @@
 CLI Usage
 =========
 
-Ansible Builder does two things. First it creates a Containerfile and a build context based on your :ref:`definition<Definition:execution environment Definition>`. Then it runs Podman or Docker to build an image based on the Containerfile and build context. If you wish, you can use Ansible Builder only for the first task, then create your images on the platform of your choice.
-
-The ``ansible-builder build`` command executes both steps, giving you a Containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a Containerfile and a build context. 
+Ansible Builder can execute two separate steps. The first step is to create a containerfile (Containerfile for Podman, Dockerfile for Docker) and a build context based on your :ref:`definition<Definition:execution environment Definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the containerfile and build context. The ``ansible-builder build`` command executes both steps, giving you a containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a containerfile and a build context. If you use ``ansible-builder create``, you can use the resulting containerfile and build context to build your container images on the platform of your choice.
 
 .. contents::
    :local:
@@ -11,7 +9,7 @@ The ``ansible-builder build`` command executes both steps, giving you a Containe
 The ``build`` command
 ---------------------
 
-The ``ansible-builder build`` command takes an execution environment definition file as an input. It outputs a Containerfile or Dockerfile, creates the build context necessary for building an execution environment image, and builds that image. The image can be re-built with the build context elsewhere, and give the same result. By default, it looks for a file named ``execution-environment.yml`` in the current directory.
+The ``ansible-builder build`` command takes an execution environment definition file as an input. It outputs a containerfile (Containerfile for Podman, Dockerfile for Docker), creates the build context necessary for building an execution environment image, and builds that image. The image can be re-built with the build context elsewhere, and give the same result. By default, it looks for a file named ``execution-environment.yml`` in the current directory.
 
 This example uses the following ``execution-environment.yml``
 file as a starting point:
