@@ -87,7 +87,7 @@ If you do not pass this option, no signature verification is performed. If you d
 ``--galaxy-ignore-signature-status-code``
 *****************************************
 
-When ``--galaxy-keyring`` is set, ignores certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
+Ignores certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -97,7 +97,7 @@ When ``--galaxy-keyring`` is set, ignores certain errors that may occur while ve
 ``--galaxy-required-valid-signature-count``
 *******************************************
 
-When ``--galaxy-keyring`` is set, overrides the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. See the ``ansible-galaxy`` documentation for more information.
+Overrides the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -162,7 +162,7 @@ Specifies the containerization tool used to build images. Default is Podman. To 
 
 .. note:: Added in version 1.2
 
-Specifies the container image validation policy to use. This is valid only when :ref:`container-runtime` is ``podman``. Valid values are one of:
+Specifies the container image validation policy to use. Valid only when :ref:`container-runtime` is ``podman``. Valid values are one of:
 
 * ``ignore_all``: Run podman with generated policy that ignores all signatures.
 * ``system``: Relies on podman's consumption of system policy/signature with
