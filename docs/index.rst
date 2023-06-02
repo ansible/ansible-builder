@@ -5,7 +5,7 @@
 Introduction
 ============
 
-With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as Execution Environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized Execution Environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the python packages, system packages, and Ansible Collections you need for each playbook.
+With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible Collections you need for each playbook.
 
 .. contents::
    :local:
@@ -24,8 +24,8 @@ Here are a few terms you should know. These concepts and terms are relevant to a
 Execution Environments
 ----------------------
 
-Execution Environments are container images that serve as Ansible `control
-nodes`_. An Execution Environment contains:
+Execution environments are container images that serve as Ansible `control
+nodes`_. An execution environment contains:
 
 - Python
 - Ansible-core
@@ -36,7 +36,7 @@ nodes`_. An Execution Environment contains:
 - Other content you select and install
 
 .. _control nodes:
-   https://docs.ansible.com/ansible/latest/network/getting_started/basic_concepts.html#control-node
+   https://docs.ansible.com/ansible/latest/getting_started/basic_concepts.html#control-node
 
 
 Getting Started
@@ -52,12 +52,12 @@ execution environment. You can specify these items:
 - all Ansible Collections (anything installed with ``ansible-galaxy``)
 - other items to download, install, or configure
 
-Ansible Builder reads the ``execution_environment.yml`` file and can execute two separate steps. The first step is to create a containerfile and a build context. The second step is to run a containerization tool (Podman or Docker) to build an image. You can use ``ansible-builder build`` to run both steps. Or you can use ``ansible-builder create`` to run only the first step. For more details, read through the :ref:`Usage:CLI Usage`.
+Ansible Builder reads the ``execution_environment.yml`` file and can execute two separate steps. The first step is to create a Containerfile and a build context. The second step is to run a containerization tool (Podman or Docker) to build an image. You can use ``ansible-builder build`` to run both steps. Or you can use ``ansible-builder create`` to run only the first step. For more details, read through the :ref:`Usage:CLI Usage`.
 
 Collection Developers
 ^^^^^^^^^^^^^^^^^^^^^
 
-When Ansible Builder installs Collections into an Execution Environment, it also installs each Collection's dependencies. You can learn to correctly declare dependencies for your collection from the :ref:`collection_metadata:Collection-level Metadata` page.
+When Ansible Builder installs Collections into an execution environment, it also installs each Collection's dependencies. You can learn to correctly declare dependencies for your collection from the :ref:`collection_metadata:Collection-level Metadata` page.
 
 
 .. toctree::

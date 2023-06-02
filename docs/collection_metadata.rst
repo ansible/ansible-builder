@@ -1,7 +1,7 @@
-Collection-level Dependencies
+Collection-level dependencies
 =============================
 
-When Ansible Builder installs Collections into an Execution Environment, it also installs the dependencies listed by each Collection on Galaxy.
+When Ansible Builder installs Collections into an execution environment, it also installs the dependencies listed by each Collection on Galaxy.
 
 For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
 
@@ -41,6 +41,6 @@ If you need to include one of these ignored package names, use the ``--user-pip`
 System-level Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For system packages, use the ``bindep`` format to specify cross-platform requirements, so they can be installed by whichever package management system the Execution Environment uses. Collections should specify necessary requirements for ``[platform:rpm]``.
+For system packages, use the ``bindep`` format to specify cross-platform requirements, so they can be installed by whichever package management system the execution environment uses. Collections should specify necessary requirements for ``[platform:rpm]``.
 
 Ansible builder combines system package entries from multiple collections into a single file. Only requirements with *no* profiles (runtime requirements) are installed to the image. Entries from multiple collections which are outright duplicates of each other may be consolidated in the combined file.

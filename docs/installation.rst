@@ -11,7 +11,7 @@ Requirements
   as well as the ``ansible-builder`` Python package.
 - The ``--container-runtime`` option needs to correspond to the Podman/Docker
   executable you intend to use (where is this set?).
-- ``ansible-builder`` version ``3.x`` requires Python ``???`` or higher.
+- ``ansible-builder`` version ``3.x`` requires Python ``3.8`` or higher.
 
 Install from PyPi
 *****************

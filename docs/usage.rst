@@ -1,9 +1,9 @@
 CLI Usage
 =========
 
-Ansible Builder does two things. First it creates a containerfile and a build context based on your :ref:`definition<Definition:Execution Environment Definition>`. Then it runs Podman or Docker to build an image based on the containerfile and build context. If you wish, you can use Ansible Builder only for the first task, then create your images on the platform of your choice.
+Ansible Builder does two things. First it creates a Containerfile and a build context based on your :ref:`definition<Definition:Execution Environment Definition>`. Then it runs Podman or Docker to build an image based on the Containerfile and build context. If you wish, you can use Ansible Builder only for the first task, then create your images on the platform of your choice.
 
-The ``ansible-builder build`` command executes both steps, giving you a containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a containerfile and a build context. 
+The ``ansible-builder build`` command executes both steps, giving you a Containerfile, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a Containerfile and a build context. 
 
 .. contents::
    :local:
@@ -124,7 +124,7 @@ Specifies the directory name for the build context Ansible Builder creates. Defa
 
 Passes build-time arguments to Podman or Docker. Specify these flags or variables the same way you would with ``podman build`` or ``docker build``.
 
-By default, the Containerfile / Dockerfile created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
+By default, the Containerfile / Dockerfile created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding execution environments without modifying any files.
 
 .. code::
 
@@ -203,7 +203,7 @@ Removes unused images created after the build process:
 
 .. note::
 
-   This flag removes all the dangling images on the given machine whether they already existed or were created by ansible-builder build process.
+   This flag removes all the dangling images on the given machine whether they already existed or were created by ``ansible-builder`` build process.
 
 
 ``--squash``
