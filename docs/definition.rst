@@ -1,3 +1,5 @@
+.. _builder_ee_definition:
+
 Execution environment definition
 ================================
 

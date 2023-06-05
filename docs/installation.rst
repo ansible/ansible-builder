@@ -1,3 +1,5 @@
+.. _builder_installation:
+
 Installation
 ============
 

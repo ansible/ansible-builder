@@ -1,7 +1,9 @@
+.. _builder_cli:
+
 CLI Usage
 =========
 
-Ansible Builder can execute two separate steps. The first step is to create a build instruction file (Containerfile for Podman, Dockerfile for Docker) and a build context based on your :ref:`definition<Definition:execution environment Definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The ``ansible-builder build`` command executes both steps, giving you a build instruction file, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a build instruction file and a build context. If you use ``ansible-builder create``, you can use the resulting build instruction file and build context to build your container images on the platform of your choice.
+Ansible Builder can execute two separate steps. The first step is to create a build instruction file (Containerfile for Podman, Dockerfile for Docker) and a build context based on your :ref:`definition <builder_ee_definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The ``ansible-builder build`` command executes both steps, giving you a build instruction file, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a build instruction file and a build context. If you use ``ansible-builder create``, you can use the resulting build instruction file and build context to build your container images on the platform of your choice.
 
 .. contents::
    :local:

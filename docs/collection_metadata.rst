@@ -1,3 +1,5 @@
+.. _builder_collection_metadata:
+
 Collection-level dependencies
 =============================
 
