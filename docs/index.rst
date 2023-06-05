@@ -49,7 +49,7 @@ execution environment. You can specify these items:
 - the version of ansible-runner
 - Ansible collections, with version restrictions
 - system packages, with version restrictions
-- python packages, with version restrictions
+- Python packages, with version restrictions
 - other items to download, install, or configure
 
 Version syntax
@@ -75,7 +75,7 @@ Ansible Builder executes four stages when it runs your containerization tool to 
 - Galaxy
 - Builder
 - Final
-In the Base stage, Ansible Builder uses Podman or Docker to pull the base image you defined. All three later stages of the build process build on the output of the Base stage. In the Galaxy stage, Ansible Builder downloads the collections you defined from Galaxy and stashes them locally as files. In the Builder stage, Ansible Builder downloads the other packages (python packages and system packages) you defined and stashes them locally as files. In the Final stage, Ansible Builder integrates the first three stages, installing all the stashed files on the base image and generating a new image that includes all the content.
+In the Base stage, Ansible Builder uses Podman or Docker to pull the base image you defined. All three later stages of the build process build on the output of the Base stage. In the Galaxy stage, Ansible Builder downloads the collections you defined from Galaxy and stashes them locally as files. In the Builder stage, Ansible Builder downloads the other packages (Python packages and system packages) you defined and stashes them locally as files. In the Final stage, Ansible Builder integrates the first three stages, installing all the stashed files on the base image and generating a new image that includes all the content.
 
 Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage. You may need to install certain packages or utilities before the Galaxy and Builder stages. For example, if you need to install a collection from GitHub, you must install git after the Base stage to make it available during the Galaxy stage. To add custom build steps, add an ``additional_build_steps`` section to your execution environment definition. For more details, read through the :ref:`Usage:CLI Usage`.
 

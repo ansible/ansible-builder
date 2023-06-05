@@ -221,7 +221,7 @@ installed into the final image.
 The following keys are valid for this section:
 
     ``ansible_core``
-      The version of the Ansible python package to be installed. This value is
+      The version of the Ansible Python package to be installed. This value is
       a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -236,7 +236,7 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
 
     ``ansible_runner``
-      The version of the Ansible Runner python package to be installed. This value
+      The version of the Ansible Runner Python package to be installed. This value
       is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -374,7 +374,7 @@ builder runtime functionality. Valid keys for this section are:
     ``package_manager_path``
       A string with the path to the package manager (dnf or microdnf) to use.
       The default is ``/usr/bin/dnf``. This value will be used to install a
-      python interpreter, if specified in ``dependencies``, and during the
+      Python interpreter, if specified in ``dependencies``, and during the
       build phase by the ``assemble`` script.
 
     ``skip_ansible_check``
