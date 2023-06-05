@@ -73,7 +73,7 @@ You may use the configuration YAML keys listed here in your v3 execution environ
 additional_build_files
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Top-level section that allows you to add any file to the build context directory. These can
+Specifies files to be added to the build context directory. These can
 then be referenced or copied by `additional_build_steps` during any build stage.
 The format is a list of dictionary values, each with a ``src`` and ``dest`` key and value.
 
