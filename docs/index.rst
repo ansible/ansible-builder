@@ -20,8 +20,8 @@ Ansible Builder depends on more generalized containerization tools like Podman o
 
 Here are a few terms you should know. These concepts and terms are relevant to any use of containers, not specific to Ansible Builder.
 
+  * Build instruction file (called a Containerfile in Podman and a Dockerfile in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies  
   * Container: a package of code and dependencies that runs a service or an application across a variety of computing environments
-  * Containerfile (called a Dockerfile in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies  
   * Image: a complete but inactive version of a container - you can distribute images and create one or more containers based on each image
 
 What are execution environments?
@@ -54,11 +54,6 @@ execution environment. You can specify these items:
 - system packages, with version restrictions
 - Python packages, with version restrictions
 - other items to download, install, or configure
-
-Defining versions in your execution environment definition
-----------------------------------------------------------
-
-In general Ansible Builder uses standard syntax to define versions.  You can use the syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility in your execution environment definition. You can also define your packages or collections in ``requirements.yml`` files and include those files in your execution environment definition file.
 
 Choosing a base image
 ---------------------
