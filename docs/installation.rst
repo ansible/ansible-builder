@@ -7,11 +7,9 @@ Installation
 Requirements
 ************
 
-- To build images, you must install either ``podman`` or ``docker``
-  as well as the ``ansible-builder`` Python package.
-- The ``--container-runtime`` option needs to correspond to the Podman/Docker
-  executable you intend to use (where is this set?).
-- ``ansible-builder`` version ``3.x`` requires Python ``3.8`` or higher.
+- To build images, you must install a containerization tool - either ``podman`` or ``docker`` - as well as the ``ansible-builder`` Python package.
+- The ``--container-runtime`` option must correspond to the containerization tool you use.
+- ``ansible-builder`` version ``3.x`` requires Python ``3.9`` or higher.
 
 Install from PyPi
 *****************

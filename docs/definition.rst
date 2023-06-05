@@ -20,7 +20,7 @@ Example:
 .. note::
    If you are running an older version of Ansible Builder, you may need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
 
-If the EE file does not specify a version, version 1 will be assumed. (IS THIS STILL TRUE???)
+To use Ansible Builder 3.x, you must specify the schema version. If your EE file does not specify a schema version, Ansible Builder will assume you want version 1.
 
 images
 ------
@@ -88,7 +88,7 @@ Example:
 Version 3 Format
 ----------------
 
-This example file shows many more options from the version 3 EE file:
+Here is a version 3 EE file with more options included:
 
 .. code:: yaml
 
