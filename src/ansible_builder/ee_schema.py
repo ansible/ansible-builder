@@ -329,7 +329,7 @@ schema_v3 = {
         },
 
         "options": {
-            "description": "Options that effect runtime behavior",
+            "description": "Options that affects the runtime behavior",
             "type": "object",
             "additionalProperties": False,
             "properties": {
@@ -371,6 +371,10 @@ schema_v3 = {
                             "type": "string",
                         },
                     },
+                },
+                "tags": {
+                    "description": "Specifies the name which is assigned to resulting image if build process completes successfully",
+                    "type": ["string", "array", "null"],
                 },
             },
         },
@@ -444,3 +448,4 @@ def _handle_options_defaults(ee_def: dict):
         'cmd': '["bash"]',
     })
     options.setdefault('user', '1000')
+    options.setdefault('tags', [])

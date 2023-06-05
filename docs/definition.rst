@@ -355,6 +355,9 @@ builder runtime functionality. Valid keys for this section are:
       This sets the username or UID to use as the default user for the final container image.
       The default value ``1000``.
 
+    ``tags``
+      Specifies the name which is assigned to resulting image if build process completes successfully.
+      The default value is ``ansible-execution-env:latest``.
 
 Example ``options`` section:
 
@@ -370,6 +373,8 @@ Example ``options`` section:
         skip_ansible_check: true
         workdir: /myworkdir
         user: bob
+        tags:
+          - ee_development:latest
 
 version
 ^^^^^^^
