@@ -1,7 +1,7 @@
 Execution environment definition
 ================================
 
-You define the content of your execution environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the containerfile (Containerfile for Podman, Dockerfile for Docker) and build context for your container image. The execution environment definition file accepts four top-level sections: version, images, dependencies, and (optionally) additional_build_steps.
+You define the content of your execution environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the build instruction file (Containerfile for Podman, Dockerfile for Docker) and build context for your container image. The execution environment definition file accepts four top-level sections: version, images, dependencies, and (optionally) additional_build_steps.
 
 .. contents::
    :local:
@@ -75,7 +75,7 @@ additional_build_steps
 Custom build steps.
 Optional.
 
-You can add build steps before or after any stage of the image creation process. Each step should be expressed as a containerfile directive. For example, if you need ``git`` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
+You can add build steps before or after any stage of the image creation process. Each step should be expressed as a build instruction file directive. For example, if you need ``git`` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
 
 Example:
 
