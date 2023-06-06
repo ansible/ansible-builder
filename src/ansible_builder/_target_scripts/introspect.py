@@ -344,7 +344,8 @@ def sanitize_requirements(collection_py_reqs):
                 consolidated.append(req)
                 seen_pkgs.add(req.name)
         except Exception as e:
-            logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
+            logger.error('Failed to parse requirements from %s, error: %s', collection, e)
+            sys.exit(1)
 
     # removal of unwanted packages
     sanitized = []

@@ -67,3 +67,9 @@ def test_parse_args_default_action():
     assert parser.user_bindep == user_bindep
     assert parser.write_pip == write_pip
     assert parser.write_bindep == write_bindep
+
+
+def test_corrupt_python_requirements():
+    with pytest.raises(SystemExit) as excinfo:
+        sanitize_requirements({'test.metadata': ['invalid_package=1']})
+    assert excinfo.value.code == 1
