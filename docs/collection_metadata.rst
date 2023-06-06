@@ -33,6 +33,8 @@ The easiest way to install a collection is to use the ``ansible-galaxy`` command
     pip install ansible
     ansible-galaxy collection install COLLECTION_NAME
 
+Refer to the `Installing collections with ansible-galaxy guide <https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-collections-with-ansible-galaxy>`_ for more options.
+
 Run the ``introspect`` command against your collection path:
 
 ::
