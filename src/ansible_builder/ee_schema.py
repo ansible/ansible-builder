@@ -329,7 +329,7 @@ schema_v3 = {
         },
 
         "options": {
-            "description": "Options that affects the runtime behavior",
+            "description": "Options that affect the runtime behavior",
             "type": "object",
             "additionalProperties": False,
             "properties": {
@@ -374,7 +374,7 @@ schema_v3 = {
                 },
                 "tags": {
                     "description": "Specifies the name which is assigned to resulting image if build process completes successfully",
-                    "type": ["string", "array", "null"],
+                    "type": "array",
                 },
             },
         },
