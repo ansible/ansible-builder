@@ -150,6 +150,13 @@ Build args used by ``ansible-builder`` are the following:
     ``ANSIBLE_GALAXY_CLI_ROLE_OPTS``
       This allows the user to pass any flags, such as `--no-deps`, to the role installation.
 
+    ``PKGMGR_PRESERVE_CACHE``
+      This controls how often the package manager cache is cleared during the image build process.
+      If this value is not set, which is the default, the cache is cleared frequently.
+      If it is set to the string `always`, the cache is never cleared.
+      Any other value forces the cache to be cleared only after the system dependencies are installed
+      in the final build stage.
+
 Ansible Builder hard-codes values given inside of ``build_arg_defaults`` into the
 build instruction file, so they will persist if you run your container build manually.
 
