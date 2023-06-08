@@ -10,7 +10,8 @@ images:
 
 options:
   user: '1000'  # (optional) sets the username or UID
-  # tags: 'ee_development:latest' # (optional) sets tags
+  # tags:  # (optional) sets tags
+  #   - 'ee_development:latest'
 
 dependencies:
   python_interpreter:
