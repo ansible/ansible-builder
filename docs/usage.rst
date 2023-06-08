@@ -1,28 +1,25 @@
+.. _builder_cli:
+
 CLI Usage
 =========
 
-Once you have created a :ref:`definition<Definition:Execution Environment Definition>`, it's time to build
-your Execution Environment.
+Ansible Builder can execute two separate steps. The first step is to create a build instruction file (Containerfile for Podman, Dockerfile for Docker) and a build context based on your :ref:`definition <builder_ee_definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The ``ansible-builder build`` command executes both steps, giving you a build instruction file, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a build instruction file and a build context. If you use ``ansible-builder create``, you can use the resulting build instruction file and build context to build your container images on the platform of your choice.
 
+.. contents::
+   :local:
 
 The ``build`` command
 ---------------------
 
-The ``ansible-builder build`` command takes an execution environment definition
-as an input. It outputs the build context necessary for
-building an execution environment image, and it builds that image. The
-image can be re-built with the build context elsewhere, and give the
-same result. By default, it looks for a file named ``execution-environment.yml``
-in the current directory.
+The ``ansible-builder build`` command takes an execution environment definition file as an input. It outputs a build instruction file (Containerfile for Podman, Dockerfile for Docker), creates the build context necessary for building an execution environment image, and builds that image. The image can be re-built with the build context elsewhere, and give the same result. By default, it looks for a file named ``execution-environment.yml`` in the current directory.
 
-For our purposes here, we will use the following ``execution-environment.yml``
+This example uses the following ``execution-environment.yml``
 file as a starting point:
-
 
 .. code:: yaml
 
     ---
-    version: 1
+    version: 3
     dependencies:
       galaxy: requirements.yml
 
@@ -35,7 +32,7 @@ The content of ``requirements.yml``:
    collections:
      - name: awx.awx
 
-To build an Execution Environment using the files above, run:
+To build an execution environment using the files above, run:
 
 .. code::
 
@@ -46,14 +43,15 @@ To build an Execution Environment using the files above, run:
    09c930f5f6ac329b7ddb321b144a029dbbfcc83bdfc77103968b7f6cdfc7bea2
    Complete! The build context can be found at: context
 
-In addition to producing a ready-to-use container image, the build context is
-preserved, which can be rebuilt at a different time and/or location with the
-tooling of your choice.
+Ansible Builder produces a ready-to-use container image and preserves the build context, which you can use to rebuild the image at a different time and/or location with the tooling of your choice.
+
+Flags for the ``build`` command
+-------------------------------
 
 ``--tag``
 *********
 
-To customize the tagged name applied to the built image:
+Customizes the tagged name applied to the built image. To create an image with a custom name:
 
 .. code::
 
@@ -68,35 +66,28 @@ More recent versions of ``ansible-builder`` support multiple tags:
 ``--file``
 **********
 
-To use a definition file named something other than
-``execution-environment.yml``:
+Specifies the execution environment file. To use a file named something other than ``execution-environment.yml``:
 
 .. code::
 
-   $ ansible-builder build --file=my-ee.yml
+   $ ansible-builder build --file=my-ee-def.yml
 
 ``--galaxy-keyring``
 ********************
 
-With more recent versions of Ansible, it is possible to have the ``ansible-galaxy``
-utility verify collection signatures during installation. This requires a keyring to
-be provided (can be built with GnuPG tooling) to use during verification. Provide
-the path to this keyring with the ``--galaxy-keyring`` option. If this option is not
-supplied, no signature verification will be performed. If it is provided, and the
-version of Ansible is not recent enough to support this feature, an error will
-occur during the image build process.
+Specifies a keyring for ``ansible-galaxy`` to use to verify collection signatures during installation. To verify collection signatures:
 
 .. code::
 
    $ ansible-builder create --galaxy-keyring=/path/to/pubring.kbx
    $ ansible-builder build --galaxy-keyring=/path/to/pubring.kbx
 
+If you do not pass this option, no signature verification is performed. If you do pass this option, but the version of Ansible is too old to support this feature, you will see an error during the image build process.
+
 ``--galaxy-ignore-signature-status-code``
 *****************************************
 
-With ``--galaxy-keyring`` set it is possible to ignore certain errors that may occur while verifying collections.
-It is passed unmodified to ``ansible-galaxy`` calls via the option ``--ignore-signature-status-code``.
-See the ``ansible-galaxy`` documentation for more information.
+Ignores certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -106,9 +97,7 @@ See the ``ansible-galaxy`` documentation for more information.
 ``--galaxy-required-valid-signature-count``
 *******************************************
 
-When ``--galaxy-keyring`` is set, the number of required valid collection signatures can be overridden.
-The value is passed unmodified to ``ansible-galaxy`` calls via the option ``--required-valid-signature-count``.
-See the ``ansible-galaxy`` documentation for more information.
+Overrides the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
 
 .. code::
 
@@ -121,8 +110,7 @@ See the ``ansible-galaxy`` documentation for more information.
 ``--context``
 *************
 
-By default, a directory named ``context`` will be created in the current working
-directory. To specify another location:
+Specifies the directory name for the build context Ansible Builder creates. Default directory name is ``context`` in the current working directory. To specify another location:
 
 .. code::
 
@@ -134,9 +122,9 @@ directory. To specify another location:
 ``--build-arg``
 ***************
 
-To use Podman or Docker's build-time variables, specify them the same way you would with ``podman build`` or ``docker build``.
+Passes build-time arguments to Podman or Docker. Specify these flags or variables the same way you would with ``podman build`` or ``docker build``.
 
-By default, the Containerfile / Dockerfile outputted by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding Execution Environments without modifying any files.
+By default, the Containerfile / Dockerfile created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding execution environments without modifying any files.
 
 .. code::
 
@@ -160,7 +148,7 @@ To use a custom base image:
 ``--container-runtime``
 ***********************
 
-Podman is used by default to build images. To use Docker:
+Specifies the containerization tool used to build images. Default is Podman. To use Docker:
 
 .. code::
 
@@ -174,8 +162,7 @@ Podman is used by default to build images. To use Docker:
 
 .. note:: Added in version 1.2
 
-Specifies the container image validation policy to use. This is valid only when
-:ref:`container-runtime` is ``podman``. Valid values are one of:
+Specifies the container image validation policy to use. Valid only when :ref:`container-runtime` is ``podman``. Valid values are one of:
 
 * ``ignore_all``: Run podman with generated policy that ignores all signatures.
 * ``system``: Relies on podman's consumption of system policy/signature with
@@ -192,14 +179,13 @@ Specifies the container image validation policy to use. This is valid only when
 
 .. note:: Added in version 1.2
 
-Specifies the path to a GPG keyring file to use for validating container
-image signatures.
+Specifies the path to a GPG keyring file to use for validating container image signatures.
 
 
 ``--verbosity``
 ***************
 
-To customize the level of verbosity:
+Customizes the level of verbosity:
 
 .. code::
 
@@ -209,7 +195,7 @@ To customize the level of verbosity:
 ``--prune-images``
 ******************
 
-To remove unused images created after the build process:
+Removes unused images created after the build process:
 
 .. code::
 
@@ -217,14 +203,13 @@ To remove unused images created after the build process:
 
 .. note::
 
-   This flag essentially removes all the dangling images on the given machine whether they
-   already exists or created by ansible-builder build process.
+   This flag removes all the dangling images on the given machine whether they already existed or were created by ``ansible-builder`` build process.
 
 
 ``--squash``
 ************
 
-This option controls the final image layer squashing. Valid values are:
+Controls the final image layer squashing. Valid values are:
 
 * ``new``: Squash all of the final image's new layers into a single new layer
   (preexisting layers are not squashed).
@@ -234,27 +219,19 @@ This option controls the final image layer squashing. Valid values are:
 
 .. note::
 
-   This flag is compatible only with the ``podman`` runtime and will be ignored
-   for any other runtime. Docker is not supported since layer image squashing is
-   considered an experimental feature.
+   This flag is compatible only with the ``podman`` runtime and will be ignored for any other runtime. Docker does not suport layer squashing; it is considered an experimental feature.
 
 
 The ``create`` command
 ----------------------
 
-The ``ansible-builder create`` command works similarly to the ``build`` command
-in that it takes an execution environment definition as an input
-and outputs the build context necessary for building an execution environment
-image. However, the ``create`` command *will not* build the execution environment
-image; this is useful for creating just the build context and a ``Containerfile``
-that can then be shared.
+The ``ansible-builder create`` command accepts an execution environment definition as an input and outputs the build context necessary for building an execution environment image. However, the ``create`` command *will not* build the execution environment image; this is useful for creating just the build context and a ``Containerfile`` that can then be shared.
 
 
 Examples
 --------
 
-The example in ``test/data/pytz`` requires the ``awx.awx`` collection in
-the execution environment definition. The lookup plugin
+The example in ``test/data/pytz`` requires the ``awx.awx`` collection in the execution environment definition. The lookup plugin
 ``awx.awx.schedule_rrule`` requires the PyPI ``pytz`` and another
 library to work. If ``test/data/pytz/execution-environment.yml`` file is
 given to the ``ansible-builder build`` command, then it will install the

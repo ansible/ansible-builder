@@ -2,58 +2,94 @@
    Tue Aug 18 18:59:26 2020.  You can adapt this file completely to your liking,
    but it should at least contain the root `toctree` directive.
 
-Introduction
-============
+.. _builder_intro:
 
-Using Ansible content that depends on non-default dependencies can be tricky.
-Packages must be installed on each node, play nicely with other software installed
-on the host system, and be kept in sync.
+*******************************
+Introduction to Ansible Builder
+*******************************
 
-To help simplify this process, we have introduced the concept of Execution
-Environments, which you can create with Ansible Builder.
+With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible collections you need for each playbook.
 
+.. contents::
+   :local:
 
-Execution Environments
-----------------------
+Container concepts and terms
+============================
 
-Execution Environments are container images that serve as Ansible `control
-nodes`_. Starting in version 2.0, `ansible-runner
-<https://ansible-runner.readthedocs.io/en/latest/execution_environments.html>`__
-can make use of these images.
+Ansible Builder depends on more generalized containerization tools like Podman or Docker. Before you start using Ansible Builder, you should understand how containers and containerization tools work. Read the documentation for your preferred containerization tool.
 
-An Execution Environment is expected to contain:
+Here are a few terms you should know. These concepts and terms are relevant to any use of containers, not specific to Ansible Builder.
 
-- Ansible
-- Ansible Runner
-- Ansible Collections
-- Python and/or system dependencies of:
-   - modules/plugins in collections
-   - content in ``ansible-base``
-   - custom user needs
+  * Build instruction file (called a Containerfile in Podman and a Dockerfile in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies  
+  * Container: a package of code and dependencies that runs a service or an application across a variety of computing environments
+  * Image: a complete but inactive version of a container - you can distribute images and create one or more containers based on each image
+
+What are execution environments?
+================================
+
+Execution environments are container images that serve as Ansible `control nodes`_. An execution environment contains:
+
+- Python
+- Ansible-core
+- Ansible-runner
+- Ansible collections (anything you install with ``ansible-galaxy``)
+- Python packages (anything you install with ``pip``)
+- System packages (anything you install with ``dnf``, ``yum``, ``apt``, or other package managers)
+- Other content you select and install
 
 .. _control nodes:
-   https://docs.ansible.com/ansible/latest/network/getting_started/basic_concepts.html#control-node
-
-.. _ansible-runner: https://github.com/ansible/ansible-runner
+   https://docs.ansible.com/ansible/latest/getting_started/basic_concepts.html#control-node
 
 
-Getting Started
-***************
+Quickstart for Ansible Builder
+==============================
 
-To get started with Ansible Builder, start by creating an
-:ref:`Execution Environment definition<Definition:Execution Environment Definition>`. This
-file allows you to specify which content you would like to include in your
-execution environment, such as collections, Python requirements, and
-system-level packages.
+To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. Once you have the tools you need, create an :ref:`execution environment definition <builder_ee_definition>` file. By default this file is called ``execution_environment.yml``. In this file you can specify the exact content you want to include in your
+execution environment. You can specify these items:
 
-Once you have created a definition, read through the :ref:`Usage:CLI Usage`.
+- the base container image
+- the version of Python
+- the version of ansible-core
+- the version of ansible-runner
+- Ansible collections, with version restrictions
+- system packages, with version restrictions
+- Python packages, with version restrictions
+- other items to download, install, or configure
 
-Collection Developers
-^^^^^^^^^^^^^^^^^^^^^
+Choosing a base image
+---------------------
 
-Collection developers can declare requirements for their content by providing
-the appropriate metadata. For more information, see
-:ref:`collection_metadata:Collection-level Metadata`.
+You can use any base image you choose. The smaller the base image, generally, the smaller the final image. However, to make Ansible Builder more efficient, you should know what packages, if any, are already installed on the base image you use. For example, some base images already have Python installed. Others do not. If you use a base image that already has Python installed, you can omit Python in your execution environment definition file. Not all base images have package managers installed.
+
+How Ansible Builder executes
+============================
+
+Ansible Builder can execute two separate steps. The first step is to create a build instruction file (Containerfile for Podman, Dockerfile for Docker) and a build context based on the execution environment definition file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The ``ansible-builder build`` command runs both steps. The ``ansible-builder create`` command runs only the first step. For more details, read through the :ref:`CLI usage docs <builder_cli>`.
+
+How Ansible Builder builds images
+---------------------------------
+
+Ansible Builder executes four stages when it runs your containerization tool to build a container image. The same four stages get executed if you build your container image directly with Podman or Docker, using a build instruction file and context generated by ``ansible-builder create``. These stages are:
+
+- Base
+- Galaxy
+- Builder
+- Final
+
+In the Base stage, Ansible Builder uses Podman or Docker to pull the base image you defined, then installs the Python version (if defined and different from any Python on the base image), pip, ansible-runner, and ansible-core or ansible. All three later stages of the build process build on the output of the Base stage.
+
+In the Galaxy stage, Ansible Builder downloads the collections you defined from Galaxy and stashes them locally as files.
+
+In the Builder stage, Ansible Builder downloads the other packages (Python packages and system packages) you defined and stashes them locally as files.
+
+In the Final stage, Ansible Builder integrates the first three stages, installing all the stashed files on the output of the Base stage and generating a new image that includes all the content.
+
+Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage. You may need to install certain packages or utilities before the Galaxy and Builder stages. For example, if you need to install a collection from GitHub, you must install git after the Base stage to make it available during the Galaxy stage. To add custom build steps, add an ``additional_build_steps`` section to your execution environment definition. For more details, read through the :ref:`CLI usage docs <builder_cli>`.
+
+Defining collection dependencies
+================================
+
+When Ansible Builder installs collections into an execution environment, it also installs each collection's dependencies. Collection maintainers can learn to correctly declare dependencies for their collections from the :ref:`collection-level dependencies <builder_collection_metadata>` page.
 
 
 .. toctree::

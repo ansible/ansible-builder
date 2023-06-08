@@ -1,27 +1,32 @@
-Execution Environment Definition
+.. _builder_ee_definition:
+
+Execution environment definition
 ================================
 
-The execution environment (EE) definition file supports multiple versions.
-
-  * Version 1: Supported by all ``ansible-builder`` versions.
-  * Version 2: Supported by ``ansible-builder`` versions ``1.2`` and later.
-  * Version 3: Supported by ``ansible-builder`` versions ``3.0`` and later.
-
-If the EE file does not specify a version, version 1 will be assumed.
+You define the content of your execution environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the build instruction file (Containerfile for Podman, Dockerfile for Docker) and build context for your container image.
 
 .. note::
+   This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
 
-    This version of the documentation discusses only the latest format version.
-    For further details on older formats, reference previous versions of the
-    documentation.
+.. contents::
+   :local:
 
-Version 3 Format
-----------------
+Overview
+--------
+The Ansible Builder 3.x execution environment definition file accepts seven top-level sections:
 
-This version of the EE definition file offers substantially more configurability
-and functionality over previous versions.
+* additional_build_files
+* additional_build_steps
+* build_arg_defaults
+* dependencies
+* images
+* options
+* version
 
-Below is an example version 3 EE file:
+Version 3 sample file
+---------------------
+
+Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify the schema version. If your EE file does not specify ``version: 3``, Ansible Builder will assume you want version 1.
 
 .. code:: yaml
 
@@ -67,16 +72,15 @@ Below is an example version 3 EE file:
         - RUN echo This is a post-install command!
         - RUN ls -la /etc
 
-Configuration
-^^^^^^^^^^^^^
+Configuration options
+---------------------
 
-Below are listed the configuration YAML keys that you may use in the v3
-format.
+You may use the configuration YAML keys listed here in your v3 execution environment definition file.
 
 additional_build_files
-**********************
+^^^^^^^^^^^^^^^^^^^^^^
 
-This section allows you to add any file to the build context directory. These can
+Specifies files to be added to the build context directory. These can
 then be referenced or copied by `additional_build_steps` during any build stage.
 The format is a list of dictionary values, each with a ``src`` and ``dest`` key and value.
 
@@ -97,12 +101,13 @@ Each list item must be a dictionary containing the following (non-optional) keys
       will be created for you if it does not exist.
 
 additional_build_steps
-**********************
+^^^^^^^^^^^^^^^^^^^^^^
 
-This section enables you to specify custom build commands for any build phase.
-These commands will be inserted directly into the instruction file for the
-container runtime (e.g., `Containerfile` or `Dockerfile`). They will need to
-conform to any rules required for the runtime system.
+Specifies custom build commands for any build phase.
+These commands will be inserted directly into the build instruction file for the
+container runtime (e.g., `Containerfile` or `Dockerfile`). The commands must conform to any rules required by the containerization tool.
+
+You can add build steps before or after any stage of the image creation process. For example, if you need ``git`` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
 
 Below are the valid keys for this section. Each supports either a multi-line
 string, or a list of strings.
@@ -132,10 +137,9 @@ string, or a list of strings.
       Commands to insert after building of the final image.
 
 build_arg_defaults
-******************
+^^^^^^^^^^^^^^^^^^
 
-Default values for build args can be specified in the definition file in
-the ``build_arg_defaults`` section as a dictionary. This is an alternative
+Specifies default values for build args as a dictionary. This is an alternative
 to using the :ref:`build-arg` CLI flag.
 
 Build args used by ``ansible-builder`` are the following:
@@ -146,22 +150,22 @@ Build args used by ``ansible-builder`` are the following:
     ``ANSIBLE_GALAXY_CLI_ROLE_OPTS``
       This allows the user to pass any flags, such as `--no-deps`, to the role installation.
 
-Values given inside of ``build_arg_defaults`` will be hard-coded into the
-Containerfile, so they will persist if ``podman build`` is called manually.
+Ansible Builder hard-codes values given inside of ``build_arg_defaults`` into the
+build instruction file, so they will persist if you run your container build manually.
 
-If the same variable is specified in the CLI :ref:`build-arg` flag,
-the CLI value will take higher precedence.
+If you specify the same variable in the execution environment definition and at the command line with the CLI :ref:`build-arg` flag, the CLI value will take higher precedence (the CLI value will override the value in the execution environment definition).
 
 dependencies
-************
+^^^^^^^^^^^^
 
-This section allows you to describe any dependencies that will need to be
-installed into the final image.
+Specifies dependencies to install into the final image, including ``ansible-core``, ``ansible-runner``, Python packages, system packages, and Ansible Collections. Ansible Builder automatically installs dependencies for any Ansible Collections you install.
+
+In general you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
 
 The following keys are valid for this section:
 
     ``ansible_core``
-      The version of the Ansible python package to be installed. This value is
+      The version of the ``ansible-core`` Python package to be installed. This value is
       a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -176,7 +180,7 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
 
     ``ansible_runner``
-      The version of the Ansible Runner python package to be installed. This value
+      The version of the Ansible Runner Python package to be installed. This value
       is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -191,7 +195,7 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible-runner/archive/refs/heads/ansible-runner.tar.gz
 
     ``galaxy``
-      Galaxy installation requirements. This may either be a filename, a
+      Ansible Collections to be installed from Galaxy. This may be a filename, a
       dictionary, or a multi-line string representation of an Ansible Galaxy
       ``requirements.yml`` file (see below for examples). Read more about
       the requirements file format in the `Galaxy user guide <https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
@@ -206,7 +210,7 @@ The following keys are valid for this section:
       (``python_path``).
 
     ``system``
-      The system requirements to be installed in bindep format. This may either
+      The system packages to be installed, in bindep format. This may either
       be a filename, or a list of requirements (see below for an example).
 
 The following example uses filenames that contain the various dependencies:
@@ -249,14 +253,24 @@ And this example uses inline values:
 
 
 images
-******
+^^^^^^
 
-This section is a dictionary that is used to define the base image to be used.
-Verification of signed container images is supported with the ``podman`` container
-runtime. How this data is used in relation to a Podman
+Specifies the base image to be used. At a minimum you *MUST* specify a source, image, and tag for the base image. The base image provides the operating system and may also provide some packages. We recommend using the standard ``host/namespace/container:tag`` syntax to specify images. You may use Podman or Docker shortcut syntax instead, but the full definition is more reliable and portable.
+
+Valid keys for this section are:
+
+    ``base_image``
+      A dictionary defining the parent image for the execution environment. A ``name``
+      key must be supplied with the container image to use. Use the ``signature_original_name``
+      key if the image is mirrored within your repository, but signed with the original
+      image's signature key.
+
+image verification
+""""""""""""""""""
+You can verify signed container images if you are using the ``podman`` container
+runtime. Set the :ref:`container-policy` CLI option to control how this data is used in relation to a Podman
 `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
-file for container image signature validation depends on the value of the
-:ref:`container-policy` CLI option.
+file for container image signature validation.
 
   * ``ignore_all`` policy: Generate a `policy.json` file in the build
     :ref:`context directory <context>` where no signature validation is
@@ -272,18 +286,10 @@ file for container image signature validation depends on the value of the
     :ref:`context directory <context>` that will be used during the build to
     validate the images.
 
-Valid keys for this section are:
-
-    ``base_image``
-      A dictionary defining the parent image for the execution environment. A ``name``
-      key must be supplied with the container image to use. Use the ``signature_original_name``
-      key if the image is mirrored within your repository, but signed with the original
-      image's signature key. Image names *MUST* contain a tag, such as ``:latest``.
-
 options
-*******
+^^^^^^^
 
-This section is a dictionary that contains keywords/options that can affect
+A dictionary of keywords/options that can affect
 builder runtime functionality. Valid keys for this section are:
 
     ``container_init``
@@ -314,7 +320,7 @@ builder runtime functionality. Valid keys for this section are:
     ``package_manager_path``
       A string with the path to the package manager (dnf or microdnf) to use.
       The default is ``/usr/bin/dnf``. This value will be used to install a
-      python interpreter, if specified in ``dependencies``, and during the
+      Python interpreter, if specified in ``dependencies``, and during the
       build phase by the ``assemble`` script.
 
     ``skip_ansible_check``
@@ -359,7 +365,6 @@ Example ``options`` section:
         user: bob
 
 version
-*******
+^^^^^^^
 
-This is an integer value that sets the version of the format being used. This
-must be ``3`` for the v3 version.
+An integer value that sets the schema version of the execution environment definition file. Defaults to ``1``. Must be ``3`` if you are using Ansible Builder 3.x.
