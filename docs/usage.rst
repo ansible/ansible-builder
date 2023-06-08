@@ -21,18 +21,11 @@ file as a starting point:
     ---
     version: 3
     dependencies:
-      galaxy: requirements.yml
+      galaxy:
+        collections:
+        - name: awx.awx
 
-
-The content of ``requirements.yml``:
-
-.. code:: yaml
-
-   ---
-   collections:
-     - name: awx.awx
-
-To build an execution environment using the files above, run:
+To build an Execution Environment using the file above, run:
 
 .. code::
 
