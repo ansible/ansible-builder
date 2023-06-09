@@ -102,3 +102,12 @@ When Ansible Builder installs collections into an execution environment, it also
    usage
    collection_metadata
    glossary
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Common Scenarios
+
+   scenario_guides/scenario_copy
+   scenario_guides/scenario_using_env
+   scenario_guides/scenario_custom

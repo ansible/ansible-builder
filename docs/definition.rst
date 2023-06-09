@@ -11,6 +11,8 @@ You define the content of your execution environment in a YAML file. By default,
 .. contents::
    :local:
 
+.. _version_3_format:
+
 Overview
 --------
 The Ansible Builder 3.x execution environment definition file accepts seven top-level sections:
