@@ -1,0 +1,38 @@
+---
+version: 3
+
+images:
+  base_image:
+    # Needs login
+    name: registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
+
+dependencies:
+  # Use Ansible Core 2.14
+  ansible_core:
+    package_pip: ansible-core==2.14.0
+  # Runner
+  ansible_runner:
+    package_pip: ansible-runner==2.3.2
+  # Collections to be installed using Galaxy
+  galaxy:
+    collections:
+      - ansible.utils
+
+additional_build_files:
+  # copy arbitrary files next to this EE def into the build context- we can refer to them later.
+  - src: files
+    dest: configs
+
+additional_build_steps:
+  prepend_galaxy:
+    # Copy ansible.cfg from build directory to EE
+    - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+    # Environment variables used for Galaxy client configurations
+    - ENV ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL=https://console.redhat.com/api/automation-hub/content/xxxxxxx-synclist/
+    - ENV ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL=https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+    # define a custom build arg env passthru - we still also have to pass
+    # `--build-arg ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN` to get it to pick it up from the env
+    - ARG ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN
+
+options:
+  package_manager_path: /usr/bin/microdnf  # downstream images use non-standard package manager
