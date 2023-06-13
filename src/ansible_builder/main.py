@@ -46,14 +46,12 @@ class AnsibleBuilder:
         self.definition = UserDefinition(filename=filename)
         self.definition.validate()
 
-        self.tags = []
+        self.tags = [constants.default_tag]
         if self.definition.version >= 3 and self.definition.options['tags']:
             self.tags = self.definition.options['tags']
-        elif tag:
+
+        if tag:
             self.tags = tag
-        else:
-            # Set default value
-            self.tags = [constants.default_tag]
 
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
