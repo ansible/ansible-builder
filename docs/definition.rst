@@ -62,6 +62,10 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
           dest: configs
 
     additional_build_steps:
+      prepend_base:
+        # Enable Non-default stream before packages provided by it can be installed. (optional)
+        - RUN $PKGMGR module enable postgresql:15 -y
+        - RUN $PKGMGR install -y postgresql
       prepend_galaxy:
         - ADD _build/configs/ansible.cfg ~/.ansible.cfg
 
