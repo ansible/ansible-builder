@@ -241,6 +241,19 @@ class TestUserDefinition:
         value = definition.raw.get('options', {}).get('user')
         assert value == 'bob'
 
+    def test_v3_set_tags(self, exec_env_definition_file):
+        """
+        Test that options.tags sets to tags
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'options': {'tags': ['ee_test:latest']}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.raw.get('options', {}).get('tags')
+        assert value == ['ee_test:latest']
+
 
 class TestImageDescription:
 
