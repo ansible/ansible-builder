@@ -373,8 +373,12 @@ schema_v3 = {
                     },
                 },
                 "tags": {
-                    "description": "Specifies the name which is assigned to resulting image if build process completes successfully",
+                    "description": "A list of names to assign to the resulting image if build process completes successfully",
                     "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+
                 },
             },
         },
