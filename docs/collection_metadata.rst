@@ -19,7 +19,7 @@ the ``build_ignore`` of a collection, because those files are not uploaded to Ga
 Dependency introspection
 ========================
 
-If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are sanitized (deduped) before container image assembly.
+If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are found and sanitized (deduped) before container image assembly.
 
 A user can see the introspection output during
 the builder intermediate phase using the ``build -v3`` option.
