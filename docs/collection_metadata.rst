@@ -3,13 +3,6 @@
 Collection-level dependencies
 =============================
 
-.. note::
-
-  The Ansible Builder's dependency introspection described in this document is not a part of a typical workflow
-  for building and using execution environments. It is a troubleshooting functionality for collection maintainers
-  to allow them to check their collection dependencies visibility for Ansible Builder
-  in cases of non-standard paths of the files listed below and alike.
-
 When Ansible Builder installs collections into an execution environment, it also installs the dependencies listed by each collection on Galaxy.
 
 For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
@@ -23,11 +16,22 @@ These files must be included in the packaged collection on Galaxy.
 Ansible Builder cannot install dependencies listed in files that are included in
 the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
 
+Dependency introspection
+========================
+
+If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are sanitized (deduped) before container image assembly.
+
+A user can see the introspection output during
+the builder intermediate phase using the ``build -v3`` option.
+
 How to verify collection-level metadata
 =======================================
 
-Collection maintainers can verify that ``ansible-builder`` recognizes
-the requirements they expect by using the ``introspect`` command.
+.. note::
+
+  Running the introspect command described below is not a part of a typical workflow for building and using execution environments.
+
+Collection developers can verify that dependencies specified in the collection will be processed correctly by Ansible Builder.
 
 In order to do that, the collection has to be installed locally.
 
