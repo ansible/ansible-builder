@@ -53,7 +53,7 @@ def test_create_streams_output_with_invalid_verbosity(cli, build_dir_and_ee_yml)
     tmpdir, eeyml = build_dir_and_ee_yml("")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml} -v 6", allow_error=True)
     assert result.rc != 0
-    assert 'invalid choice: 6 (choose from 0, 1, 2, 3)' in (result.stdout + result.stderr)
+    assert f'maximum verbosity is {constants.max_verbosity}' in (result.stdout + result.stderr)
 
 
 def test_inline_str_galaxy_requirements(cli, build_dir_and_ee_yml):

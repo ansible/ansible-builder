@@ -177,6 +177,18 @@ Customizes the level of verbosity:
 
    $ ansible-builder build --verbosity 2
 
+You may also use ``-v`` for the shorthand version. You may either specify an integer for
+the verbosity level, or supply multiples of the option. For example, the following are
+equivalent to setting the verbosity level to ``3``:
+
+.. code::
+
+   $ ansible-builder build -v 3
+
+.. code::
+
+   $ ansible-builder build -vvv
+
 
 ``--prune-images``
 ******************
