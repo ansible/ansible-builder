@@ -11,27 +11,22 @@ Ansible Builder can execute two separate steps. The first step is to create a bu
 The ``build`` command
 ---------------------
 
-The ``ansible-builder build`` command takes an execution environment definition file as an input. It outputs a build instruction file (Containerfile for Podman, Dockerfile for Docker), creates the build context necessary for building an execution environment image, and builds that image. The image can be re-built with the build context elsewhere, and give the same result. By default, it looks for a file named ``execution-environment.yml`` in the current directory.
+The ``ansible-builder build`` command:
 
-This example uses the following ``execution-environment.yml``
-file as a starting point:
+* takes an :ref:`execution environment definition file<builder_ee_definition>` as an input,
+* outputs a build instruction file (Containerfile for Podman, Dockerfile for Docker),
+* creates a build context necessary for building an execution environment image,
+* builds the image.
 
-.. code:: yaml
+By default, it looks for a file named ``execution-environment.yml`` in the current directory.
 
-    ---
-    version: 3
-    dependencies:
-      galaxy:
-        collections:
-        - name: awx.awx
-
-To build an Execution Environment using the file above, run:
+To build an execution environment using the default definition file, run:
 
 .. code::
 
    $ ansible-builder build
    ...
-   STEP 7: COMMIT my-awx-ee
+   STEP 7: COMMIT my-ee
    --> 09c930f5f6a
    09c930f5f6ac329b7ddb321b144a029dbbfcc83bdfc77103968b7f6cdfc7bea2
    Complete! The build context can be found at: context
@@ -212,7 +207,7 @@ Controls the final image layer squashing. Valid values are:
 
 .. note::
 
-   This flag is compatible only with the ``podman`` runtime and will be ignored for any other runtime. Docker does not suport layer squashing; it is considered an experimental feature.
+   This flag is compatible only with the ``podman`` runtime and will be ignored for any other runtime. Docker does not support layer squashing; it is considered an experimental feature.
 
 
 The ``create`` command
