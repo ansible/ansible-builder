@@ -7,25 +7,76 @@ When Ansible Builder installs collections into an execution environment, it also
 
 For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
 
--  A file named ``meta/execution-environment.yml`` for Python
-   and/or bindep requirements files
--  A file named ``requirements.txt`` in the root level of the
-   collection
--  A file named ``bindep.txt`` in the root level of the collection
+* The ``meta/execution-environment.yml`` file containing the Python
+  and/or bindep requirements or referencing other files listing them.
+* The ``requirements.txt`` file in the root level of the collection.
+* The ``bindep.txt`` file in the root level of the collection.
 
-These files must be included in the packaged collection on Galaxy. Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
+These files must be included in the packaged collection on Galaxy.
+Ansible Builder cannot install dependencies listed in files that are included in
+the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
 
-Collection maintainers can verify that ``ansible-builder`` recognizes
-the requirements they expect by using the ``introspect`` command. For example:
+Dependency introspection
+========================
 
-.. code-block:: text
+If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are found and sanitized (deduped) before container image assembly.
 
-    ansible-builder introspect --sanitize ~/.ansible/collections/
+A user can see the introspection output during
+the builder intermediate phase using the ``build -v3`` option.
+
+How to verify collection-level metadata
+=======================================
+
+.. note::
+
+  Running the introspect command described below is not a part of a typical workflow for building and using execution environments.
+
+Collection developers can verify that dependencies specified in the collection will be processed correctly by Ansible Builder.
+
+In order to do that, the collection has to be installed locally.
+
+When installing collections using ansible-galaxy
+------------------------------------------------
+
+The easiest way to install a collection is to use the `ansible-galaxy <https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-collections-with-ansible-galaxy>`_
+command which is a part of the ``ansible`` package.
+
+Run the ``introspect`` command against your collection path:
+
+::
+
+    ansible-builder introspect --sanitize COLLECTION_PATH
+
+The default collection path used by the ``ansible-galaxy`` command is ``~/.ansible/collections/``.
+Read more about collection paths in the `Ansible configuration settings <https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths>`_ guide.
 
 The ``--sanitize`` option reviews all of the collection requirements and removes duplicates. It also removes any Python requirements that should normally be excluded (see :ref:`python_deps` below).
 
 .. note::
     Use the ``-v3`` option to ``introspect`` to see logging messages about requirements that are being excluded.
+
+When installing collections manually
+------------------------------------
+
+If you download collection tarballs from `Galaxy <https://galaxy.ansible.com/>`_  manually or clone collection git repositories,
+for the ``introspect`` command to work properly, be sure you store your collections
+using the following directory structure:
+
+::
+
+   ansible_collections/NAMESPACE/COLLECTION
+
+For example, if you need to inspect the ``community.docker`` collection, the path will be:
+
+::
+
+  ansible_collections/community/docker
+
+Then, if the ``ansible_collection`` directory is in your home directory, you can run ``introspect`` with the following command:
+
+::
+
+  ansible-builder introspect --sanitize ~/
 
 .. _python_deps:
 
