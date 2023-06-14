@@ -25,11 +25,9 @@ To build an execution environment using the default definition file, run:
 .. code::
 
    $ ansible-builder build
-   ...
-   STEP 7: COMMIT my-ee
-   --> 09c930f5f6a
-   09c930f5f6ac329b7ddb321b144a029dbbfcc83bdfc77103968b7f6cdfc7bea2
-   Complete! The build context can be found at: context
+   Running command:
+     podman build -f context/Containerfile -t ansible-execution-env:latest context
+   Complete! The build context can be found at: /path/to/context
 
 Ansible Builder produces a ready-to-use container image and preserves the build context, which you can use to rebuild the image at a different time and/or location with the tooling of your choice.
 
