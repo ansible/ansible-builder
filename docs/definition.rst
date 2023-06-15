@@ -146,7 +146,7 @@ string, or a list of strings.
 
     Please make sure that you do not specify `USER` directives in these build steps. This may lead to
     failures while building the image.
-    If you want to override `USER` setting, consider using `options.user` setting mentioned below.
+    If you want to override the `USER` setting, consider using the `options.user` setting mentioned below.
 
 build_arg_defaults
 ^^^^^^^^^^^^^^^^^^
