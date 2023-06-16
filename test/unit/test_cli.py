@@ -335,28 +335,28 @@ def test_as_executable_module(capsys):
     assert "usage" in captured.err
 
 
-def test_verbosity(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('verbosity_opt,expected_val',
+                         [('-v', 1),
+                          ('-v -v', 2),
+                          ('-vvv', 3),
+                          ('-v 1', 1),
+                          ('--verbosity', 1),
+                          ('--verbosity=2', 2)])
+def test_verbosity(exec_env_definition_file, tmp_path, verbosity_opt, expected_val):
     content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
 
-    for option_val, expected_val in [('-v', 1),
-                                     ('-v -v', 2),
-                                     ('-vvv', 3),
-                                     ('-v 1', 1),
-                                     ('--verbosity', 1),
-                                     ('--verbosity=2', 2)
-                                     ]:
-        aee = prepare(['create',
-                       '-f', path,
-                       '-c', str(tmp_path),
-                       option_val,
-                       ])
-        assert aee.verbosity == expected_val
+    aee = prepare(['create',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   verbosity_opt,
+                   ])
+    assert aee.verbosity == expected_val
 
 
-def test_invalid_verbosity(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('verbosity_opt', ['-v4', '-vvvv', '-v -v -v -v', '--verbosity=4'])
+def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
     content = {'version': 3}
     path = str(exec_env_definition_file(content=content))
-    for verbosity in ['-v4', '-vvvv', '-v -v -v -v', '--verbosity=4']:
-        with pytest.raises(ValueError, match=f'maximum verbosity is {constants.max_verbosity}'):
-            prepare(['create', '-f', path, '-c', str(tmp_path), verbosity])
+    with pytest.raises(ValueError, match=f'maximum verbosity is {constants.max_verbosity}'):
+        prepare(['create', '-f', path, '-c', str(tmp_path), verbosity_opt])
