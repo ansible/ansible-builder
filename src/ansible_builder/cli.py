@@ -17,6 +17,29 @@ from .utils import configure_logger
 logger = logging.getLogger(__name__)
 
 
+class CustomVerbosityAction(argparse.Action):
+    """
+    Custom argparse Action to maintain backward compatibility for '-v N' and '-vvv'.
+    """
+    def __init__(self, option_strings, *args, **kwargs):
+        super(CustomVerbosityAction, self).__init__(option_strings=option_strings, *args, **kwargs)
+        self.count = 0
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is None:
+            self.count += 1
+        else:
+            try:
+                self.count = int(values)
+            except ValueError:
+                self.count = values.count('v') + 1
+
+        if self.count > constants.max_verbosity:
+            raise ValueError(f'maximum verbosity is {constants.max_verbosity}')
+
+        setattr(namespace, self.dest, self.count)
+
+
 def run():
     args = parse_args()
     configure_logger(args.verbosity)
@@ -164,12 +187,11 @@ def add_container_options(parser):
 
         n.add_argument('-v', '--verbosity',
                        dest='verbosity',
-                       type=int,
-                       choices=[0, 1, 2, 3],
+                       action=CustomVerbosityAction,
+                       nargs='?',
                        default=constants.default_verbosity,
-                       help='Increase the output verbosity, for up to three levels of verbosity '
-                            '(invoked via "--verbosity" or "-v" followed by an integer ranging '
-                            'in value from 0 to 3) (default: %(default)s)')
+                       help='Set the verbosity output level. Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
+                            'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). Default is %(default)s.')
 
 
 def parse_args(args=sys.argv[1:]):

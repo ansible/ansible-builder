@@ -333,3 +333,30 @@ def test_as_executable_module(capsys):
     assert sysexit.value.code == 2  # default rc for "usage"
     captured = capsys.readouterr()
     assert "usage" in captured.err
+
+
+@pytest.mark.parametrize('verbosity_opt,expected_val',
+                         [('-v', 1),
+                          ('-v -v', 2),
+                          ('-vvv', 3),
+                          ('-v 1', 1),
+                          ('--verbosity', 1),
+                          ('--verbosity=2', 2)])
+def test_verbosity(exec_env_definition_file, tmp_path, verbosity_opt, expected_val):
+    content = {'version': 3}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['create',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   verbosity_opt,
+                   ])
+    assert aee.verbosity == expected_val
+
+
+@pytest.mark.parametrize('verbosity_opt', ['-v4', '-vvvv', '-v -v -v -v', '--verbosity=4'])
+def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
+    content = {'version': 3}
+    path = str(exec_env_definition_file(content=content))
+    with pytest.raises(ValueError, match=f'maximum verbosity is {constants.max_verbosity}'):
+        prepare(['create', '-f', path, '-c', str(tmp_path), verbosity_opt])
