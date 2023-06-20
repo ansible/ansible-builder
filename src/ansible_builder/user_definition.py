@@ -246,12 +246,11 @@ class UserDefinition:
 
             self._validate_additional_build_files()
 
-            if self.version == 3:
+            if self.version >= 3:
                 build_steps = self.raw.get('additional_build_steps', {})
                 for step_name, steps in build_steps.items():
                     for directive in steps:
                         if directive.startswith('USER '):
                             logging.warning(
                                 f"Found USER directive in '{step_name}' in 'additional_build_steps'. "
-                                f"Remove this directive from '{step_name}', "
-                                f"since this may cause failure in the build process.")
+                                f"Including this directive may cause failures in the build process.")
