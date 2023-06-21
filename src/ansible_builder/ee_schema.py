@@ -31,6 +31,20 @@ TYPE_DictOrStringOrListOfStrings = {
     ]
 }
 
+TYPE_VersionString = {
+    "description": "The Execution environment schema version number",
+    "type": "number",
+    "minimum": 1,
+    "maximum": 3,
+    "multipleOf": 1,
+    "err_message": {
+        "maximum": "Version value is greater than 3",
+        "minimum": "Version value is less than 1",
+        "type": "Version value should be integer",
+        "multipleOf": "Version value should be multiple of 1",
+    }
+}
+
 ############
 # Version 1
 ############
@@ -39,11 +53,7 @@ schema_v1 = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        "version": {
-            "description": "The EE schema version number",
-            "type": "number",
-        },
-
+        "version": TYPE_VersionString,
         "ansible_config": {
             "type": "string",
         },
@@ -107,10 +117,7 @@ schema_v2 = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        "version": {
-            "description": "The EE schema version number",
-            "type": "number",
-        },
+        "version": TYPE_VersionString,
 
         "ansible_config": {
             "type": "string",
@@ -198,10 +205,7 @@ schema_v3 = {
     "type": "object",
     "additionalProperties": False,
     "properties": {
-        "version": {
-            "description": "The EE schema version number",
-            "type": "number",
-        },
+        "version": TYPE_VersionString,
 
         "build_arg_defaults": {
             "type": "object",
@@ -378,7 +382,6 @@ schema_v3 = {
                     "items": {
                         "type": "string"
                     }
-
                 },
             },
         },
@@ -387,15 +390,7 @@ schema_v3 = {
 
 
 def validate_schema(ee_def: dict):
-    schema_version = 1
-    if 'version' in ee_def:
-        try:
-            schema_version = int(ee_def['version'])
-        except ValueError:
-            raise DefinitionError(f"Schema version not an integer: {ee_def['version']}")
-
-    if schema_version not in (1, 2, 3):
-        raise DefinitionError(f"Unsupported schema version: {schema_version}")
+    schema_version = int(ee_def.get('version', 1))
 
     try:
         if schema_version == 1:
@@ -405,6 +400,9 @@ def validate_schema(ee_def: dict):
         elif schema_version == 3:
             validate(instance=ee_def, schema=schema_v3)
     except (SchemaError, ValidationError) as e:
+        err_message = e.schema.get('err_message', None)
+        if err_message:
+            raise DefinitionError(msg=err_message.get(e.validator, ''), path=e.absolute_schema_path)
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
 
     _handle_aliasing(ee_def)
