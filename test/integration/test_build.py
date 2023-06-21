@@ -8,6 +8,20 @@ from test.conftest import delete_image
 
 
 @pytest.mark.test_all_runtimes
+def test_build_fail_user_directive(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that user is warned when USER directive is used in additional_build_steps
+    """
+    bc = tmp_path
+    ee_def = data_dir / 'build_fail' / 'user-ee.yml'
+    r = cli(
+        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3",
+        allow_error=True
+    )
+    assert r.rc != 0, (r.stdout + r.stderr)
+    assert 'Found USER directive in' in (r.stdout + r.stderr)
+
+
+@pytest.mark.test_all_runtimes
 def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
     """Test that when a build fails, the ansible-builder exits with non-zero exit code.
 

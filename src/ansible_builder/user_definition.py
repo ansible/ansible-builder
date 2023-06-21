@@ -1,3 +1,4 @@
+import logging
 import os
 import textwrap
 import tempfile
@@ -10,6 +11,7 @@ from . import constants
 from .exceptions import DefinitionError
 from .ee_schema import validate_schema
 
+logger = logging.getLogger(__name__)
 
 # HACK: manage lifetimes more carefully
 _tempfiles: list[Callable] = []
@@ -243,3 +245,12 @@ class UserDefinition:
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
             self._validate_additional_build_files()
+
+            if self.version >= 3:
+                build_steps = self.raw.get('additional_build_steps', {})
+                for step_name, steps in build_steps.items():
+                    for directive in steps:
+                        if directive.startswith('USER '):
+                            logging.warning(
+                                f"Found USER directive in '{step_name}' in 'additional_build_steps'. "
+                                f"Including this directive may cause failures in the build process.")

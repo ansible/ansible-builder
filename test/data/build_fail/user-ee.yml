@@ -1,0 +1,9 @@
+version: 3
+
+additional_build_steps:
+  prepend_base:
+  - USER bob
+
+images:
+  base_image:
+    name: quay.io/centos/centos:stream9
