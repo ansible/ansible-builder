@@ -128,10 +128,11 @@ class Containerfile:
 
         self._insert_global_args()
 
+        self._insert_custom_steps('prepend_builder')
+     
         if image == "base":
             self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
 
-        self._insert_custom_steps('prepend_builder')
         self._prepare_galaxy_copy_steps()
         self._prepare_introspect_assemble_steps()
         self._insert_custom_steps('append_builder')
