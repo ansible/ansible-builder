@@ -69,7 +69,7 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
 
     additional_build_steps:
       prepend_base:
-        - RUN echo This is a preprend base command!
+        - RUN echo This is a prepend base command!
         # Enable Non-default stream before packages provided by it can be installed. (optional)
         # - RUN $PKGMGR module enable postgresql:15 -y
         # - RUN $PKGMGR install -y postgresql
