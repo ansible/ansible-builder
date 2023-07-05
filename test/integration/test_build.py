@@ -8,6 +8,20 @@ from test.conftest import delete_image
 
 
 @pytest.mark.test_all_runtimes
+def test_version_1_warning(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that warning about version 1.
+
+    """
+    bc = tmp_path
+    ee_def = data_dir / 'blank' / 'execution-environment.yml'
+    r = cli(
+        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3",
+        allow_error=True
+    )
+    assert 'Found version 1, consider upgrading to version 3 or above' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+
+
+@pytest.mark.test_all_runtimes
 def test_build_fail_user_directive(cli, runtime, ee_tag, tmp_path, data_dir):
     """Test that user is warned when USER directive is used in additional_build_steps
     """
