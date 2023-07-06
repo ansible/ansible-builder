@@ -59,17 +59,22 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
         #   - registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
         #     (needs an account)
 
+    # Custom package manager path for the RHEL based images
+    # options:
+    #  package_manager_path: /usr/bin/microdnf
+
     additional_build_files:
         - src: files/ansible.cfg
           dest: configs
 
     additional_build_steps:
       prepend_base:
+        - RUN echo This is a prepend base command!
         # Enable Non-default stream before packages provided by it can be installed. (optional)
-        - RUN $PKGMGR module enable postgresql:15 -y
-        - RUN $PKGMGR install -y postgresql
+        # - RUN $PKGMGR module enable postgresql:15 -y
+        # - RUN $PKGMGR install -y postgresql
       prepend_galaxy:
-        - ADD _build/configs/ansible.cfg ~/.ansible.cfg
+        - ADD _build/configs/ansible.cfg /etc/ansible/ansible.cfg
 
       prepend_final: |
         RUN whoami
@@ -337,7 +342,7 @@ builder runtime functionality. Valid keys for this section are:
         The default value is ``dumb-init==1.2.5``.
 
     ``package_manager_path``
-      A string with the path to the package manager (dnf or microdnf) to use.
+      A string with the path to the package manager (For example - ``dnf`` or ``microdnf``) to use.
       The default is ``/usr/bin/dnf``. This value will be used to install a
       Python interpreter, if specified in ``dependencies``, and during the
       build phase by the ``assemble`` script.
