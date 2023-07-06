@@ -46,6 +46,9 @@ class AnsibleBuilder:
         self.definition = UserDefinition(filename=filename)
         self.definition.validate()
 
+        if self.definition.version < 3:
+            logger.warning(f'Found version {self.definition.version}, consider upgrading to version 3 or above')
+
         self.tags = [constants.default_tag]
         if self.definition.version >= 3 and self.definition.options['tags']:
             self.tags = self.definition.options['tags']
