@@ -194,7 +194,7 @@ def add_container_options(parser):
                             'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). Default is %(default)s.')
 
 
-def parse_args(args=sys.argv[1:]):
+def parse_args(args=None):
 
     parser = argparse.ArgumentParser(
         prog='ansible-builder',
