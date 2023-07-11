@@ -194,7 +194,7 @@ def add_container_options(parser):
                             'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). Default is %(default)s.')
 
 
-def parse_args(args=sys.argv[1:]):
+def parse_args(args=None):
 
     parser = argparse.ArgumentParser(
         prog='ansible-builder',
@@ -208,14 +208,15 @@ def parse_args(args=sys.argv[1:]):
         help='Print ansible-builder version and exit.'
     )
 
-    subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
-    subparsers.required = True
+    subparsers = parser.add_subparsers(
+        help='The command to invoke.',
+        dest='action',
+        required=True,
+    )
 
     add_container_options(subparsers)
 
-    args = parser.parse_args(args)
-
-    return args
+    return parser.parse_args(args)
 
 
 class BuildArgAction(argparse.Action):
