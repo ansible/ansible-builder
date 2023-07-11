@@ -13,10 +13,22 @@ disable = [
   # Some codes we will leave disabled
   "C0103",  # invalid-name
   "C0114",  # missing-module-docstring
+  "C0115",  # missing-class-docstring
   "C0116",  # missing-function-docstring
+
   "R0902",  # too-many-instance-attributes
 ]
 
 enable = [
+  "C0206",  # consider-using-dict-items
+  "C0209",  # consider-using-f-string
+
+  "R0402",  # consider-using-from-import
+  "R1705",  # no-else-return
+  "R1725",  # super-with-arguments
+  "R1735",  # use-dict-literal
+
   "W0102",  # dangerous-default-value
+  "W1203",  # logging-fstring-interpolation
+
 ]

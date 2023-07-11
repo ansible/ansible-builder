@@ -10,6 +10,6 @@ class DefinitionError(RuntimeError):
     sys.tracebacklimit = 0
 
     def __init__(self, msg: str, path: Sequence[str | int] | None = None):
-        super(DefinitionError, self).__init__("%s" % msg)
+        super().__init__(f"{msg}")
         self.msg = msg
         self.path = path
