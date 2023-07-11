@@ -9,3 +9,4 @@ types-jsonschema
 types-pyyaml
 tox
 yamllint
+pylint==2.17.4

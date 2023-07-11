@@ -208,7 +208,7 @@ def simple_combine(reqs):
     return fancy_lines
 
 
-def parse_args(args=sys.argv[1:]):
+def parse_args(args=None):
 
     parser = argparse.ArgumentParser(
         prog='introspect',
@@ -217,14 +217,15 @@ def parse_args(args=sys.argv[1:]):
         )
     )
 
-    subparsers = parser.add_subparsers(help='The command to invoke.', dest='action')
-    subparsers.required = True
+    subparsers = parser.add_subparsers(
+        help='The command to invoke.',
+        dest='action',
+        required=True,
+    )
 
     create_introspect_parser(subparsers)
 
-    args = parser.parse_args(args)
-
-    return args
+    return parser.parse_args(args)
 
 
 def run_introspect(args, logger):

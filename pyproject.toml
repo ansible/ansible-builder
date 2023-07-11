@@ -3,3 +3,20 @@ requires = ["setuptools>=45, <=67.7.2", "setuptools-scm[toml]>=6.2, <=7.1.0"]  #
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+
+[tool.pylint.main]
+output-format = "colorized"
+max-line-length=120
+disable = [
+  "all",
+
+  # Some codes we will leave disabled
+  "C0103",  # invalid-name
+  "C0114",  # missing-module-docstring
+  "C0116",  # missing-function-docstring
+  "R0902",  # too-many-instance-attributes
+]
+
+enable = [
+  "W0102",  # dangerous-default-value
+]
