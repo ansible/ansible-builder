@@ -6,7 +6,7 @@ Copying arbitratory files to EE
 Ansible Builder version 3 schema provides the option to copy files to an EE image.
 See  the :ref:`version 3 schema <version_3_format>` for more details.
 
-In the example below, we will take a look at copying arbitratory files to an execution environment.
+In the example below, we will take a look at copying arbitratory files to an Execution Environment.
 
 
 .. literalinclude:: copy_ee.yml

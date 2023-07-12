@@ -1,9 +1,9 @@
 .. _builder_ee_definition:
 
-Execution environment definition
+Execution Environment definition
 ================================
 
-You define the content of your execution environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the build instruction file (Containerfile for Podman, Dockerfile for Docker) and build context for your container image.
+You define the content of your Execution Environment in a YAML file. By default, this file is called ``execution_environment.yml``. This file tells Ansible Builder how to create the build instruction file (Containerfile for Podman, Dockerfile for Docker) and build context for your container image.
 
 .. note::
    This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
@@ -15,7 +15,7 @@ You define the content of your execution environment in a YAML file. By default,
 
 Overview
 --------
-The Ansible Builder 3.x execution environment definition file accepts seven top-level sections:
+The Ansible Builder 3.x Execution Environment definition file accepts seven top-level sections:
 
 * additional_build_files
 * additional_build_steps
@@ -86,7 +86,7 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
 Configuration options
 ---------------------
 
-You may use the configuration YAML keys listed here in your v3 execution environment definition file.
+You may use the configuration YAML keys listed here in your v3 Execution Environment definition file.
 
 additional_build_files
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -100,7 +100,7 @@ Each list item must be a dictionary containing the following (non-optional) keys
     ``src``
       Specifies the source file(s) to copy into the build context directory. This
       may either be an absolute path (e.g., ``/home/user/.ansible.cfg``),
-      or a path that is relative to the execution environment file. Relative paths may be
+      or a path that is relative to the Execution Environment file. Relative paths may be
       a glob expression matching one or more files (e.g. ``files/*.cfg``). Note
       that an absolute path may *not* include a regular expression. If ``src`` is
       a directory, the entire contents of that directory are copied to ``dest``.
@@ -177,14 +177,14 @@ Build args used by ``ansible-builder`` are the following:
 Ansible Builder hard-codes values given inside of ``build_arg_defaults`` into the
 build instruction file, so they will persist if you run your container build manually.
 
-If you specify the same variable in the execution environment definition and at the command line with the CLI :ref:`build-arg` flag, the CLI value will take higher precedence (the CLI value will override the value in the execution environment definition).
+If you specify the same variable in the Execution Environment definition and at the command line with the CLI :ref:`build-arg` flag, the CLI value will take higher precedence (the CLI value will override the value in the Execution Environment definition).
 
 dependencies
 ^^^^^^^^^^^^
 
 Specifies dependencies to install into the final image, including ``ansible-core``, ``ansible-runner``, Python packages, system packages, and Ansible Collections. Ansible Builder automatically installs dependencies for any Ansible Collections you install.
 
-In general you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
+In general you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your Execution Environment definition file.
 
 The following keys are valid for this section:
 
@@ -284,7 +284,7 @@ Specifies the base image to be used. At a minimum you *MUST* specify a source, i
 Valid keys for this section are:
 
     ``base_image``
-      A dictionary defining the parent image for the execution environment. A ``name``
+      A dictionary defining the parent image for the Execution Environment. A ``name``
       key must be supplied with the container image to use. Use the ``signature_original_name``
       key if the image is mirrored within your repository, but signed with the original
       image's signature key.
@@ -396,4 +396,4 @@ Example ``options`` section:
 version
 ^^^^^^^
 
-An integer value that sets the schema version of the execution environment definition file. Defaults to ``1``. Must be ``3`` if you are using Ansible Builder 3.x.
+An integer value that sets the schema version of the Execution Environment definition file. Defaults to ``1``. Must be ``3`` if you are using Ansible Builder 3.x.

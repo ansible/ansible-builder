@@ -10,7 +10,7 @@ into the EE build without leaking them into the final EE image.
 
 In the example below, we will take a look at
 
-* Copying `ansible.cfg` file to an execution environment
+* Copying `ansible.cfg` file to an Execution Environment
 * Using Galaxy Server environment variables
 
 .. literalinclude:: galaxy_ee.yml
