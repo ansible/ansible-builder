@@ -1,11 +1,11 @@
 import argparse
+import importlib.metadata
 import logging
 import os
 import sys
 import yaml
 
 import requirements
-import importlib.metadata
 
 base_collections_path = '/usr/share/ansible/collections'
 default_file = 'execution-environment.yml'
