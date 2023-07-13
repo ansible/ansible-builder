@@ -22,7 +22,7 @@ class CustomVerbosityAction(argparse.Action):
     Custom argparse Action to maintain backward compatibility for '-v N' and '-vvv'.
     """
     def __init__(self, option_strings, *args, **kwargs):
-        super(CustomVerbosityAction, self).__init__(option_strings=option_strings, *args, **kwargs)
+        super().__init__(option_strings=option_strings, *args, **kwargs)
         self.count = 0
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -50,9 +50,9 @@ def run():
         try:
             if action():
                 print(
-                    MessageColors.OKGREEN + "Complete! The build context can be found at: {0}".format(
-                        os.path.abspath(ab.build_context)
-                    ) + MessageColors.ENDC)
+                    f"{MessageColors.OKGREEN}Complete! The build context can be found at: "
+                    f"{os.path.abspath(ab.build_context)}{MessageColors.ENDC}"
+                )
                 sys.exit(0)
         except DefinitionError as e:
             logger.error(e.args[0])
@@ -116,8 +116,8 @@ def add_container_options(parser):
         default={},
         dest='build_args',
         help='Build-time variables to pass to any podman or docker calls. '
-             'Internally ansible-builder makes use of {0}.'.format(
-             ', '.join(constants.build_arg_defaults.keys())))
+             f'Internally ansible-builder makes use of {", ".join(constants.build_arg_defaults.keys())}'
+    )
 
     build_command_parser.add_argument(
         '--no-cache',
@@ -166,8 +166,8 @@ def add_container_options(parser):
                        choices=list(constants.runtime_files.values()),
                        default=None,
                        help='Name of file to write image definition to '
-                            '(default depends on --container-runtime, {0})'.format(
-                                ' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()]))
+                            '(default depends on --container-runtime, '
+                            f"{' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()])}"
                        )
 
         p.add_argument('--galaxy-keyring',
@@ -190,8 +190,10 @@ def add_container_options(parser):
                        action=CustomVerbosityAction,
                        nargs='?',
                        default=constants.default_verbosity,
-                       help='Set the verbosity output level. Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
-                            'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). Default is %(default)s.')
+                       help='Set the verbosity output level. '
+                            'Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
+                            'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). '
+                            'Default is %(default)s.')
 
 
 def parse_args(args=None):

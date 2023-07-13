@@ -23,8 +23,10 @@ class Containerfile:
                  galaxy_required_valid_signature_count=None,
                  galaxy_ignore_signature_status_codes=()):
         """
-        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically validate collection signatures.
-        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required for ansible-galaxy to accept collections.
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy
+                                   to opportunistically validate collection signatures.
+        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required
+                                                          for ansible-galaxy to accept collections.
         :param str galaxy_ignore_signature_status_codes: GPG Status codes to ignore when validating galaxy collections.
         """
 
@@ -72,7 +74,8 @@ class Containerfile:
 
         if not self.definition.builder_image:
             if self.definition.python_package_system:
-                self.steps.append('RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi')
+                step = 'RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi'
+                self.steps.append(step)
 
             # We should always make sure pip is available for later stages.
             self.steps.append('RUN $PYCMD -m ensurepip')
@@ -205,7 +208,8 @@ class Containerfile:
             'PYCMD': self.definition.python_path or '/usr/bin/python3',
             'PYPKG': self.definition.python_package_system,
             'PKGMGR_PRESERVE_CACHE': self.definition.build_arg_defaults['PKGMGR_PRESERVE_CACHE'],
-            'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
+            'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS':
+                self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
         }
@@ -248,7 +252,10 @@ class Containerfile:
             copy_file(requirement_path, dest, ignore_mtime=True)
 
         if self.original_galaxy_keyring:
-            copy_file(self.original_galaxy_keyring, os.path.join(self.build_outputs_dir, constants.default_keyring_name))
+            copy_file(
+                self.original_galaxy_keyring,
+                os.path.join(self.build_outputs_dir, constants.default_keyring_name)
+            )
 
         self._handle_additional_build_files()
 
@@ -260,7 +267,11 @@ class Containerfile:
 
         # HACK: this sucks
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
-        for script in ('assemble', 'install-from-bindep', 'introspect.py', 'check_galaxy', 'check_ansible', 'entrypoint'):
+        script_files = (
+            'assemble', 'install-from-bindep', 'introspect.py', 'check_galaxy',
+            'check_ansible', 'entrypoint'
+        )
+        for script in script_files:
             with importlib.resources.as_file(scriptres / script) as script_path:
                 copy_file(str(script_path), os.path.join(scripts_dir, script))
 
@@ -290,15 +301,15 @@ class Containerfile:
             ee_file = Path(self.definition.filename)
             if src.is_absolute():
                 if not src.exists():
-                    logger.warning(f"User build file {src} does not exist.")
+                    logger.warning("User build file %s does not exist.", src)
                     continue
                 src_files = [src]
             elif not (src_files := list(ee_file.parent.glob(str(src)))):
-                logger.warning(f"No matches for '{src}' in additional_build_files.")
+                logger.warning("No matches for '%s' in additional_build_files.", src)
                 continue
 
             final_dst = Path(self.build_outputs_dir) / dst
-            logger.debug(f"Creating {final_dst}")
+            logger.debug("Creating %s", final_dst)
             final_dst.mkdir(parents=True, exist_ok=True)
 
             for src_file in src_files:
@@ -363,7 +374,8 @@ class Containerfile:
 
     def _prepare_galaxy_install_steps(self):
         env = ""
-        install_opts = f"-r {constants.CONTEXT_FILES['galaxy']} --collections-path \"{constants.base_collections_path}\""
+        install_opts = (f"-r {constants.CONTEXT_FILES['galaxy']} "
+                        f"--collections-path \"{constants.base_collections_path}\"")
 
         if self.galaxy_ignore_signature_status_codes:
             for code in self.galaxy_ignore_signature_status_codes:
@@ -383,10 +395,12 @@ class Containerfile:
             env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
 
         self.steps.append(
-            f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS -r {constants.CONTEXT_FILES['galaxy']}"
+            f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
+            f"-r {constants.CONTEXT_FILES['galaxy']}"
             f" --roles-path \"{constants.base_roles_path}\"",
         )
-        self.steps.append(f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}")
+        step = f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}"
+        self.steps.append(step)
 
     def _prepare_introspect_assemble_steps(self):
         # The introspect/assemble block is valid if there are any form of requirements
@@ -399,15 +413,18 @@ class Containerfile:
             ))
 
             if requirements_file_exists:
-                relative_requirements_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['python'])
+                relative_requirements_path = os.path.join(
+                    constants.user_content_subfolder,
+                    constants.CONTEXT_FILES['python']
+                )
                 self.steps.append(f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
                 # WORKDIR is /build, so we use the (shorter) relative paths there
-                introspect_cmd += " --user-pip={0}".format(constants.CONTEXT_FILES['python'])
+                introspect_cmd += f" --user-pip={constants.CONTEXT_FILES['python']}"
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
             if bindep_exists:
                 relative_bindep_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['system'])
                 self.steps.append(f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}")
-                introspect_cmd += " --user-bindep={0}".format(constants.CONTEXT_FILES['system'])
+                introspect_cmd += f" --user-bindep={constants.CONTEXT_FILES['system']}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 
@@ -422,11 +439,10 @@ class Containerfile:
 
     def _prepare_galaxy_copy_steps(self):
         if self.definition.get_dep_abs_path('galaxy'):
+            dir_name = os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
             self.steps.extend([
                 "",
-                "COPY --from=galaxy {0} {0}".format(
-                    os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
-                ),
+                f"COPY --from=galaxy {dir_name} {dir_name}",
                 "",
             ])
 

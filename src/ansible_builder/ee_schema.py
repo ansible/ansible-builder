@@ -2,7 +2,7 @@ import os
 
 from jsonschema import validate, SchemaError, ValidationError
 
-import ansible_builder.constants as constants
+from ansible_builder import constants
 from ansible_builder.exceptions import DefinitionError
 
 
@@ -373,7 +373,8 @@ schema_v3 = {
                     },
                 },
                 "tags": {
-                    "description": "A list of names to assign to the resulting image if build process completes successfully",
+                    "description": "A list of names to assign to the resulting image "
+                                   "if build process completes successfully",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -391,8 +392,8 @@ def validate_schema(ee_def: dict):
     if 'version' in ee_def:
         try:
             schema_version = int(ee_def['version'])
-        except ValueError:
-            raise DefinitionError(f"Schema version not an integer: {ee_def['version']}")
+        except ValueError as e:
+            raise DefinitionError(f"Schema version not an integer: {ee_def['version']}") from e
 
     if schema_version not in (1, 2, 3):
         raise DefinitionError(f"Unsupported schema version: {schema_version}")
@@ -405,7 +406,7 @@ def validate_schema(ee_def: dict):
         elif schema_version == 3:
             validate(instance=ee_def, schema=schema_v3)
     except (SchemaError, ValidationError) as e:
-        raise DefinitionError(msg=e.message, path=e.absolute_schema_path)
+        raise DefinitionError(msg=e.message, path=e.absolute_schema_path) from e
 
     _handle_aliasing(ee_def)
 
