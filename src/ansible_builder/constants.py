@@ -21,6 +21,10 @@ build_arg_defaults = dict(
     # this value is removed elsewhere for v3+ schemas
     EE_BUILDER_IMAGE='quay.io/ansible/ansible-builder:latest',
     PKGMGR_PRESERVE_CACHE='',
+    PKGMGR_CLEAN_ALL_COMMAND='clean all',
+    PKGMGR_CACHE_LOCATION='/var/cache/{dnf,yum}',
+    PKGMGR_CLEANUP_LOCATIONS='/var/lib/dnf/history.* /var/log/{dnf.*,hawkey.log}',
+    PKGMGR_INSTALL_COMMAND='install -y',
 )
 
 user_content_subfolder = '_build'

@@ -18,6 +18,10 @@ set -ex
 # NOTE(pabelanger): Allow users to force either microdnf or dnf as a package
 # manager.
 PKGMGR="${PKGMGR:-}"
+PKGMGR_CLEAN_ALL_COMMAND="${PKGMGR_CLEAN_ALL_COMMAND:-clean all}"
+PKGMGR_CACHE_LOCATION="${PKGMGR_CACHE_LOCATION:-/var/cache/{dnf,yum\}}"
+PKGMGR_CLEANUP_LOCATIONS="${PKGMGR_CLEANUP_LOCATIONS:-/var/lib/dnf/history.* /var/log/{dnf.*,hawkey.log\}}"
+PKGMGR_INSTALL_COMMAND="${PKGMGR_INSTALL_COMMAND:-install -y}"
 PKGMGR_OPTS="${PKGMGR_OPTS:-}"
 PKGMGR_PRESERVE_CACHE="${PKGMGR_PRESERVE_CACHE:-}"
 
@@ -25,7 +29,9 @@ PYCMD="${PYCMD:=/usr/bin/python3}"
 PIPCMD="${PIPCMD:=$PYCMD -m pip}"
 PIP_OPTS="${PIP_OPTS-}"
 
-$PYCMD -m ensurepip
+if [ $PY_DISABLE_ENSUREPIP != "true" ]; then
+    $PYCMD -m ensurepip
+fi
 
 if [ -z $PKGMGR ]; then
     # Expect dnf to be installed, however if we find microdnf default to it.
@@ -48,14 +54,14 @@ fi
 if [ -f /output/bindep/run.txt ] ; then
     PACKAGES=$(cat /output/bindep/run.txt)
     if [ ! -z "$PACKAGES" ]; then
-        $PKGMGR install -y $PKGMGR_OPTS $PACKAGES
+        $PKGMGR $PKGMGR_INSTALL_COMMAND $PKGMGR_OPTS $PACKAGES
     fi
 fi
 
 if [ -f /output/bindep/epel.txt ] ; then
     EPEL_PACKAGES=$(cat /output/bindep/epel.txt)
     if [ ! -z "$EPEL_PACKAGES" ]; then
-        $PKGMGR install -y $PKGMGR_OPTS --enablerepo epel $EPEL_PACKAGES
+        $PKGMGR $PKGMGR_INSTALL_COMMAND $PKGMGR_OPTS --enablerepo epel $EPEL_PACKAGES
     fi
 fi
 
@@ -99,9 +105,8 @@ fi
 
 # clean up after ourselves, unless requested to keep the cache
 if [[ "$PKGMGR_PRESERVE_CACHE" != always ]]; then
-  $PKGMGR clean all
-  rm -rf /var/cache/{dnf,yum}
+  $PKGMGR $PKGMGR_CLEAN_ALL_COMMAND
+  rm -rf $PKGMGR_CACHE_LOCATION
 fi
 
-rm -rf /var/lib/dnf/history.*
-rm -rf /var/log/{dnf.*,hawkey.log}
+rm -rf $PKGMGR_CLEANUP_LOCATIONS

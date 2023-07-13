@@ -75,7 +75,8 @@ class Containerfile:
                 self.steps.append('RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi')
 
             # We should always make sure pip is available for later stages.
-            self.steps.append('RUN $PYCMD -m ensurepip')
+            if not self.definition.options.get('disable_ensurepip'):
+                self.steps.append('RUN $PYCMD -m ensurepip')
 
             if self.definition.ansible_ref_install_list:
                 self.steps.append('RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
@@ -208,10 +209,15 @@ class Containerfile:
             'ANSIBLE_GALAXY_CLI_COLLECTION_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
+            'PY_DISABLE_ENSUREPIP': 'true' if self.definition.options.get('disable_ensurepip') else '',
         }
 
         if self.definition.version >= 3:
             global_args['PKGMGR'] = self.definition.options['package_manager_path']
+            global_args['PKGMGR_CLEAN_ALL_COMMAND'] = self.definition.build_arg_defaults['PKGMGR_CLEAN_ALL_COMMAND']
+            global_args['PKGMGR_CACHE_LOCATION'] = self.definition.build_arg_defaults['PKGMGR_CACHE_LOCATION']
+            global_args['PKGMGR_CLEANUP_LOCATIONS'] = self.definition.build_arg_defaults['PKGMGR_CLEANUP_LOCATIONS']
+            global_args['PKGMGR_INSTALL_COMMAND'] = self.definition.build_arg_defaults['PKGMGR_INSTALL_COMMAND']
 
         for arg, value in global_args.items():
             if value is None:

@@ -216,6 +216,18 @@ schema_v3 = {
                 "PKGMGR_PRESERVE_CACHE": {
                     "type": "string",
                 },
+                "PKGMGR_CLEAN_ALL_COMMAND": {
+                    "type": "string",
+                },
+                "PKGMGR_CACHE_LOCATION": {
+                    "type": "string",
+                },
+                "PKGMGR_CLEANUP_LOCATIONS": {
+                    "type": "string",
+                },
+                "PKGMGR_INSTALL_COMMAND": {
+                    "type": "string",
+                },
             },
         },
 
@@ -353,6 +365,10 @@ schema_v3 = {
                     "description": "Sets the username or UID",
                     "type": "string",
                 },
+                "disable_ensurepip": {
+                    "description": "Disable running ensurepip",
+                    "type": "boolean",
+                },
                 "container_init": {
                     "description": "Customize container startup behavior",
                     "type": "object",
@@ -443,6 +459,7 @@ def _handle_options_defaults(ee_def: dict):
     entrypoint_path = os.path.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
 
     options.setdefault('skip_ansible_check', False)
+    options.setdefault('disable_ensurepip', False)
     options.setdefault('relax_passwd_permissions', True)
     options.setdefault('workdir', '/runner')
     options.setdefault('package_manager_path', '/usr/bin/dnf')
