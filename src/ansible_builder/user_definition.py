@@ -2,10 +2,10 @@ import logging
 import os
 import textwrap
 import tempfile
-import yaml
-
 from pathlib import Path
 from typing import Callable
+
+import yaml
 
 from . import constants
 from .exceptions import DefinitionError
