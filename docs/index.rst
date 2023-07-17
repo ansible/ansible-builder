@@ -8,7 +8,7 @@
 Introduction to Ansible Builder
 *******************************
 
-With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible `control nodes`_ that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible collections you need for each playbook.
+With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible control nodes that are packaged as containers by Podman or Docker. These containers are known as execution environments. You can use execution environments on AWX or Ansible Controller, for local playbook development and testing, in your CI pipeline, and anywhere else you run automation. You can design and distribute specialized execution environments for your playbooks, choosing the versions of Python and ansible-core you want, and installing only the Python packages, system packages, and Ansible collections you need for each playbook.
 
 .. contents::
    :local:
@@ -27,19 +27,7 @@ Here are a few terms you should know. These concepts and terms are relevant to a
 What are execution environments?
 ================================
 
-Execution environments are container images that serve as Ansible `control nodes`_. An execution environment contains:
-
-- Python
-- Ansible-core
-- Ansible-runner
-- Ansible collections (anything you install with ``ansible-galaxy``)
-- Python packages (anything you install with ``pip``)
-- System packages (anything you install with ``dnf``, ``yum``, ``apt``, or other package managers)
-- Other content you select and install
-
-.. _control nodes:
-   https://docs.ansible.com/ansible/latest/getting_started/basic_concepts.html#control-node
-
+Refer to the `Getting started with Execution Environments guide <https://docs.ansible.com/ansible/devel/getting_started_ee/index.html>`_ for details.
 
 Quickstart for Ansible Builder
 ==============================
