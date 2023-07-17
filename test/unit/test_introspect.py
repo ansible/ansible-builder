@@ -1,7 +1,8 @@
 import os
 import pytest
 
-from ansible_builder._target_scripts.introspect import process, process_collection, simple_combine, sanitize_requirements
+from ansible_builder._target_scripts.introspect import process, process_collection
+from ansible_builder._target_scripts.introspect import simple_combine, sanitize_requirements
 from ansible_builder._target_scripts.introspect import parse_args
 
 
@@ -33,7 +34,7 @@ def test_single_collection_metadata(data_dir):
     py_reqs, sys_reqs = process_collection(col_path)
 
     assert py_reqs == ['pyvcloud>=14']
-    assert sys_reqs == []
+    assert not sys_reqs
 
 
 def test_parse_args_empty(capsys):

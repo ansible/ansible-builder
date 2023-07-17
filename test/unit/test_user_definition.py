@@ -83,7 +83,8 @@ class TestUserDefinition:
             "Additional properties are not allowed ('ansible_config' was unexpected)"
         ),  # ansible_config not supported in v3
         (
-            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}",
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}, "
+            "'builder_image': {'name': 'builder_image:latest'} }}",
             "Additional properties are not allowed ('builder_image' was unexpected)"
         ),  # builder_image not suppored in v3
         (
@@ -111,7 +112,8 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             AnsibleBuilder(filename=path)
 
-        assert "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location." in str(error.value.args[0])
+        err_msg = "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location."
+        assert err_msg in str(error.value.args[0])
 
     def test_ee_validated_early(self, exec_env_definition_file):
         """
@@ -130,7 +132,9 @@ class TestUserDefinition:
 
     def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):
         """ Test that EE schema keys are upgraded from version V1 to V2. """
-        path = exec_env_definition_file("{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}")
+        path = exec_env_definition_file(
+            "{'version': 1, 'additional_build_steps': {'prepend': 'value1', 'append': 'value2'}}"
+        )
         definition = UserDefinition(path)
         definition.validate()
         add_bld_steps = definition.raw['additional_build_steps']
@@ -149,7 +153,8 @@ class TestUserDefinition:
         to the build_arg_defaults equivalents.
         """
         path = exec_env_definition_file(
-            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, 'builder_image': {'name': 'builder_image:latest'} }}"
+            "{'version': 2, 'images': { 'base_image': {'name': 'base_image:latest'}, "
+            "'builder_image': {'name': 'builder_image:latest'} }}"
         )
         definition = UserDefinition(path)
         definition.validate()

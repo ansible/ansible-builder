@@ -91,7 +91,8 @@ def test_build_command(exec_env_definition_file, runtime):
 
     aee = AnsibleBuilder(filename=path, tag=['my-custom-image'])
     command = aee.build_command
-    assert 'build' and 'my-custom-image' in command
+    assert 'build' in command
+    assert 'my-custom-image' in command
 
     aee = AnsibleBuilder(filename=path, build_context='foo/bar/path', container_runtime=runtime)
 
