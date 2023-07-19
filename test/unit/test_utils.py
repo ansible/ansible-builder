@@ -1,6 +1,5 @@
 import os
 import pathlib
-import shutil
 
 import pytest
 
@@ -19,22 +18,6 @@ def test_write_file(tmp_path):
     ]
     assert write_file(path, text)  # does not exist, write
     assert not write_file(path, text)  # already correct, do not write
-
-
-@pytest.fixture
-def source_file(tmp_path):
-    source = tmp_path / 'bar.txt'
-    with open(source, 'w') as f:
-        f.write('foo\nbar\n')
-    return source
-
-
-@pytest.fixture
-def dest_file(tmp_path, source_file):
-    '''Returns a file that has been copied from source file'''
-    dest = tmp_path / 'foo.txt'
-    shutil.copy2(source_file, dest)
-    return dest
 
 
 def test_copy_file(dest_file, source_file):
@@ -96,7 +79,7 @@ def test_failed_command_with_allow_error(mocker):
     )
 
     assert rc == 1
-    assert out == []
+    assert not out
 
 
 @pytest.mark.run_command

@@ -1,12 +1,12 @@
-import filelock
 import os
 import pathlib
-import pytest
 import re
 import shutil
 import subprocess
 import tempfile
 import uuid
+import filelock
+import pytest
 import yaml
 
 
@@ -34,12 +34,12 @@ def pytest_sessionfinish(session, exitstatus):
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
     base_tmpfile = os.path.join(tempfile.gettempdir(), "builder_pytest_data_")
 
-    for runtime in WORKER_IMAGES:
+    for runtime, images in WORKER_IMAGES.items():
         data_file = pathlib.Path(base_tmpfile + runtime)
         with filelock.FileLock(str(data_file) + ".lock"):
             # Append any images created in this runtime to the data file
             with open(str(data_file), "a") as f:
-                f.write("\n".join(WORKER_IMAGES[runtime]))
+                f.write("\n".join(images))
                 f.write("\n")
 
     # If we are the main worker thread, we've been called last, so do the cleanup.
@@ -121,7 +121,9 @@ def good_exec_env_definition_path(tmp_path):
 @pytest.fixture
 def galaxy_requirements_file(tmp_path):
 
-    def _write_file(content={}):
+    def _write_file(content=None):
+        if content is None:
+            content = {}
         path = tmp_path / 'galaxy'
         path.mkdir()
         path = path / 'requirements.yml'
@@ -148,14 +150,18 @@ def pytest_collection_modifyitems(session, config, items):
     # mark destructive items as skipped if `--run-destructive` was not specified
     if not config.getoption('--run-destructive'):
         for destructive_item in (i for i in items if any(i.iter_markers(name='destructive'))):
-            destructive_item.add_marker(pytest.mark.skip(reason='test is potentially destructive to the host (add --run-destructive to allow)'))
+            destructive_item.add_marker(
+                pytest.mark.skip(reason='test is potentially destructive to the host (add --run-destructive to allow)')
+            )
 
     # mark serial items as skipped if it looks like we're running with some obvious kinds of parallelism
     numproc = getattr(config.known_args_namespace, 'numprocesses', None)
 
     if isinstance(numproc, int) and numproc > 1:
         for serial_item in (i for i in items if any(i.iter_markers(name='serial'))):
-            serial_item.add_marker(pytest.mark.skip(reason='test requires serial execution (add --numprocesses 0 to allow)'))
+            serial_item.add_marker(
+                pytest.mark.skip(reason='test requires serial execution (add --numprocesses 0 to allow)')
+            )
 
 
 def pytest_generate_tests(metafunc):
@@ -249,8 +255,7 @@ def delete_image(runtime, image_name):
     if r.rc != 0:
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
-        else:
-            raise Exception(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+        raise Exception(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture
@@ -270,7 +275,7 @@ def ee_tag(request, runtime):
     yield image_name
 
 
-class CompletedProcessProxy(object):
+class CompletedProcessProxy:
     def __init__(self, result):
         self.result = result
 
@@ -281,3 +286,19 @@ class CompletedProcessProxy(object):
 @pytest.fixture
 def cli():
     return run
+
+
+@pytest.fixture
+def source_file(tmp_path):
+    source = tmp_path / 'bar.txt'
+    with open(source, 'w') as f:
+        f.write('foo\nbar\n')
+    return source
+
+
+@pytest.fixture
+def dest_file(tmp_path, source_file):
+    '''Returns a file that has been copied from source file'''
+    dest = tmp_path / 'foo.txt'
+    shutil.copy2(source_file, dest)
+    return dest

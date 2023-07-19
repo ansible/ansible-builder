@@ -1,6 +1,6 @@
 import os
-import pytest
 import runpy
+import pytest
 
 
 from ansible_builder import constants
@@ -34,7 +34,12 @@ def test_custom_ansible_galaxy_cli_role_opts(exec_env_definition_file, tmp_path)
     content = {'version': 1}
     path = str(exec_env_definition_file(content=content))
 
-    aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-errors', '-c', str(tmp_path)])
+    aee = prepare(
+        [
+            'build', '-f', path, '--build-arg',
+            'ANSIBLE_GALAXY_CLI_ROLE_OPTS=--ignore-errors', '-c', str(tmp_path)
+        ]
+    )
     assert aee.build_args == {'ANSIBLE_GALAXY_CLI_ROLE_OPTS': '--ignore-errors'}
 
 
