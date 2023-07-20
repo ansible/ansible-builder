@@ -35,6 +35,8 @@ enable = [
   "R1735",  # use-dict-literal
 
   "W0102",  # dangerous-default-value
+  "W0108",  # unnecessary-lambda
+  "W0612",  # unused-variable
   "W0707",  # raise-missing-from
   "W1203",  # logging-fstring-interpolation
 
