@@ -2,6 +2,8 @@ from ansible_builder import constants
 from ansible_builder.containerfile import Containerfile
 from ansible_builder.user_definition import UserDefinition
 
+# pylint: disable=W0212
+
 
 def make_containerfile(tmpdir, ee_path, **cf_kwargs):
     definition = UserDefinition(ee_path)
