@@ -67,6 +67,7 @@ def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
     logger.info('  %s', ' '.join(command))
     try:
+        # pylint: disable=R1732
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT)

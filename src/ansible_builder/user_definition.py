@@ -179,6 +179,7 @@ class UserDefinition:
             _tempfiles.append(tf)
             req_file = tf.name
         elif (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
+            # pylint: disable=R1732
             tf = tempfile.NamedTemporaryFile('w')
             if is_list:
                 tf.write('\n'.join(req_file))
