@@ -31,6 +31,7 @@ WORKER_IMAGES = {}
 # have this called last so it will be responsible for the cleanup
 # work.
 def pytest_sessionfinish(session, exitstatus):
+    # pylint: disable=W0613
     worker_id = os.environ.get("PYTEST_XDIST_WORKER")
     base_tmpfile = os.path.join(tempfile.gettempdir(), "builder_pytest_data_")
 
@@ -147,6 +148,7 @@ def pytest_sessionstart(session):
 
 
 def pytest_collection_modifyitems(session, config, items):
+    # pylint: disable=W0613
     # mark destructive items as skipped if `--run-destructive` was not specified
     if not config.getoption('--run-destructive'):
         for destructive_item in (i for i in items if any(i.iter_markers(name='destructive'))):
@@ -199,6 +201,7 @@ def build_dir_and_ee_yml(tmp_path):
 
 
 def run(args, *a, allow_error=False, **kw):
+    # pylint: disable=W1510
     kw["encoding"] = "utf-8"
     if "check" not in kw:
         # By default we want to fail if a command fails to run. Tests that
@@ -277,6 +280,7 @@ def ee_tag(request, runtime):
 
 class CompletedProcessProxy:
     def __init__(self, result):
+        self.rc = 0
         self.result = result
 
     def __getattr__(self, attr):
@@ -298,6 +302,7 @@ def source_file(tmp_path):
 
 @pytest.fixture
 def dest_file(tmp_path, source_file):
+    # pylint: disable=W0621
     '''Returns a file that has been copied from source file'''
     dest = tmp_path / 'foo.txt'
     shutil.copy2(source_file, dest)
