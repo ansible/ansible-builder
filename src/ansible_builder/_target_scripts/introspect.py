@@ -226,15 +226,15 @@ def parse_args(args=None):
     return parser.parse_args(args)
 
 
-def run_introspect(args, logger):
+def run_introspect(args, log):
     data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
     if args.sanitize:
-        logger.info('# Sanitized dependencies for %s', args.folder)
+        log.info('# Sanitized dependencies for %s', args.folder)
         data_for_write = data
         data['python'] = sanitize_requirements(data['python'])
         data['system'] = simple_combine(data['system'])
     else:
-        logger.info('# Dependency data for %s', args.folder)
+        log.info('# Dependency data for %s', args.folder)
         data_for_write = data.copy()
         data_for_write['python'] = simple_combine(data['python'])
         data_for_write['system'] = simple_combine(data['system'])
