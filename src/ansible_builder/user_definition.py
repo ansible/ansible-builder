@@ -245,9 +245,14 @@ class UserDefinition:
                     self.builder_image = ImageDescription(images, 'builder_image')
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
-            if self.version >= 3 and \
-                self.build_arg_defaults['EE_BASE_IMAGE'] == constants.build_arg_defaults['EE_BASE_IMAGE']:
-                    raise DefinitionError(f"Using the old base image {self.build_arg_defaults['EE_BASE_IMAGE']} might result in build failures.")
+            if (
+                self.version >= 3 and
+                self.build_arg_defaults["EE_BASE_IMAGE"] == constants.build_arg_defaults["EE_BASE_IMAGE"]
+            ):
+                raise DefinitionError(
+                    f"Using the outdated base image {self.build_arg_defaults['EE_BASE_IMAGE']} might "
+                    f"result in the build failures."
+                )
 
             self._validate_additional_build_files()
 

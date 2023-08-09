@@ -64,6 +64,9 @@ def test_inline_str_galaxy_requirements(cli, build_dir_and_ee_yml):
     """
     ee_str = """
     version: 3
+    images:
+      base_image:
+        name: 'base_image:latest'
     dependencies:
       galaxy: |
         collections:  # a comment
@@ -90,6 +93,9 @@ def test_inline_mapping_galaxy_requirements(cli, build_dir_and_ee_yml):
     """
     ee_str = """
     version: 3
+    images:
+      base_image:
+        name: 'base_image:latest'
     dependencies:
       galaxy:
         collections:
@@ -359,6 +365,9 @@ def test_v3_skip_ansible_check(cli, build_dir_and_ee_yml):
     """
     ee = [
         'version: 3',
+        'images:',
+        '  base_image:',
+        '    name: quay.io/ansible/awx-ee:latest',
         'options:',
         '  skip_ansible_check: True',
     ]
@@ -377,6 +386,9 @@ def test_v3_skip_container_init(cli, build_dir_and_ee_yml):
     tmpdir, eeyml = build_dir_and_ee_yml(
         """
         version: 3
+        images:
+          base_image:
+            name: quay.io/ansible/awx-ee:latest
         options:
           container_init: {}
         """
@@ -396,6 +408,9 @@ def test_v3_custom_container_init(cli, build_dir_and_ee_yml):
     tmpdir, eeyml = build_dir_and_ee_yml(
         """
         version: 3
+        images:
+          base_image:
+            name: quay.io/ansible/awx-ee:latest
         options:
           container_init:
             package_pip: custominit==1.2.3
@@ -422,6 +437,9 @@ def test_v3_no_relax_passwd_perms(cli, build_dir_and_ee_yml):
     """
     ee = """
     version: 3
+    images:
+      base_image:
+        name: quay.io/ansible/awx-ee:latest
     options:
         relax_passwd_permissions: false
     """
@@ -442,6 +460,9 @@ def test_v3_custom_workdir(cli, build_dir_and_ee_yml):
     """
     ee = """
     version: 3
+    images:
+      base_image:
+        name: quay.io/ansible/awx-ee:latest
     options:
         workdir: /yourmom
     """
@@ -463,6 +484,9 @@ def test_v3_no_workdir(cli, build_dir_and_ee_yml):
     """
     ee = """
     version: 3
+    images:
+      base_image:
+        name: quay.io/ansible/awx-ee:latest
     options:
         workdir:
     """
@@ -485,6 +509,9 @@ def test_v3_set_user_id(cli, build_dir_and_ee_yml):
     tmpdir, eeyml = build_dir_and_ee_yml(
         """
         version: 3
+        images:
+          base_image:
+            name: quay.io/ansible/awx-ee:latest
         options:
           user: bob
         """
