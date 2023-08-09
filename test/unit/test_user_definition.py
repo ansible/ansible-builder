@@ -63,11 +63,13 @@ class TestUserDefinition:
             "Additional properties are not allowed ('prepend' was unexpected)"
         ),  # 'prepend' is renamed in v2
         (
-            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}}, "
+            "'additional_build_files': [ {'src': 'a', 'dest': '../b'} ]}",
             "'dest' must not be an absolute path or contain '..': ../b"
         ),  # destination cannot contain ..
         (
-            "{'version': 3, 'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}}, "
+            "'additional_build_files': [ {'src': 'a', 'dest': '/b'} ]}",
             "'dest' must not be an absolute path or contain '..': /b"
         ),  # destination cannot be absolute
         (
@@ -168,6 +170,7 @@ class TestUserDefinition:
         path = exec_env_definition_file(
             """
             {'version': 3,
+             'images': { 'base_image': {'name': 'base_image:latest'}},
              'dependencies': {
                 'ansible_core': {'package_pip': 'ansible-core==2.13'},
                 'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
@@ -186,7 +189,8 @@ class TestUserDefinition:
         Test that inline values for dependencies.python work.
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'dependencies': {'python': ['req1', 'req2']}}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}},"
+            "'dependencies': {'python': ['req1', 'req2']}}"
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -199,7 +203,8 @@ class TestUserDefinition:
         Test that inline values for dependencies.system work.
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'dependencies': {'system': ['req1', 'req2']}}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}},"
+            "'dependencies': {'system': ['req1', 'req2']}}"
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -212,7 +217,7 @@ class TestUserDefinition:
         Test that options.skip_ansible_check defaults to False
         """
         path = exec_env_definition_file(
-            "{'version': 3}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}}}"
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -225,7 +230,7 @@ class TestUserDefinition:
         Test that options.user defaults to 1000
         """
         path = exec_env_definition_file(
-            "{'version': 3}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}}}"
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -238,7 +243,8 @@ class TestUserDefinition:
         Test that options.user sets to username
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'options': {'user': 'bob'}}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}},"
+            "'options': {'user': 'bob'}}"
         )
         definition = UserDefinition(path)
         definition.validate()
@@ -251,7 +257,8 @@ class TestUserDefinition:
         Test that options.tags sets to tags
         """
         path = exec_env_definition_file(
-            "{'version': 3, 'options': {'tags': ['ee_test:latest']}}"
+            "{'version': 3, 'images': { 'base_image': {'name': 'base_image:latest'}}, "
+            "'options': {'tags': ['ee_test:latest']}}"
         )
         definition = UserDefinition(path)
         definition.validate()
