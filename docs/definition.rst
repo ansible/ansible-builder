@@ -88,6 +88,8 @@ Configuration options
 
 You may use the configuration YAML keys listed here in your v3 execution environment definition file.
 
+.. _additional_build_files:
+
 additional_build_files
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -110,6 +112,8 @@ Each list item must be a dictionary containing the following (non-optional) keys
       build context directory that should contain the source file(s) (e.g., ``files/configs``).
       This may not be an absolute path or contain ``..`` within the path. This directory
       will be created for you if it does not exist.
+
+.. _additional_build_steps:
 
 additional_build_steps
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -179,6 +183,8 @@ build instruction file, so they will persist if you run your container build man
 
 If you specify the same variable in the execution environment definition and at the command line with the CLI :ref:`build-arg` flag, the CLI value will take higher precedence (the CLI value will override the value in the execution environment definition).
 
+.. _dependencies:
+
 dependencies
 ^^^^^^^^^^^^
 
@@ -204,7 +210,7 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
 
     ``ansible_runner``
-      The version of the Ansible Runner Python package to be installed. This value
+      The version of the Ansible Runner Python package is to be installed. This value
       is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -234,10 +240,10 @@ The following keys are valid for this section:
       (``python_path``).
 
     ``system``
-      The system packages to be installed, in bindep format. This may either
+      The system packages are to be installed, in bindep format. This may either
       be a filename, or a list of requirements (see below for an example).
 
-The following example uses filenames that contain the various dependencies:
+The following example uses filenames that contain various dependencies:
 
 .. code:: yaml
 
@@ -275,6 +281,7 @@ And this example uses inline values:
             package_system: "python310"
             python_path: "/usr/bin/python3.10"
 
+.. _images:
 
 images
 ^^^^^^
@@ -284,10 +291,12 @@ Specifies the base image to be used. At a minimum you *MUST* specify a source, i
 Valid keys for this section are:
 
     ``base_image``
-      A dictionary defining the parent image for the execution environment. A ``name``
+      A dictionary defines the parent image for the execution environment. A ``name``
       key must be supplied with the container image to use. Use the ``signature_original_name``
       key if the image is mirrored within your repository, but signed with the original
       image's signature key.
+
+.. _image_verification:
 
 image verification
 """"""""""""""""""
@@ -309,6 +318,8 @@ file for container image signature validation.
     image definitions here to generate a `policy.json` file in the build
     :ref:`context directory <context>` that will be used during the build to
     validate the images.
+
+.. _options:
 
 options
 ^^^^^^^
@@ -392,6 +403,8 @@ Example ``options`` section:
         user: bob
         tags:
           - ee_development:latest
+
+.. _version:
 
 version
 ^^^^^^^

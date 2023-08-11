@@ -109,6 +109,7 @@ Collection maintainers can learn to correctly declare dependencies for their col
    definition
    usage
    collection_metadata
+   porting_guide_v3
    glossary
 
 .. toctree::
