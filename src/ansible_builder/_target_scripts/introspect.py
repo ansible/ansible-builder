@@ -28,7 +28,7 @@ def pip_file_data(path):
     pip_content = read_req_file(path)
 
     pip_lines = []
-    for line in pip_content.split('\n'):
+    for line in join_lines(pip_content.split('\n')):
         if line_is_empty(line):
             continue
         if line.startswith('-r') or line.startswith('--requirement'):
@@ -39,6 +39,23 @@ def pip_file_data(path):
             pip_lines.append(line)
 
     return pip_lines
+
+
+def join_lines(pip_lines):
+
+    joined_pip_lines = []
+    contexts = []
+    for line in pip_lines:
+        if line.endswith('\\'):
+            contexts.append(line.strip('\\'))
+        else:
+            if contexts:
+                contexts.append(line)
+                joined_pip_lines.append(''.join(contexts))
+                contexts.clear()
+            else:
+                joined_pip_lines.append(line)
+    return joined_pip_lines
 
 
 def bindep_file_data(path):
