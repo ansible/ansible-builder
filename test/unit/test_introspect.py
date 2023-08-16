@@ -37,6 +37,19 @@ def test_single_collection_metadata(data_dir):
     assert not sys_reqs
 
 
+def test_single_collection_splitted_lines(data_dir):
+
+    col_path = os.path.join(data_dir, 'ansible_collections', 'test', 'splitted_lines')
+    py_reqs, sys_reqs = process_collection(col_path)
+
+    assert py_reqs == [
+        'paramiko',
+        'ansible-pylibssh  >=  1.1.0',
+        'ncclient'
+    ]
+    assert not sys_reqs
+
+
 def test_parse_args_empty(capsys):
     with pytest.raises(SystemExit):
         parse_args()
