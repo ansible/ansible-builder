@@ -20,7 +20,7 @@
 # at build time.
 set -ex
 
-RELEASE=$(source /etc/os-release; echo $ID)
+RELEASE=$(source /etc/os-release; echo "${ID}")
 
 # NOTE(pabelanger): Allow users to force either microdnf or dnf as a package
 # manager.
@@ -33,7 +33,7 @@ PIPCMD="${PIPCMD:=$PYCMD -m pip}"
 
 $PYCMD -m ensurepip
 
-if [ -z $PKGMGR ]; then
+if [ -z "${PKGMGR}" ]; then
     # Expect dnf to be installed, however if we find microdnf default to it.
     PKGMGR=/usr/bin/dnf
     if [ -f "/usr/bin/microdnf" ]; then
@@ -71,8 +71,8 @@ function install_bindep {
             rm -rf /output/bindep/stage.txt
         fi
         compile_packages=$(bindep -b compile || true)
-        if [ ! -z "$compile_packages" ] ; then
-            $PKGMGR install -y $PKGMGR_OPTS ${compile_packages}
+        if [ -n "$compile_packages" ] ; then
+            $PKGMGR install -y ${PKGMGR_OPTS} "${compile_packages}"
         fi
     fi
 }
@@ -81,7 +81,7 @@ function install_wheels {
     # NOTE(pabelanger): If there are build requirements to install, do so.
     # However do not cache them as we do not want them in the final image.
     if [ -f /tmp/src/build-requirements.txt ] && [ ! -f /tmp/src/.build-requirements.txt ] ; then
-        $PIPCMD install $CONSTRAINTS $PIP_OPTS --no-cache -r /tmp/src/build-requirements.txt
+        $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --no-cache -r /tmp/src/build-requirements.txt
         touch /tmp/src/.build-requirements.txt
     fi
     # Build a wheel so that we have an install target.
@@ -105,13 +105,13 @@ function install_wheels {
     # Only do this for the main package (i.e. only write requirements
     # once).
     if [ -f /tmp/src/requirements.txt ] && [ ! -f /output/requirements.txt ] ; then
-        $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels -r /tmp/src/requirements.txt
+        $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels -r /tmp/src/requirements.txt
         cp /tmp/src/requirements.txt /output/requirements.txt
     fi
     # If we didn't build wheels, we can skip trying to install it.
     if [ $(ls -1 /output/wheels/*whl 2>/dev/null | wc -l) -gt 0 ]; then
         $PIPCMD uninstall -y /output/wheels/*.whl
-        $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels /output/wheels/*whl
+        $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels /output/wheels/*whl
     fi
 }
 
@@ -123,7 +123,7 @@ install_bindep
 
 # go through ZUUL_SIBLINGS, if any, and build those wheels too
 for sibling in ${ZUUL_SIBLINGS:-}; do
-    pushd .zuul-siblings/${sibling}
+    pushd .zuul-siblings/"${sibling}"
     install_bindep
     popd
 done
@@ -146,7 +146,7 @@ fi
 # If we got a list of packages, install them, otherwise install the
 # main package.
 if [[ $PACKAGES ]] ; then
-    $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels $PACKAGES
+    $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels "${PACKAGES}"
     for package in $PACKAGES ; do
       echo "$package" >> /output/packages.txt
     done
@@ -156,12 +156,12 @@ fi
 
 # go through ZUUL_SIBLINGS, if any, and build those wheels too
 for sibling in ${ZUUL_SIBLINGS:-}; do
-    pushd .zuul-siblings/${sibling}
+    pushd .zuul-siblings/"${sibling}"
     install_wheels
     popd
 done
 
-if [ -z $PKGMGR_PRESERVE_CACHE ]; then
+if [ -z "${PKGMGR_PRESERVE_CACHE}" ]; then
   $PKGMGR clean all
   rm -rf /var/cache/{dnf,yum}
 fi

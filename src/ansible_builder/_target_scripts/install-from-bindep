@@ -27,7 +27,7 @@ PIP_OPTS="${PIP_OPTS-}"
 
 $PYCMD -m ensurepip
 
-if [ -z $PKGMGR ]; then
+if [ -z "${PKGMGR}" ]; then
     # Expect dnf to be installed, however if we find microdnf default to it.
     PKGMGR=/usr/bin/dnf
     if [ -f "/usr/bin/microdnf" ]; then
@@ -47,15 +47,15 @@ fi
 
 if [ -f /output/bindep/run.txt ] ; then
     PACKAGES=$(cat /output/bindep/run.txt)
-    if [ ! -z "$PACKAGES" ]; then
-        $PKGMGR install -y $PKGMGR_OPTS $PACKAGES
+    if [ -n "$PACKAGES" ]; then
+        $PKGMGR install -y ${PKGMGR_OPTS} "${PACKAGES}"
     fi
 fi
 
 if [ -f /output/bindep/epel.txt ] ; then
     EPEL_PACKAGES=$(cat /output/bindep/epel.txt)
-    if [ ! -z "$EPEL_PACKAGES" ]; then
-        $PKGMGR install -y $PKGMGR_OPTS --enablerepo epel $EPEL_PACKAGES
+    if [ -n "$EPEL_PACKAGES" ]; then
+        $PKGMGR install -y ${PKGMGR_OPTS} --enablerepo epel "${EPEL_PACKAGES}"
     fi
 fi
 
@@ -69,19 +69,19 @@ fi
 # to do things like pick up patched but unreleased versions
 # of dependencies.
 if [ -f /output/requirements.txt ] ; then
-    $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels -r /output/requirements.txt
+    $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels -r /output/requirements.txt
 fi
 
 # Add any requested extras to the list of things to install
 EXTRAS=""
-for extra in $* ; do
+for extra in "$@" ; do
     EXTRAS="${EXTRAS} -r /output/$extra/requirements.txt"
 done
 
 if [ -f /output/packages.txt ] ; then
   # If a package list was passed to assemble, install that in the final
   # image.
-  $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels -r /output/packages.txt $EXTRAS
+  $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels -r /output/packages.txt "${EXTRAS}"
 else
   # Install the wheels. Uninstall any existing version as siblings maybe
   # be built with the same version number as the latest release, but we
@@ -90,10 +90,10 @@ else
   # NOTE(pabelanger): It is possible a project may not have a wheel, but does have requirements.txt
   if [ $(ls -1 /output/wheels/*whl 2>/dev/null | wc -l) -gt 0 ]; then
       $PIPCMD uninstall -y /output/wheels/*.whl
-      $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels /output/wheels/*.whl $EXTRAS
-  elif [ ! -z "$EXTRAS" ] ; then
-      $PIPCMD uninstall -y $EXTRAS
-      $PIPCMD install $CONSTRAINTS $PIP_OPTS --cache-dir=/output/wheels $EXTRAS
+      $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels /output/wheels/*.whl "${EXTRAS}"
+  elif [ -n "$EXTRAS" ] ; then
+      $PIPCMD uninstall -y "${EXTRAS}"
+      $PIPCMD install "${CONSTRAINTS}" "${PIP_OPTS}" --cache-dir=/output/wheels "${EXTRAS}"
   fi
 fi
 
