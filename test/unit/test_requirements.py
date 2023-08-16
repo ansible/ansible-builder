@@ -1,3 +1,5 @@
+import pytest
+
 from ansible_builder._target_scripts.introspect import sanitize_requirements
 
 
@@ -28,12 +30,14 @@ def test_remove_unwanted_requirements():
 
 
 def test_skip_bad_formats():
-    """A single incorrectly formatted requirement should warn, but not block other reqs"""
-    assert sanitize_requirements({'foo.bar': [
-        'foo',
-        'bar'
-    ], 'foo.bad': ['zizzer zazzer zuzz']  # not okay
-    }) == ['foo  # from collection foo.bar', 'bar  # from collection foo.bar']
+    """A single incorrectly formatted requirement should raise error"""
+
+    with pytest.raises(SystemExit) as exc_info:
+        sanitize_requirements({
+            'foo.bar': ['foo', 'bar'],
+            'foo.bad': ['zizzer zazzer zuzz']  # not okay
+        })
+    assert exc_info.value.code.startswith('Failed to parse requirements')
 
 
 def test_sanitize_requirements_do_not_exclude():
