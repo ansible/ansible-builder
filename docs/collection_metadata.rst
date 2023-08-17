@@ -29,7 +29,7 @@ How to verify collection-level metadata
 
 .. note::
 
-  Running the introspect command described below is not a part of a typical workflow for building and using execution environments.
+  Running the introspect command described below is not part of a typical workflow for building and using execution environments.
 
 Collection developers can verify that dependencies specified in the collection will be processed correctly by Ansible Builder.
 
@@ -96,4 +96,10 @@ System-level Dependencies
 
 For system packages, use the ``bindep`` format to specify cross-platform requirements, so they can be installed by whichever package management system the execution environment uses. Collections should specify necessary requirements for ``[platform:rpm]``.
 
-Ansible Builder combines system package entries from multiple collections into a single file. Only requirements with *no* profiles (runtime requirements) are installed to the image. Entries from multiple collections which are outright duplicates of each other may be consolidated in the combined file.
+Ansible Builder combines system package entries from multiple collections into a single file.
+
+* Requirements with ``compile`` profile indicate that these requirements are needed to install other requirements (especially Python ones), but are not required to be in the final build.
+* Requirements with ``epel`` profile indicate that EPEL repositories will be enabled before installing these requirements.
+* Only requirements with *no* profiles (runtime requirements) are installed to the image.
+
+Entries from multiple collections which are outright duplicates of each other may be consolidated in the combined file.
