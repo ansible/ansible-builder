@@ -37,7 +37,7 @@ def test_skip_bad_formats():
             'foo.bar': ['foo', 'bar'],
             'foo.bad': ['zizzer zazzer zuzz']  # not okay
         })
-    assert exc_info.value.code.startswith('Failed to parse requirements')
+    assert exc_info.value.code == 1
 
 
 def test_sanitize_requirements_do_not_exclude():

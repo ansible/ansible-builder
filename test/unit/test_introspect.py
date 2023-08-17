@@ -72,4 +72,4 @@ def test_parse_args_default_action():
 def test_corrupt_python_requirements():
     with pytest.raises(SystemExit) as excinfo:
         sanitize_requirements({'test.metadata': ['invalid_package=1']})
-    assert excinfo.value.code.startswith('Failed to parse requirements from')
+    assert excinfo.value.code == 1

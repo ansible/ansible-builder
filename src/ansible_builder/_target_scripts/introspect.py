@@ -346,7 +346,7 @@ def sanitize_requirements(collection_py_reqs):
         except Exception as e:
             msg = f'Failed to parse requirements from {collection}, error: {e}'
             logger.error(msg)
-            sys.exit(msg)
+            sys.exit(1)
 
     # removal of unwanted packages
     sanitized = []

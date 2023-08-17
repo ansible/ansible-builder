@@ -46,8 +46,6 @@ def pytest_sessionfinish(session, exitstatus):
     # If we are the main worker thread, we've been called last, so do the cleanup.
     if worker_id is None:
         for runtime in CONTAINER_RUNTIMES:
-            if runtime not in FOUND_RUNTIMES:
-                continue
             data_file = pathlib.Path(base_tmpfile + runtime)
             if data_file.exists():
                 for image_name in data_file.read_text().split("\n"):
