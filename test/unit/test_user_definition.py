@@ -12,7 +12,7 @@ class TestUserDefinition:
         path = os.path.join(data_dir, 'definition_files/bad.yml')
 
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path)
+            AnsibleBuilder(action='create', filename=path)
 
         assert 'An error occurred while parsing the definition file:' in str(error.value.args[0])
 
@@ -110,7 +110,7 @@ class TestUserDefinition:
         path = "exec_env.txt"
 
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path)
+            AnsibleBuilder(action='create', filename=path)
 
         err_msg = "Could not detect 'exec_env.txt' file in this directory.\nUse -f to specify a different location."
         assert err_msg in str(error.value.args[0])
@@ -121,13 +121,13 @@ class TestUserDefinition:
         """
         path = exec_env_definition_file("{'version': 1, 'bad_key': 1}")
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path)
+            AnsibleBuilder(action='create', filename=path)
         assert "Additional properties are not allowed ('bad_key' was unexpected)" in str(error.value.args[0])
 
     def test_ee_missing_image_name(self, exec_env_definition_file):
         path = exec_env_definition_file("{'version': 2, 'images': { 'base_image': {'signature_original_name': ''}}}")
         with pytest.raises(DefinitionError) as error:
-            AnsibleBuilder(filename=path)
+            AnsibleBuilder(action='create', filename=path)
         assert "'name' is a required field for 'base_image'" in str(error.value.args[0])
 
     def test_v1_to_v2_key_upgrades(self, exec_env_definition_file):

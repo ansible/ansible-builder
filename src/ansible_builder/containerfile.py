@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib.resources
 import logging
 import os
@@ -15,19 +17,28 @@ logger = logging.getLogger(__name__)
 class Containerfile:
     newline_char = '\n'
 
-    def __init__(self, definition: UserDefinition,
-                 build_context=None,
-                 container_runtime=None,
-                 output_filename=None,
-                 galaxy_keyring=None,
-                 galaxy_required_valid_signature_count=None,
-                 galaxy_ignore_signature_status_codes=()):
+    def __init__(self,
+                 definition: UserDefinition,
+                 build_context: str,
+                 container_runtime: str,
+                 output_filename: str | None = None,
+                 galaxy_keyring: str | None = None,
+                 galaxy_required_valid_signature_count: int | None = None,
+                 galaxy_ignore_signature_status_codes: list | None = None
+                 ) -> None:
         """
-        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy
-                                   to opportunistically validate collection signatures.
-        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required
-                                                          for ansible-galaxy to accept collections.
-        :param str galaxy_ignore_signature_status_codes: GPG Status codes to ignore when validating galaxy collections.
+        Initialize a Containerfile object for instruction file creation.
+
+        :param UserDefinition definition: Object describing the EE definition.
+        :param str build_context: Name of the build context subdirectory.
+        :param str container_runtime: Name of the container runtime in use.
+        :param str output_filename: Name of the resulting instruction file. If not supplied, it
+            will default to a value based on container_runtime.
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically
+            validate collection signatures.
+        :param int galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig)
+            required for ansible-galaxy to accept collections.
+        :param list galaxy_ignore_signature_status_codes: GPG Status codes to ignore when validating galaxy collections.
         """
 
         self.build_context = build_context
@@ -35,10 +46,8 @@ class Containerfile:
             build_context, constants.user_content_subfolder)
         self.definition = definition
         if output_filename is None:
-            filename = constants.runtime_files[container_runtime]
-        else:
-            filename = output_filename
-        self.path = os.path.join(self.build_context, filename)
+            output_filename = constants.runtime_files[container_runtime]
+        self.path = os.path.join(self.build_context, output_filename)
         self.container_runtime = container_runtime
         self.original_galaxy_keyring = galaxy_keyring
         self.copied_galaxy_keyring = None
@@ -46,7 +55,7 @@ class Containerfile:
         self.galaxy_ignore_signature_status_codes = galaxy_ignore_signature_status_codes
         self.steps: list = []
 
-    def prepare(self):
+    def prepare(self) -> None:
         """
         Prepares the steps for the run-time specific build file.
 
@@ -181,7 +190,7 @@ class Containerfile:
             self._prepare_user_steps(uid)
         self._prepare_entrypoint_steps()
 
-    def write(self):
+    def write(self) -> None:
         """
         Writes the steps (built via the `Containerfile.prepare()` method) for
         the runtime-specific build file (Dockerfile or Containerfile) to the
@@ -190,13 +199,14 @@ class Containerfile:
         with open(self.path, 'w') as f:
             for step in self.steps:
                 f.write(step + self.newline_char)
-        return True
 
-    def _insert_global_args(self, include_values: bool = False):
+    def _insert_global_args(self, include_values: bool = False) -> None:
         """
         Insert Containerfile ARGs and, possibly, their values.
 
         An ARG with a None or empty value will not be included.
+
+        :param bool include_values: If True, include the ARG values in the directives.
         """
 
         # ARGs will be output in the order listed below. Keys with value `None` will be omitted, but empty string values
@@ -227,7 +237,7 @@ class Containerfile:
                 self.steps.append(f"ARG {arg}")
         self.steps.append("")
 
-    def _create_folder_copy_files(self):
+    def _create_folder_copy_files(self) -> None:
         """
         Creates the build context directory, and copies any potential context
         files (python, galaxy, or bindep requirements) into it.
@@ -284,7 +294,7 @@ class Containerfile:
         # to retain in that image.
         self.steps.append(f'COPY {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint')
 
-    def _handle_additional_build_files(self):
+    def _handle_additional_build_files(self) -> None:
         """
         Deal with any files the user wants added to the image build context.
 
@@ -320,7 +330,7 @@ class Containerfile:
                     copy_location = final_dst / src_file.name
                     copy_file(str(src_file), str(copy_location))
 
-    def _prepare_ansible_config_file(self):
+    def _prepare_ansible_config_file(self) -> None:
         if self.definition.version != 1:
             return
 
@@ -333,7 +343,7 @@ class Containerfile:
                 "",
             ])
 
-    def _insert_custom_steps(self, section: str):
+    def _insert_custom_steps(self, section: str) -> None:
         additional_steps = self.definition.additional_build_steps
         if additional_steps:
             section_steps = additional_steps.get(section)
@@ -344,12 +354,12 @@ class Containerfile:
                     lines = section_steps
                 self.steps.extend(lines)
 
-    def _relax_etc_passwd_permissions(self):
+    def _relax_etc_passwd_permissions(self) -> None:
         self.steps.append(
             "RUN chmod ug+rw /etc/passwd"
         )
 
-    def _prepare_final_workdir(self, workdir: str):
+    def _prepare_final_workdir(self, workdir: str) -> None:
         workdir = workdir.strip()
         if not workdir:
             return
@@ -359,12 +369,12 @@ class Containerfile:
             f"WORKDIR {workdir}"
         ])
 
-    def _prepare_label_steps(self):
+    def _prepare_label_steps(self) -> None:
         self.steps.extend([
             "LABEL ansible-execution-environment=true",
         ])
 
-    def _prepare_build_context(self):
+    def _prepare_build_context(self) -> None:
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
             self.steps.extend([
                 f"COPY {constants.user_content_subfolder} /build",
@@ -372,7 +382,7 @@ class Containerfile:
                 "",
             ])
 
-    def _prepare_galaxy_install_steps(self):
+    def _prepare_galaxy_install_steps(self) -> None:
         env = ""
         install_opts = (f"-r {constants.CONTEXT_FILES['galaxy']} "
                         f"--collections-path \"{constants.base_collections_path}\"")
@@ -402,7 +412,7 @@ class Containerfile:
         step = f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}"
         self.steps.append(step)
 
-    def _prepare_introspect_assemble_steps(self):
+    def _prepare_introspect_assemble_steps(self) -> None:
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
@@ -431,13 +441,13 @@ class Containerfile:
             self.steps.append(introspect_cmd)
             self.steps.append("RUN /output/scripts/assemble")
 
-    def _prepare_system_runtime_deps_steps(self):
+    def _prepare_system_runtime_deps_steps(self) -> None:
         self.steps.extend([
             "COPY --from=builder /output/ /output/",
             "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
         ])
 
-    def _prepare_galaxy_copy_steps(self):
+    def _prepare_galaxy_copy_steps(self) -> None:
         if self.definition.get_dep_abs_path('galaxy'):
             dir_name = os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
             self.steps.extend([
@@ -446,11 +456,11 @@ class Containerfile:
                 "",
             ])
 
-    def _prepare_entrypoint_steps(self):
+    def _prepare_entrypoint_steps(self) -> None:
         if ep := self.definition.container_init.get('entrypoint'):
             self.steps.append(f"ENTRYPOINT {ep}")
         if cmd := self.definition.container_init.get('cmd'):
             self.steps.append(f"CMD {cmd}")
 
-    def _prepare_user_steps(self, uid):
+    def _prepare_user_steps(self, uid) -> None:
         self.steps.append(f"USER {uid}")
