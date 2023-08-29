@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import logging
 import os
 
 from . import constants
 from .containerfile import Containerfile
-from .policies import PolicyChoices, IgnoreAll, ExactReference
+from .policies import PolicyChoices, BaseImagePolicy, IgnoreAll, ExactReference
 from .user_definition import UserDefinition
 from .utils import run_command
 
@@ -13,30 +15,45 @@ logger = logging.getLogger(__name__)
 
 class AnsibleBuilder:
     def __init__(self,
-                 action=None,
-                 filename=constants.default_file,
-                 build_args=None,
-                 build_context=constants.default_build_context,
-                 tag=None,
-                 container_runtime=constants.default_container_runtime,
-                 output_filename=None,
-                 no_cache=False,
-                 prune_images=False,
-                 verbosity=constants.default_verbosity,
-                 galaxy_keyring=None,
-                 galaxy_required_valid_signature_count=None,
-                 galaxy_ignore_signature_status_codes=(),
-                 container_policy=None,
-                 container_keyring=None,
-                 squash=None,
-                 ):
+                 action: str,
+                 filename: str = constants.default_file,
+                 build_args: dict[str, str] | None = None,
+                 build_context: str = constants.default_build_context,
+                 tag: list | None = None,
+                 container_runtime: str = constants.default_container_runtime,
+                 output_filename: str | None = None,
+                 no_cache: bool = False,
+                 prune_images: bool = False,
+                 verbosity: int = constants.default_verbosity,
+                 galaxy_keyring: str | None = None,
+                 galaxy_required_valid_signature_count: int | None = None,
+                 galaxy_ignore_signature_status_codes: list | None = None,
+                 container_policy: str | None = None,
+                 container_keyring: str | None = None,
+                 squash: str | None = None,
+                 ) -> None:
         """
-        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to
-                                   opportunistically validate collection signatures.
-        :param str galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig) required
-                                                          for ansible-galaxy to accept collections.
-        :param str galaxy_ignore_signature_status_codes: GPG Status code to ignore when validating galaxy collections.
+        Initialize the AnsibleBuilder object.
+
+        :param str action: Builder action to perform (build/create/introspect).
+        :param str filename: Execution environment file to use.
+        :param dict build_args: Dictionary of build args to consider.
+        :param str build_context: Name of the build context directory.
+        :param list tag: List of tag names to apply to resulting image.
+        :param str container_runtime: Name of the container runtime in use.
+        :param str output_filename: Name of the resulting instruction file. If not supplied, it
+            will default to a value based on container_runtime.
+        :param bool no_cache: If True, will not use the build cache when building an image.
+        :param bool prune_images: If True, will attempt an image prune at the end of a successful build.
+        :param int verbosity: Output verbosity level.
+        :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically
+            validate collection signatures.
+        :param int galaxy_required_valid_signature_count: Number of sigs (prepend + to disallow no sig)
+            required for ansible-galaxy to accept collections.
+        :param list galaxy_ignore_signature_status_codes: GPG Status code to ignore when validating galaxy collections.
         :param str container_policy: The container validation policy. A valid string value from the PolicyChoices enum.
+        :param str container_keyring: GPG keyring for container image validation.
+        :param str squash: With podman, controls layer squashing.
         """
 
         if not galaxy_keyring and (galaxy_required_valid_signature_count or galaxy_ignore_signature_status_codes):
@@ -68,6 +85,7 @@ class AnsibleBuilder:
         self.build_args = build_args or {}
         self.no_cache = no_cache
         self.prune_images = prune_images
+
         self.containerfile = Containerfile(
             definition=self.definition,
             build_context=self.build_context,
@@ -76,6 +94,7 @@ class AnsibleBuilder:
             galaxy_keyring=galaxy_keyring,
             galaxy_required_valid_signature_count=galaxy_required_valid_signature_count,
             galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
+
         self.verbosity = verbosity
         self.container_policy, self.container_keyring = self._handle_image_validation_opts(
             container_policy,
@@ -83,7 +102,10 @@ class AnsibleBuilder:
         )
         self.squash = squash
 
-    def _handle_image_validation_opts(self, policy, keyring):
+    def _handle_image_validation_opts(self,
+                                      policy: str | None,
+                                      keyring: str | None,
+                                      ) -> tuple[PolicyChoices | None, str | None]:
         """
         Process the container_policy and container_keyring arguments.
 
@@ -140,20 +162,21 @@ class AnsibleBuilder:
         return (resolved_policy, resolved_keyring)
 
     @property
-    def version(self):
+    def version(self) -> int:
         return self.definition.version
 
     @property
-    def ansible_config(self):
+    def ansible_config(self) -> str:
         return self.definition.ansible_config
 
-    def create(self):
+    def create(self) -> bool:
         logger.debug('Ansible Builder is generating your execution environment build context.')
         self.containerfile.prepare()
-        return self.containerfile.write()
+        self.containerfile.write()
+        return True
 
     @property
-    def prune_image_command(self):
+    def prune_image_command(self) -> list[str]:
         command = [
             self.container_runtime, "image",
             "prune", "--force"
@@ -161,7 +184,7 @@ class AnsibleBuilder:
         return command
 
     @property
-    def build_command(self):
+    def build_command(self) -> list[str]:
         command = [
             self.container_runtime, "build",
             "-f", self.containerfile.path
@@ -191,6 +214,8 @@ class AnsibleBuilder:
         if self.container_policy:
             logger.debug('Container policy is %s', PolicyChoices(self.container_policy).value)
 
+            policy: BaseImagePolicy
+
             if self.container_policy == PolicyChoices.IGNORE:
                 policy = IgnoreAll()
             elif self.container_policy == PolicyChoices.SIG_REQ:
@@ -219,7 +244,7 @@ class AnsibleBuilder:
 
         return command
 
-    def build(self):
+    def build(self) -> bool:
         self.create()
         logger.debug('Ansible Builder is building your execution environment image. Tags: %s', ", ".join(self.tags))
         run_command(self.build_command)

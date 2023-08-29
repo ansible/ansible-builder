@@ -178,6 +178,7 @@ def add_container_options(parser):
                        help='A gpg status code to ignore during signature verification when installing with '
                        'ansible-galaxy. May be specified multiple times. See ansible-galaxy doc for more info.')
         p.add_argument('--galaxy-required-valid-signature-count',
+                       type=int,
                        help='The number of signatures that must successfully verify collections from '
                        'ansible-galaxy ~if there are any signatures provided~. See ansible-galaxy doc for more info.')
 
