@@ -3,9 +3,7 @@
 Ansible Builder version 3 Porting Guide
 =======================================
 
-This section discusses the behavioral changes between ``ansible-builder`` 1.2 and ``ansible-builder`` 3.0.
-
-It is intended to assist in updating your execution environment configuration files so they will work with this version of Ansible Builder.
+This section discusses the behavioral changes between ``ansible-builder`` version 1.2 and version 3.0.
 
 We suggest you read this page along with `ansible-builder 3.0 release notes <https://github.com/ansible/ansible-builder/releases/tag/3.0.0>`_ to understand what updates you may need to make.
 
@@ -43,7 +41,7 @@ With Ansible Builder 3, you can specify more fine-grained build steps or custom 
 These commands will be inserted directly into the build instruction file for the
 container runtime (For example, `Containerfile` or `Dockerfile`). The commands must conform to any rules required by the containerization tool.
 
-These are additional build steps - 
+These are additional build steps -
 
 * ``prepend_base``
 * ``append_base``

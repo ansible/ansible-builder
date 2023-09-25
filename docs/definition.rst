@@ -210,7 +210,7 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible/archive/refs/heads/ansible.tar.gz
 
     ``ansible_runner``
-      The version of the Ansible Runner Python package is to be installed. This value
+      The version of the Ansible Runner Python package to be installed. This value
       is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
       is passed directly to `pip` for installation and can be in any format that
       pip supports. Below are some example values:
@@ -240,7 +240,7 @@ The following keys are valid for this section:
       (``python_path``).
 
     ``system``
-      The system packages are to be installed, in bindep format. This may either
+      The system packages to be installed, in bindep format. This may either
       be a filename, or a list of requirements (see below for an example).
 
 The following example uses filenames that contain various dependencies:
@@ -291,7 +291,7 @@ Specifies the base image to be used. At a minimum you *MUST* specify a source, i
 Valid keys for this section are:
 
     ``base_image``
-      A dictionary defines the parent image for the execution environment. A ``name``
+      A dictionary defining the parent image for the execution environment. A ``name``
       key must be supplied with the container image to use. Use the ``signature_original_name``
       key if the image is mirrored within your repository, but signed with the original
       image's signature key.
