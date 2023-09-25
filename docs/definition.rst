@@ -3,7 +3,7 @@
 Execution environment definition
 ================================
 
-You define the content of your execution environment in a YAML file. By default, this file is called ``execution-environment.yml``. This file tells Ansible Builder how to create the build instruction file (Containerfile for Podman, Dockerfile for Docker) and build context for your container image.
+You define the content of your execution environment in a YAML file. By default, this file is called ``execution-environment.yml``. This file tells Ansible Builder how to create the build instruction file (``Containerfile`` for Podman, ``Dockerfile`` for Docker) and build context for your container image.
 
 .. note::
    This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
@@ -184,7 +184,7 @@ dependencies
 
 Specifies dependencies to install into the final image, including ``ansible-core``, ``ansible-runner``, Python packages, system packages, and Ansible Collections. Ansible Builder automatically installs dependencies for any Ansible Collections you install.
 
-In general you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
+In general, you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
 
 The following keys are valid for this section:
 
@@ -230,7 +230,7 @@ The following keys are valid for this section:
 
     ``python_interpreter``
       A dictionary that defines the Python system package name to be installed by
-      dnf (``package_system``) and/or a path to the Python interpreter to be used
+      ``dnf`` (``package_system``) and/or a path to the Python interpreter to be used
       (``python_path``).
 
     ``system``
@@ -292,7 +292,7 @@ Valid keys for this section are:
 image verification
 """"""""""""""""""
 You can verify signed container images if you are using the ``podman`` container
-runtime. Set the :ref:`container-policy` CLI option to control how this data is used in relation to a Podman
+runtime. Set the :ref:`container-policy` CLI option to control how this data is used with a Podman
 `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
 file for container image signature validation.
 
@@ -320,7 +320,7 @@ builder runtime functionality. Valid keys for this section are:
       A dictionary with keys that allow for customization of the container ``ENTRYPOINT`` and
       ``CMD`` directives (and related behaviors). Customizing these behaviors is an advanced
       task, and may result in subtle, difficult-to-debug failures. As the provided defaults for
-      this section control a number of intertwined behaviors, overriding any value will skip all
+      this section control several intertwined behaviors, overriding any value will skip all
       remaining defaults in this dictionary.
       Valid keys are:
 
@@ -373,7 +373,7 @@ builder runtime functionality. Valid keys for this section are:
       The default value ``1000``.
 
     ``tags``
-      Specifies the name which is assigned to resulting image if build process completes successfully.
+      Specifies the names that are assigned to the resulting image if the build process completes successfully.
       The default value is ``ansible-execution-env:latest``.
 
 Example ``options`` section:
