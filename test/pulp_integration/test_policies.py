@@ -1,9 +1,10 @@
-import pytest
 import shutil
 import subprocess
 import uuid
 
 from pathlib import Path
+
+import pytest
 
 from ansible_builder.policies import RejectAll, IgnoreAll
 
@@ -41,7 +42,7 @@ class TestPolicies:
             user_policy.rename(target)
 
             cmd = 'podman image prune --force'
-            subprocess.run(cmd.split())
+            subprocess.run(cmd.split(), check=False)
 
     @classmethod
     def teardown_class(cls):
