@@ -38,7 +38,8 @@ def test_create_streams_output_with_verbosity_on(cli, build_dir_and_ee_yml):
 
 def test_create_streams_output_with_verbosity_off(cli, build_dir_and_ee_yml):
     """
-    Like the test_create_streams_output_with_verbosity_on test but making sure less output is shown with default verbosity level of 2.
+    Like the test_create_streams_output_with_verbosity_on test
+    but making sure less output is shown with default verbosity level of 2.
     """
     tmpdir, eeyml = build_dir_and_ee_yml("")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml}")
@@ -48,7 +49,8 @@ def test_create_streams_output_with_verbosity_off(cli, build_dir_and_ee_yml):
 
 def test_create_streams_output_with_invalid_verbosity(cli, build_dir_and_ee_yml):
     """
-    Like the test_create_streams_output_with_verbosity_off test but making sure it errors out correctly with invalid verbosity level.
+    Like the test_create_streams_output_with_verbosity_off test
+    but making sure it errors out correctly with invalid verbosity level.
     """
     tmpdir, eeyml = build_dir_and_ee_yml("")
     result = cli(f"ansible-builder create -c {tmpdir} -f {eeyml} -v 6", allow_error=True)
@@ -78,7 +80,8 @@ def test_inline_str_galaxy_requirements(cli, build_dir_and_ee_yml):
     req_out_content = req_out.read_text()
     assert "# a comment" in req_out_content
     assert "# another comment" in req_out_content
-    assert yaml.safe_load(req_out_content) == {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
+    expected_output = {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
+    assert yaml.safe_load(req_out_content) == expected_output
 
 
 def test_inline_mapping_galaxy_requirements(cli, build_dir_and_ee_yml):
@@ -101,7 +104,8 @@ def test_inline_mapping_galaxy_requirements(cli, build_dir_and_ee_yml):
 
     assert req_out.exists()
     req_out_content = req_out.read_text()
-    assert yaml.safe_load(req_out_content) == {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
+    expected_output = {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
+    assert yaml.safe_load(req_out_content) == expected_output
 
 
 def test_collection_verification_off(cli, build_dir_and_ee_yml):

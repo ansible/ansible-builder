@@ -1,5 +1,5 @@
-import pytest
 import subprocess
+import pytest
 
 
 class TestV3:
