@@ -4,7 +4,7 @@ import pathlib
 
 import pytest
 
-from ansible_builder.utils import write_file, copy_directory, copy_file, run_command
+from ansible_builder.utils import configure_logger, write_file, copy_directory, copy_file, run_command
 
 
 def test_write_file(tmp_path):
@@ -67,8 +67,9 @@ def test_copy_file_with_destination_directory(dest_file, source_file):
 @pytest.mark.run_command
 def test_failed_command(mocker):
     mocker.patch('ansible_builder.utils.subprocess.Popen.wait', return_value=1)
+    configure_logger(3)
     with pytest.raises(SystemExit):
-        run_command(['sleep', '--invalidargument'])
+        run_command(['sleep', '--invalidargument'], capture_output=True)
 
 
 @pytest.mark.run_command
