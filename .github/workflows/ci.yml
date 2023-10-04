@@ -35,7 +35,7 @@ jobs:
         run: tox --notest
 
       - name: Run tests
-        run: tox
+        run: tox --skip-pkg-install
 
   secrets_preflight:
     runs-on: ubuntu-22.04
@@ -101,7 +101,7 @@ jobs:
 
       - name: Run pulp integration tests
         run: |
-          tox -- --run-destructive
+          tox --skip-pkg-install -- --run-destructive
 
 
   integration:
@@ -141,12 +141,10 @@ jobs:
           python3 -m pip install tox
 
       - name: Create tox environment
-        run: |
-          tox --notest
+        run: tox --notest
 
       - name: Run integration tests (including destructive)
-        run: |
-          tox -- --run-destructive
+        run: tox --skip-pkg-install -- --run-destructive
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v3
@@ -193,7 +191,7 @@ jobs:
         run: tox --notest
 
       - name: Run tests
-        run: tox
+        run: tox --skip-pkg-install
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v3
