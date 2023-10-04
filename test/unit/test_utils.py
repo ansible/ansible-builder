@@ -1,13 +1,14 @@
+import filecmp
 import os
 import pathlib
 
 import pytest
 
-from ansible_builder.utils import write_file, copy_file, run_command
+from ansible_builder.utils import write_file, copy_directory, copy_file, run_command
 
 
 def test_write_file(tmp_path):
-    path = tmp_path / 'foo.txt'
+    path = tmp_path / 'bar' / 'foo.txt'
     text = [
         'foo  # from some collection',
         'bar',
@@ -26,6 +27,7 @@ def test_copy_file(dest_file, source_file):
 
     assert copy_file(source_file, dest_file)
     assert not copy_file(source_file, dest_file)
+    assert not copy_file(source_file, source_file)
 
 
 def test_copy_touched_file(dest_file, source_file):
@@ -108,3 +110,37 @@ def test_invalid_docker_command(caplog, mocker):
 
     assert 'You do not have docker installed' in record.msg
     assert 'podman: not installed, docker: not installed' in record.msg
+
+
+def test_copy_directory_notadir(tmp_path):
+    """
+    Test passing a file instead of a directory.
+    """
+    notadir = tmp_path / 'xyz'
+    notadir.touch()
+    with pytest.raises(Exception, match="Expected a directory at *"):
+        copy_directory(notadir, 'abc')
+
+
+def test_copy_directory(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+
+    # a file
+    src_f1 = src / "f1"
+    src_f1.touch()
+
+    # a subdirectory and a file underneath it
+    src_d1 = src / "d1"
+    src_d1.mkdir()
+    src_d1f2 = src_d1 / "f2"
+    src_d1f2.touch()
+
+    dst = tmp_path / "dst"
+    dst.mkdir()
+
+    copy_directory(src, dst)
+
+    dcmp = filecmp.dircmp(str(src), str(dst))
+    assert not dcmp.left_only
+    assert not dcmp.right_only
