@@ -20,14 +20,24 @@ TYPE_StringOrListOfStrings = {
 
 TYPE_DictOrStringOrListOfStrings = {
     "anyOf": [
-        {"type": "object"},
-        {"type": "string"},
         {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        }
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "roles": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "collections": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+        },
+        {
+            "type": "string",
+            "additionalProperties": False,
+        },
     ]
 }
 
