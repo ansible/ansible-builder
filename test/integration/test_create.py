@@ -496,3 +496,22 @@ def test_v3_set_user_id(cli, build_dir_and_ee_yml):
     text = containerfile.read_text()
 
     assert "USER bob" in text
+
+
+def test_v3_additional_build_files(cli, build_dir_and_ee_yml):
+    """
+    Test functionality of addition_build_files.
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        additional_build_files:
+          - src: ansible.cfg
+            dest: configs
+        """
+    )
+
+    cfg = tmpdir / 'ansible.cfg'
+    cfg.touch()
+
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
