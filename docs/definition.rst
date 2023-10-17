@@ -74,7 +74,7 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
         # - RUN $PKGMGR module enable postgresql:15 -y
         # - RUN $PKGMGR install -y postgresql
       prepend_galaxy:
-        - ADD _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+        - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
 
       prepend_final: |
         RUN whoami
