@@ -39,8 +39,8 @@ Quickstart for Ansible Builder
 To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. 
 
 Once you have the tools you need, create an :ref:`execution environment definition <builder_ee_definition>` file.
-By default this file is called ``execution_environment.yml``.
-In the execution environment definition file you can specify the exact content you want to include in your
+By default, this file is called ``execution-environment.yml``.
+In the execution environment definition file, you can specify the exact content you want to include in your
 execution environment. You can specify these items:
 
 - the base container image
@@ -83,7 +83,7 @@ The same four stages get executed if you build your container image directly wit
 
 1. **Base**: uses Podman or Docker to pull the base image you defined, then installs the Python version (if defined and different from any Python on the base image), pip, ansible-runner, and ansible-core or ansible. All three later stages of the build process build on the output of the Base stage.
 2. **Galaxy**: downloads the collections you defined from Galaxy and stashes them locally as files.
-3. **Builder**: downloads the other packages (Python packages and system packages) you defined and stashes them locally as files.
+3. **Builder**: downloads the other packages (Python packages and system packages) you defined and stash them locally as files.
 4. **Final**: integrates the first three stages, installing all the stashed files on the output of the Base stage and generating a new image that includes all the content.
 
 Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage.
