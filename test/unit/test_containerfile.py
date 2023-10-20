@@ -207,3 +207,50 @@ def test__handle_additional_build_files(build_dir_and_ee_yml):
     config_dir = tmpdir / '_build' / 'configs'
     assert config_dir.exists()
     assert (config_dir / 'ansible.cfg').exists()
+
+
+def test_pep668_env_var_v1(build_dir_and_ee_yml):
+    """
+    Test that we add the pip env var to handle PEP668.
+    """
+    ee_data = """
+    version: 1
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+
+
+def test_pep668_env_var_v2(build_dir_and_ee_yml):
+    """
+    Test that we add the pip env var to handle PEP668.
+    """
+    ee_data = """
+    version: 2
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+      builder_image:
+        name: quay.io/user/mycustombuilderimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+
+
+def test_pep668_env_var_v3(build_dir_and_ee_yml):
+    """
+    Test that we add the pip env var to handle PEP668.
+    """
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
