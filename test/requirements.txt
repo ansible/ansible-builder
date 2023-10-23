@@ -1,6 +1,6 @@
 coverage
-flake8
-mypy==1.0.1
+flake8==6.1.0
+mypy==1.6.0
 pytest
 pytest-cov
 pytest-mock
@@ -8,5 +8,5 @@ pytest-xdist
 types-jsonschema
 types-pyyaml
 tox
-yamllint
-pylint==2.17.4
+yamllint==1.32.0
+pylint==3.0.1
