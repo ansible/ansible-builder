@@ -31,7 +31,7 @@ PKGMGR_PRESERVE_CACHE="${PKGMGR_PRESERVE_CACHE:-}"
 PYCMD="${PYCMD:=/usr/bin/python3}"
 PIPCMD="${PIPCMD:=$PYCMD -m pip}"
 
-$PYCMD -m ensurepip
+$PYCMD -m ensurepip --root /
 
 if [ -z $PKGMGR ]; then
     # Expect dnf to be installed, however if we find microdnf default to it.

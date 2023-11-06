@@ -76,6 +76,7 @@ class Containerfile:
             "# Base build stage",
             "FROM $EE_BASE_IMAGE as base",
             "USER root",
+            "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
         ])
 
         self._insert_global_args()
@@ -87,7 +88,7 @@ class Containerfile:
                 self.steps.append(step)
 
             # We should always make sure pip is available for later stages.
-            self.steps.append('RUN $PYCMD -m ensurepip')
+            self.steps.append('RUN $PYCMD -m ensurepip --root /')
 
             if self.definition.ansible_ref_install_list:
                 self.steps.append('RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
