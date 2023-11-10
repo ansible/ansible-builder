@@ -36,10 +36,10 @@ Refer to the `Getting started with Execution Environments guide <https://docs.an
 Quickstart for Ansible Builder
 ==============================
 
-To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool. 
+To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool.
 
 Once you have the tools you need, create an :ref:`execution environment definition <builder_ee_definition>` file.
-By default, this file is called ``execution-environment.yml``.
+By default, this file is called ``execution-environment.yml`` (the ``.yaml`` extension is also accepted).
 In the execution environment definition file, you can specify the exact content you want to include in your
 execution environment. You can specify these items:
 

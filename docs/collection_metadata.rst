@@ -9,6 +9,7 @@ For Ansible Builder to find and install collection dependencies, those dependenc
 
 * The ``meta/execution-environment.yml`` file containing the Python
   and/or bindep requirements or referencing other files listing them.
+  The ``.yaml`` extension is also valid on this file.
 * The ``requirements.txt`` file in the root level of the collection.
 * The ``bindep.txt`` file in the root level of the collection.
 

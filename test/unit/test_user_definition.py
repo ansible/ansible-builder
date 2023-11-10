@@ -1,6 +1,7 @@
 import os
 import pytest
 
+from ansible_builder import constants
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.user_definition import UserDefinition, ImageDescription
@@ -299,3 +300,35 @@ class TestImageDescription:
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"Container image requires a tag: {image}" in str(error.value.args[0])
+
+
+class TestDefaultEEFilename:
+    """
+    Class to handle test setup/teardown of tests that need to change working
+    directory to test the default EE filename in the current directory.
+    """
+
+    def setup_method(self):
+        self._old_workdir = os.getcwd()  # pylint: disable=W0201
+
+    def teardown_method(self):
+        os.chdir(self._old_workdir)
+
+    def test_all_default_filenames(self, tmp_path):
+        """
+        Test finding all variations of the default execution environment filename.
+        """
+        os.chdir(str(tmp_path))
+        for ext in constants.YAML_FILENAME_EXTENSIONS:
+            ee = tmp_path / f"{constants.DEFAULT_EE_BASENAME}.{ext}"
+            ee.write_text("version: 3")
+            UserDefinition()   # This would fail if the file is not found
+            ee.unlink()
+
+    def test_missing_default_file(self, tmp_path):
+        """
+        Test that we fail if the default file is not found.
+        """
+        os.chdir(str(tmp_path))
+        with pytest.raises(DefinitionError, match="Default execution environment file not found in current directory."):
+            UserDefinition()

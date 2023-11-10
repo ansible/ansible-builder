@@ -153,7 +153,6 @@ def add_container_options(parser):
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
-                       default=constants.default_file,
                        dest='filename',
                        help='The definition of the execution environment (default: %(default)s)')
 
