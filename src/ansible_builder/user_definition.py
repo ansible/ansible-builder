@@ -247,7 +247,7 @@ class UserDefinition:
 
             if (
                 self.version >= 3
-                and self.build_arg_defaults["EE_BASE_IMAGE"] == constants.build_arg_defaults["EE_BASE_IMAGE"]
+                and self.build_arg_defaults["EE_BASE_IMAGE"] == 'quay.io/ansible/ansible-runner:latest'
             ):
                 logging.warning(
                     "Using the outdated base image '%s' might "
