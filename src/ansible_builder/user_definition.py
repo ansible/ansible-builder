@@ -245,6 +245,15 @@ class UserDefinition:
                     self.builder_image = ImageDescription(images, 'builder_image')
                     self.build_arg_defaults['EE_BUILDER_IMAGE'] = self.builder_image.name
 
+            if (
+                self.version >= 3
+                and self.build_arg_defaults["EE_BASE_IMAGE"] == 'quay.io/ansible/ansible-runner:latest'
+            ):
+                logging.warning(
+                    "Using the outdated base image '%s' might "
+                    "result in the build failures.", self.build_arg_defaults['EE_BASE_IMAGE']
+                )
+
             self._validate_additional_build_files()
 
             if self.version >= 3:

@@ -44,7 +44,7 @@ def test_custom_ansible_galaxy_cli_role_opts(exec_env_definition_file, tmp_path)
 
 
 def test_build_args_empty_value(exec_env_definition_file, tmp_path):
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS=', '-c', str(tmp_path)])
@@ -52,7 +52,7 @@ def test_build_args_empty_value(exec_env_definition_file, tmp_path):
 
 
 def test_build_args_no_trailing_equal(exec_env_definition_file, tmp_path):
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(['build', '-f', path, '--build-arg', 'ANSIBLE_GALAXY_CLI_ROLE_OPTS', '-c', str(tmp_path)])
@@ -60,7 +60,7 @@ def test_build_args_no_trailing_equal(exec_env_definition_file, tmp_path):
 
 
 def test_build_args_multiple_equal_sign_value(exec_env_definition_file, tmp_path):
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(['build', '-f', path,
@@ -257,7 +257,7 @@ def test_squash_default(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with default.
     '''
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -271,7 +271,7 @@ def test_squash_all(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with 'all'.
     '''
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -286,7 +286,7 @@ def test_squash_off(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with 'off'.
     '''
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -301,7 +301,7 @@ def test_squash_new(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option with 'new'.
     '''
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -317,7 +317,7 @@ def test_squash_ignored(exec_env_definition_file, tmp_path):
     '''
     Test the squash CLI option is ignored with docker.
     '''
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -348,7 +348,7 @@ def test_as_executable_module(capsys):
                           ('--verbosity', 1),
                           ('--verbosity=2', 2)])
 def test_verbosity(exec_env_definition_file, tmp_path, verbosity_opt, expected_val):
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
 
     aee = prepare(['create',
@@ -361,7 +361,7 @@ def test_verbosity(exec_env_definition_file, tmp_path, verbosity_opt, expected_v
 
 @pytest.mark.parametrize('verbosity_opt', ['-v4', '-vvvv', '-v -v -v -v', '--verbosity=4'])
 def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
-    content = {'version': 3}
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(ValueError, match=f'maximum verbosity is {constants.max_verbosity}'):
         prepare(['create', '-f', path, '-c', str(tmp_path), verbosity_opt])
