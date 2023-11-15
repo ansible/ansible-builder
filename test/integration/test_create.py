@@ -283,7 +283,7 @@ def test_v2_default_builder_image(cli, build_dir_and_ee_yml):
 def test_v3_pre_post_commands(cli, data_dir, tmp_path):
     """Test that the pre/post commands are inserted"""
     ee_def = data_dir / 'v3' / 'pre_and_post' / 'ee.yml'
-    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def} --output-filename Containerfile')
     assert r.rc == 0
 
     containerfile = tmp_path / "Containerfile"
@@ -305,7 +305,7 @@ def test_v3_pre_post_commands(cli, data_dir, tmp_path):
 def test_v3_complete(cli, data_dir, tmp_path):
     """For testing various elements in a complete v2 EE file"""
     ee_def = data_dir / 'v3' / 'complete' / 'ee.yml'
-    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def}')
+    r = cli(f'ansible-builder create -c {str(tmp_path)} -f {ee_def} --output-filename Containerfile')
     assert r.rc == 0
 
     containerfile = tmp_path / "Containerfile"
