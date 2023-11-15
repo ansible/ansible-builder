@@ -1,6 +1,10 @@
 import os
 import pytest
 
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
+
+from ansible_builder.ee_schema import TYPE_DictOrStringOrListOfStrings
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.user_definition import UserDefinition, ImageDescription
@@ -306,3 +310,41 @@ class TestImageDescription:
         with pytest.raises(DefinitionError) as error:
             ImageDescription(ee_section, key)
         assert f"Container image requires a tag: {image}" in str(error.value.args[0])
+
+
+class TestGalaxyDefinition:
+
+    instances = [
+        ("", True),
+        ("requirements.yml", True),
+        ("| requirements.yml", True),
+        ([], False),
+        ({"invalid_key": []}, False),
+        ({"roles": [], "collections2": []}, False),
+        ({"roles2": [], "collections": []}, False),
+        ({"roles": "", "collections": []}, False),
+        ({"roles": [], "collections": ""}, False),
+        ({"roles": [1], "collections": []}, False),
+        ({"roles": [], "collections": [1]}, False),
+        ({}, True),
+        ({"roles": []}, True),
+        ({"collections": []}, True),
+        ({"roles": [], "collections": []}, True),
+        ({"roles": ["openshift"], "collections": []}, True),
+        ({"roles": ["openshift"], "collections": ["community.okd"]}, True),
+        ({"roles": [], "collections": ["community.okd"]}, True),
+        ({"collections": ["community.okd"]}, True),
+        ({"roles": ["openshift"]}, True),
+    ]
+
+    @pytest.mark.parametrize("test_input,expected", instances)
+    def test_galaxy_requirements(self, test_input, expected):
+        """
+        Test Galaxy definition
+        """
+        try:
+            validate(instance=test_input, schema=TYPE_DictOrStringOrListOfStrings)
+            test_passed = True
+        except ValidationError:
+            test_passed = False
+        assert test_passed == expected
