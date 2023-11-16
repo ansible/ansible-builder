@@ -72,6 +72,10 @@ def test_parse_args_default_action():
 def test_yaml_extension(data_dir):
     """
     Test that introspection recognizes a collection meta directory EE with a .yaml file extension.
+
+    NOTE: This test depends on the meta EE in the collection to reference a file other than "requirements.txt"
+    because of the way CollectionDefinition.__init__() will fall through to a default if the meta EE is not
+    found.
     """
     col_path = os.path.join(data_dir, 'alternate_collections')
     files = process(col_path)
