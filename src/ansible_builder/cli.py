@@ -153,9 +153,8 @@ def add_container_options(parser):
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',
-                       default=constants.default_file,
                        dest='filename',
-                       help='The definition of the execution environment (default: %(default)s)')
+                       help='The definition of the execution environment (default: execution-environment.(yml|yaml))')
 
         p.add_argument('-c', '--context',
                        default=constants.default_build_context,

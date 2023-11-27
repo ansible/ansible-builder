@@ -3,7 +3,9 @@
 Execution environment definition
 ================================
 
-You define the content of your execution environment in a YAML file. By default, this file is called ``execution-environment.yml``. This file tells Ansible Builder how to create the build instruction file (``Containerfile`` for Podman, ``Dockerfile`` for Docker) and build context for your container image.
+You define the content of your execution environment in a YAML file. By default, this file is called ``execution-environment.yml``
+or ``execution-environment.yaml``. This file tells Ansible Builder how to create the build instruction file
+(``Containerfile`` for Podman, ``Dockerfile`` for Docker) and build context for your container image.
 
 .. note::
    This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.

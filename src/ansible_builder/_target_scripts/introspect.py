@@ -7,8 +7,8 @@ import yaml
 
 import requirements
 
+
 base_collections_path = '/usr/share/ansible/collections'
-default_file = 'execution-environment.yml'
 logger = logging.getLogger(__name__)
 
 
@@ -142,11 +142,19 @@ class CollectionDefinition:
 
     def __init__(self, collection_path):
         self.reference_path = collection_path
-        meta_file = os.path.join(collection_path, 'meta', default_file)
-        if os.path.exists(meta_file):
-            with open(meta_file, 'r') as f:
-                self.raw = yaml.safe_load(f)
-        else:
+
+        # NOTE: Filenames should match constants.DEAFULT_EE_BASENAME and constants.YAML_FILENAME_EXTENSIONS.
+        meta_file_base = os.path.join(collection_path, 'meta', 'execution-environment')
+        ee_exists = False
+        for ext in ('yml', 'yaml'):
+            meta_file = f"{meta_file_base}.{ext}"
+            if os.path.exists(meta_file):
+                with open(meta_file, 'r') as f:
+                    self.raw = yaml.safe_load(f)
+                ee_exists = True
+                break
+
+        if not ee_exists:
             self.raw = {'version': 1, 'dependencies': {}}
             # Automatically infer requirements for collection
             for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:

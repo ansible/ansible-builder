@@ -1,0 +1,3 @@
+---
+dependencies:
+  python: my-requirements.txt

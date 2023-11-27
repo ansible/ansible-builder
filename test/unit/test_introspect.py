@@ -67,3 +67,19 @@ def test_parse_args_default_action():
     assert parser.user_bindep == user_bindep
     assert parser.write_pip == write_pip
     assert parser.write_bindep == write_bindep
+
+
+def test_yaml_extension(data_dir):
+    """
+    Test that introspection recognizes a collection meta directory EE with a .yaml file extension.
+
+    NOTE: This test depends on the meta EE in the collection to reference a file other than "requirements.txt"
+    because of the way CollectionDefinition.__init__() will fall through to a default if the meta EE is not
+    found.
+    """
+    col_path = os.path.join(data_dir, 'alternate_collections')
+    files = process(col_path)
+    assert files == {
+        'python': {'test_collection.test_yaml_extension': ['python-six']},
+        'system': {},
+    }

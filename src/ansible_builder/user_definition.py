@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import os
 import textwrap
@@ -63,27 +65,43 @@ class UserDefinition:
     Class representing the Execution Environment file.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         """
         Initialize the UserDefinition object.
 
-        :param str filename: Path to the EE file.
+        :param str filename: Path to the EE file. If this is None, we will
+            look for the default file: execution-environment.(yml|yaml)
         """
-        self.filename = filename
 
         # A dict that is the raw representation of the EE file.
         self.raw = {}
+
+        if filename is None:
+            for ext in constants.YAML_FILENAME_EXTENSIONS:
+                ee_file = f'{constants.DEFAULT_EE_BASENAME}.{ext}'
+                if os.path.exists(ee_file):
+                    filename = ee_file
+                    break
+            if filename is None:
+                raise DefinitionError(textwrap.dedent(
+                    """
+                    Default execution environment file not found in current directory.
+                    Use -f to specify the correct file.
+                    """))
+
+        self.filename = filename
+
         # The folder which dependencies are specified relative to.
-        self.reference_path = os.path.dirname(filename)
+        self.reference_path = os.path.dirname(self.filename)
 
         try:
-            with open(filename, 'r') as ee_file:
+            with open(self.filename, 'r') as ee_file:
                 data = yaml.safe_load(ee_file)
                 self.raw = data if data else {}
         except FileNotFoundError as exc:
             raise DefinitionError(textwrap.dedent(
                 f"""
-                Could not detect '{filename}' file in this directory.
+                Could not detect '{self.filename}' file in this directory.
                 Use -f to specify a different location.
                 """)) from exc
         except (yaml.parser.ParserError, yaml.scanner.ScannerError) as exc:

@@ -18,7 +18,7 @@ The ``ansible-builder build`` command:
 * creates a build context necessary for building an execution environment image,
 * builds the image.
 
-By default, it looks for a file named ``execution-environment.yml`` in the current directory.
+By default, it looks for a file named ``execution-environment.yml`` (or ``execution-environment.yaml``) in the current directory.
 
 To build an execution environment using the default definition file, run:
 
@@ -52,7 +52,7 @@ More recent versions of ``ansible-builder`` support multiple tags:
 ``--file``
 **********
 
-Specifies the execution environment file. To use a file named something other than ``execution-environment.yml``:
+Specifies the execution environment file. To use a file other than the default:
 
 .. code::
 
