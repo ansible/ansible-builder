@@ -7,12 +7,9 @@ images:
     name: registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
 
 dependencies:
-  # Use Ansible Core 2.14
-  ansible_core:
-    package_pip: ansible-core==2.14.0
-  # Runner
-  ansible_runner:
-    package_pip: ansible-runner==2.3.2
+  # No need to specify ansible-core or ansible-runner dependencies
+  # because they are included in the base image.
+
   # Collections to be installed using Galaxy
   galaxy:
     collections:
