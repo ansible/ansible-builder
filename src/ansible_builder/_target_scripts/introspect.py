@@ -63,14 +63,22 @@ def process_collection(path):
     CD = CollectionDefinition(path)
 
     py_file = CD.get_dependency('python')
-    pip_lines = []
-    if py_file:
-        pip_lines = pip_file_data(os.path.join(path, py_file))
+    # When requirements specified right in meta/execution-environment.yml:
+    if isinstance(py_file, list):
+        pip_lines = py_file
+    else:
+        pip_lines = []
+        if py_file:
+            pip_lines = pip_file_data(os.path.join(path, py_file))
 
     sys_file = CD.get_dependency('system')
-    bindep_lines = []
-    if sys_file:
-        bindep_lines = bindep_file_data(os.path.join(path, sys_file))
+    # When requirements specified right in meta/execution-environment.yml:
+    if isinstance(sys_file, list):
+        bindep_lines = sys_file
+    else:
+        bindep_lines = []
+        if sys_file:
+            bindep_lines = bindep_file_data(os.path.join(path, sys_file))
 
     return (pip_lines, bindep_lines)
 
@@ -181,6 +189,9 @@ class CollectionDefinition:
         req_file = self.raw.get('dependencies', {}).get(entry)
         if req_file is None:
             return None
+        # When requirements specified right in meta/execution-environment.yml:
+        if isinstance(req_file, list):
+            return req_file
         if os.path.isabs(req_file):
             raise RuntimeError(
                 'Collections must specify relative paths for requirements files. '
