@@ -3,19 +3,30 @@
 Collection-level dependencies
 =============================
 
-When Ansible Builder installs collections into an execution environment, it also installs the dependencies listed by each collection on Galaxy.
+When Ansible Builder installs collections into an execution environment, it also installs their controller-side Python or system package dependencies listed by each collection on Galaxy.
 
-For Ansible Builder to find and install collection dependencies, those dependencies must be defined in one of these files:
+For Ansible Builder to find and install collection dependencies, those dependencies must be defined in files in a collection repository.
 
-* The ``meta/execution-environment.yml`` file containing the Python
-  and/or bindep requirements or referencing other files listing them.
-  The ``.yaml`` extension is also valid on this file.
-* The ``requirements.txt`` file in the root level of the collection.
-* The ``bindep.txt`` file in the root level of the collection.
+.. note::
 
-These files must be included in the packaged collection on Galaxy.
-Ansible Builder cannot install dependencies listed in files that are included in
-the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
+  If present, the files below must be included in the packaged collection on Galaxy.
+  Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
+
+If you are a collection maintainer, make sure the controller-side dependencies are specified and :ref:`verified<verify_collection_metadata>`.
+
+We recommend you to specify paths to dependency files in the ``meta/execution-environment.yml`` file.
+Here is an example of its content:
+
+.. code:: yaml
+
+    dependencies:
+      python: meta/ee-requirements.txt  # List Python package requirements in the file
+      system: meta/ee-bindep.txt  # List system package requirements in the file
+
+If the ``meta/execution-environment.yml`` file is not present, by default, Ansible Builder will expect the dependencies to be defined in:
+
+* the ``requirements.txt`` file in the collection root directory for Python package requirements
+* the ``bindep.txt`` file in the collection root directory for system package requirements
 
 Dependency introspection
 ========================
@@ -24,6 +35,8 @@ If any dependencies are given, the introspection is run by Ansible Builder so th
 
 A user can see the introspection output during
 the builder intermediate phase using the ``build -v3`` option.
+
+.. _verify_collection_metadata:
 
 How to verify collection-level metadata
 =======================================
