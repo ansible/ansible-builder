@@ -57,6 +57,8 @@ def process_collection(path):
     """Return a tuple of (python_dependencies, system_dependencies) for the
     collection install path given.
     Both items returned are a list of dependencies.
+    If a value is already a list of dependencies,
+    the function does nothing just returning the list.
 
     :param str path: root directory of collection (this would contain galaxy.yml file)
     """
