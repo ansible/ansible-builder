@@ -28,6 +28,10 @@ If the ``meta/execution-environment.yml`` file is not present, by default, Ansib
 * the ``requirements.txt`` file in the collection root directory for Python package requirements
 * the ``bindep.txt`` file in the collection root directory for system package requirements
 
+.. note::
+
+  If your collection uses the ``requirements.txt`` or ``bindep.txt`` files in its root directory for anything else but its controller-side dependencies, for example, for listing testing requirements, make sure you use the ``meta/execution-environment.yml`` file to specify other dependency files for execution environment purposes.
+
 Dependency introspection
 ========================
 
