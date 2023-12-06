@@ -10,7 +10,7 @@ For Ansible Builder to find and install collection dependencies, those dependenc
 .. note::
 
   If present, the files below must be included in the packaged collection on Galaxy.
-  Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files are not uploaded to Galaxy.
+  Ansible Builder cannot install dependencies listed in files that are included in the ``build_ignore`` of a collection, because those files are not included in the collection artifact.
 
 If you are a collection maintainer, make sure the controller-side dependencies are specified and :ref:`verified<verify_collection_metadata>`.
 
