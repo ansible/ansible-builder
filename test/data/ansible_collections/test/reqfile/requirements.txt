@@ -2,3 +2,6 @@ pytz
 python-dateutil>=2.8.2    # intentional dash
 jinja2>=3.0    # intentional lowercase
 -r extra_req.txt
+pan-os-python==1.8.0 ; python_version >= "3.8" and python_version < "4.0" \
+    --hash=sha256:843972122ef4c5bfd17354070e3ada1285e243325f5e7cf7fd969150048becd4 \
+    --hash=sha256:da9153fe4a961a43d36016851ab06df45a37ea8612ed36b3b5b528f8394f34f5

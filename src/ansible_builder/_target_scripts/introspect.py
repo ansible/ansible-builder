@@ -26,17 +26,17 @@ def read_req_file(path):
 
 def pip_file_data(path):
     pip_content = read_req_file(path)
-
+    ignored_line = ('--hash',)
     pip_lines = []
     for line in pip_content.split('\n'):
-        if line_is_empty(line):
+        if line_is_empty(line) or line.lstrip().startswith(ignored_line):
             continue
-        if line.startswith('-r') or line.startswith('--requirement'):
+        if line.startswith(('-r', '--requirement')):
             _, new_filename = line.split(None, 1)
             new_path = os.path.join(os.path.dirname(path or '.'), new_filename)
             pip_lines.extend(pip_file_data(new_path))
         else:
-            pip_lines.append(line)
+            pip_lines.append(line.strip('\\ '))
 
     return pip_lines
 

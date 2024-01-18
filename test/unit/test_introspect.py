@@ -21,7 +21,8 @@ def test_multiple_collection_metadata(data_dir):
         # jinja2 should appear only once even though referenced in multiple
         # places, once with uppercase and another with lowercase in the name.
         'jinja2>=3.0  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile'
+        'tacacs_plus  # from collection test.reqfile',
+        'pan_os_python==1.8.0  # from collection test.reqfile'
     ], 'system': [
         'subversion [platform:rpm]  # from collection test.bindep',
         'subversion [platform:dpkg]  # from collection test.bindep'
