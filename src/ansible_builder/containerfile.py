@@ -80,6 +80,7 @@ class Containerfile:
         ])
 
         self._insert_global_args()
+        self._create_folder_copy_files()
         self._insert_custom_steps('prepend_base')
 
         if not self.definition.builder_image:
@@ -87,13 +88,13 @@ class Containerfile:
                 step = 'RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi'
                 self.steps.append(step)
 
-            # We should always make sure pip is available for later stages.
-            self.steps.append('RUN $PYCMD -m ensurepip --root /')
+            # pip needs to be available for later stages.
+            if self.definition.version >= 3 and not self.definition.options['skip_pip_install']:
+                self.steps.append('RUN /output/scripts/pip_install $PYCMD')
 
             if self.definition.ansible_ref_install_list:
                 self.steps.append('RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
 
-        self._create_folder_copy_files()
         self._insert_custom_steps('append_base')
 
         ######################################################################
@@ -145,6 +146,9 @@ class Containerfile:
 
         if image == "base":
             self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
+        else:
+            # For < v3 with a custom builder image, we always make sure pip is available.
+            self.steps.append("RUN /output/scripts/pip_install $PYCMD")
 
         self._insert_custom_steps('prepend_builder')
         self._prepare_galaxy_copy_steps()
@@ -283,7 +287,7 @@ class Containerfile:
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
         script_files = (
             'assemble', 'install-from-bindep', 'introspect.py', 'check_galaxy',
-            'check_ansible', 'entrypoint'
+            'check_ansible', 'pip_install', 'entrypoint'
         )
         for script in script_files:
             with importlib.resources.as_file(scriptres / script) as script_path:

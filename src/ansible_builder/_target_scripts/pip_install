@@ -1,0 +1,56 @@
+#!/bin/bash
+# Copyright (c) 2024 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################################################################
+# Script to encapsulate pip installation.
+#
+# Usage: pip_install <PYCMD>
+#
+# Options:
+#     PYCMD - The path to the python executable to use.
+#####################################################################
+
+set -x
+
+PYCMD=$1
+
+if [ -z "$PYCMD" ]
+then
+    echo "Usage: pip_install <PYCMD>"
+    exit 1
+fi
+
+if [ ! -x "$PYCMD" ]
+then
+    echo "$PYCMD is not an executable"
+    exit 1
+fi
+
+# This is going to be our default functionality for now. This will likely
+# need to change if we add support for non-RHEL distros.
+$PYCMD -m ensurepip --root /
+
+if [ $? -ne 0 ]
+then
+    cat<<EOF
+**********************************************************************
+ERROR - pip installation failed for Python $PYCMD
+**********************************************************************
+EOF
+    exit 1
+fi
+
+exit 0
