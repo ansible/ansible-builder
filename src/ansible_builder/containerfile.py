@@ -144,7 +144,7 @@ class Containerfile:
         self._insert_global_args()
 
         if image == "base":
-            self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
+            self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml packaging")
         else:
             # For an EE schema earlier than v3 with a custom builder image, we always make sure pip is available.
             context_dir = Path(self.build_outputs_dir).stem

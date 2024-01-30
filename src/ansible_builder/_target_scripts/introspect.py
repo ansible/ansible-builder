@@ -1,15 +1,18 @@
 import argparse
-import importlib.metadata
 import logging
 import os
+import re
 import sys
 import yaml
 
-import requirements
-
+from packaging.requirements import InvalidRequirement, Requirement
+from packaging.specifiers import SpecifierSet
+from packaging.utils import canonicalize_name
 
 base_collections_path = '/usr/share/ansible/collections'
 logger = logging.getLogger(__name__)
+
+COMMENT_RE = re.compile(r'\s*#.*$')
 
 
 def line_is_empty(line):
@@ -330,47 +333,34 @@ def sanitize_requirements(collection_py_reqs):
     :returns: A finalized list of sanitized Python requirements.
     """
     # de-duplication
-    consolidated = []
-    seen_pkgs = set()
+    consolidated = {}
 
     for collection, lines in collection_py_reqs.items():
-        try:
-            for req in requirements.parse('\n'.join(lines)):
-                if req.specifier:
-                    req.name = importlib.metadata.Prepared(req.name).normalized
-                req.collections = [collection]  # add backref for later
-                if req.name is None:
-                    consolidated.append(req)
-                    continue
-                if req.name in seen_pkgs:
-                    for prior_req in consolidated:
-                        if req.name == prior_req.name:
-                            prior_req.specs.extend(req.specs)
-                            prior_req.collections.append(collection)
-                            break
-                    continue
-                consolidated.append(req)
-                seen_pkgs.add(req.name)
-        except Exception as e:
-            logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
+        for line in lines:
+            if not (line := COMMENT_RE.sub('', line.strip())):
+                continue
+            try:
+                req = Requirement(line)
+            except InvalidRequirement as e:
+                logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
+                continue
+            req.name = canonicalize_name(req.name)
+            req.collections = [collection]  # add backref for later
+            if (prior_req := consolidated.get(req.name)) and prior_req.marker == req.marker:
+                specifiers = f'{prior_req.specifier},{req.specifier}'
+                prior_req.specifier = SpecifierSet(specifiers)
+                prior_req.collections.append(collection)
+                continue
+            consolidated[req.name] = req
 
     # removal of unwanted packages
     sanitized = []
-    for req in consolidated:
+    for name, req in consolidated.items():
         # Exclude packages, unless it was present in the user supplied requirements.
-        if req.name and req.name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
+        if name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
             logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
             continue
-        if req.vcs or req.uri:
-            # Requirement like git+ or http return as-is
-            new_line = req.line
-        elif req.name:
-            specs = [f'{cmp}{ver}' for cmp, ver in req.specs]
-            new_line = req.name + ','.join(specs)
-        else:
-            raise RuntimeError(f'Could not process {req.line}')
-
-        sanitized.append(f'{new_line}  # from collection {",".join(req.collections)}')
+        sanitized.append(f'{req}  # from collection {",".join(req.collections)}')
 
     return sanitized
 

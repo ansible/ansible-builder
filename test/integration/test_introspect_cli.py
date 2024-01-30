@@ -50,9 +50,9 @@ def test_introspect_write_python_and_sanitize(cli, data_dir, tmp_path):
     assert dest_file.read_text() == '\n'.join([
         'pyvcloud>=14,>=18.0.10  # from collection test.metadata,test.reqfile',
         'pytz  # from collection test.reqfile',
-        'python_dateutil>=2.8.2  # from collection test.reqfile',
+        'python-dateutil>=2.8.2  # from collection test.reqfile',
         'jinja2>=3.0  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile',
+        'tacacs-plus  # from collection test.reqfile',
         '',
     ])
 
