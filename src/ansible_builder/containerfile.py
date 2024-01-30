@@ -127,7 +127,7 @@ class Containerfile:
         # Second stage (aka, builder): assemble (pip installs, bindep run)
         ######################################################################
 
-        if self.definition.builder_image:
+        if self.definition.builder_image or self.definition.version == 1:
             # Note: A builder image can be specified only in V1 or V2 schema.
             image = "$EE_BUILDER_IMAGE"
         else:
@@ -147,7 +147,9 @@ class Containerfile:
         if image == "base":
             self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
         else:
-            # For < v3 with a custom builder image, we always make sure pip is available.
+            # For an EE schema earlier than v3 with a custom builder image, we always make sure pip is available.
+            context_dir = Path(self.build_outputs_dir).stem
+            self.steps.append(f'COPY {context_dir}/scripts/pip_install /output/scripts/pip_install')
             self.steps.append("RUN /output/scripts/pip_install $PYCMD")
 
         self._insert_custom_steps('prepend_builder')
