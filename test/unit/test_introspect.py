@@ -83,3 +83,47 @@ def test_yaml_extension(data_dir):
         'python': {'test_collection.test_yaml_extension': ['python-six']},
         'system': {},
     }
+
+
+def test_sanitize_pep508():
+    reqs = {
+        'a.b': [
+            'foo[ext1,ext3] == 1',
+            'bar; python_version < "2.7"',
+            'A',
+            "name",
+        ],
+        'c.d': [
+            'FOO >= 1',
+            'bar; python_version < "3.6"',
+            "name<=1",
+        ],
+        'e.f': [
+            'foo[ext2] @ git+http://github.com/foo/foo.git',
+            "name>=3",
+        ],
+        'g.h': [
+            "name>=3,<2",
+        ],
+        'i.j': [
+            "name@http://foo.com",
+        ],
+        'k.l': [
+            "name [fred,bar] @ http://foo.com ; python_version=='2.7'",
+        ],
+        'm.n': [
+            "name[quux, strange];python_version<'2.7' and platform_version=='2'",
+        ],
+    }
+
+    expected = [
+        'foo[ext1,ext2,ext3]==1,>=1@ git+http://github.com/foo/foo.git  # from collection a.b,c.d,e.f',
+        'bar; python_version < "2.7"  # from collection a.b',
+        'a  # from collection a.b',
+        'name<2,<=1,>=3@ http://foo.com  # from collection a.b,c.d,e.f,g.h,i.j',
+        'bar; python_version < "3.6"  # from collection c.d',
+        'name[bar,fred]@ http://foo.com ; python_version == "2.7"  # from collection k.l',
+        'name[quux,strange]; python_version < "2.7" and platform_version == "2"  # from collection m.n'
+    ]
+
+    assert sanitize_requirements(reqs) == expected
