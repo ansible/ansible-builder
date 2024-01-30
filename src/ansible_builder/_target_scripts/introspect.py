@@ -345,7 +345,7 @@ def sanitize_requirements(collection_py_reqs):
                 logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
                 continue
             req.name = canonicalize_name(req.name)
-            req.collections = [collection]  # add backref for later
+            req.collections = {collection: None}  # add backref for later
             key = (req.name, req.marker)
             if (prior_req := consolidated.get(key)):
                 specifiers = f'{prior_req.specifier},{req.specifier}'
@@ -355,7 +355,7 @@ def sanitize_requirements(collection_py_reqs):
                     # The first URL seen wins
                     prior_req.url = req.url
                 prior_req.extras.update(req.extras)
-                prior_req.collections.append(collection)
+                prior_req.collections.update({collection: None})
                 continue
             consolidated[key] = req
 
