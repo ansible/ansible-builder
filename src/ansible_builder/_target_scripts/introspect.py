@@ -346,16 +346,17 @@ def sanitize_requirements(collection_py_reqs):
                 continue
             req.name = canonicalize_name(req.name)
             req.collections = [collection]  # add backref for later
-            if (prior_req := consolidated.get(req.name)) and prior_req.marker == req.marker:
+            key = (req.name, req.marker)
+            if (prior_req := consolidated.get(key)):
                 specifiers = f'{prior_req.specifier},{req.specifier}'
                 prior_req.specifier = SpecifierSet(specifiers)
                 prior_req.collections.append(collection)
                 continue
-            consolidated[req.name] = req
+            consolidated[key] = req
 
     # removal of unwanted packages
     sanitized = []
-    for name, req in consolidated.items():
+    for (name, _marker), req in consolidated.items():
         # Exclude packages, unless it was present in the user supplied requirements.
         if name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
             logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
