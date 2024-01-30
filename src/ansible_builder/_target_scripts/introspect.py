@@ -354,6 +354,7 @@ def sanitize_requirements(collection_py_reqs):
                     # An explicit install URL is preferred over none
                     # The first URL seen wins
                     prior_req.url = req.url
+                prior_req.extras.update(req.extras)
                 prior_req.collections.append(collection)
                 continue
             consolidated[key] = req
