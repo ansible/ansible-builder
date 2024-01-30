@@ -17,11 +17,11 @@ def test_multiple_collection_metadata(data_dir):
         'pytz  # from collection test.reqfile',
         # python-dateutil should appear only once even though referenced in
         # multiple places, once with a dash and another with an underscore in the name.
-        'python_dateutil>=2.8.2  # from collection test.reqfile',
+        'python-dateutil>=2.8.2  # from collection test.reqfile',
         # jinja2 should appear only once even though referenced in multiple
         # places, once with uppercase and another with lowercase in the name.
         'jinja2>=3.0  # from collection test.reqfile',
-        'tacacs_plus  # from collection test.reqfile'
+        'tacacs-plus  # from collection test.reqfile'
     ], 'system': [
         'subversion [platform:rpm]  # from collection test.bindep',
         'subversion [platform:dpkg]  # from collection test.bindep'
