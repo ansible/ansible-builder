@@ -108,7 +108,6 @@ class Containerfile:
                 "",
                 "# Galaxy build stage",
                 "FROM base as galaxy",
-                "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
             ])
 
             self._insert_global_args()
