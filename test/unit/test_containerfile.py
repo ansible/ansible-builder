@@ -207,3 +207,125 @@ def test__handle_additional_build_files(build_dir_and_ee_yml):
     config_dir = tmpdir / '_build' / 'configs'
     assert config_dir.exists()
     assert (config_dir / 'ansible.cfg').exists()
+
+
+def test_pep668_v1(build_dir_and_ee_yml):
+    """
+    Test PEP668 handling with v1 format.
+    """
+    ee_data = """
+    version: 1
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
+
+
+def test_pep668_v2(build_dir_and_ee_yml):
+    """
+    Test PEP668 handling with v2 format.
+    """
+    ee_data = """
+    version: 2
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+      builder_image:
+        name: quay.io/user/mycustombuilderimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
+
+
+def test_pep668_v3(build_dir_and_ee_yml):
+    """
+    Test PEP668 handling with v3 format.
+    """
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
+
+
+def test_pep668_v3_skip_pip_install(build_dir_and_ee_yml):
+    """
+    Test PEP668 handling with v3 format and skipping pip installation.
+    """
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    options:
+      skip_pip_install: True
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "ENV PIP_BREAK_SYSTEM_PACKAGES=1" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" not in c.steps
+
+
+def test_v1_builder_image(build_dir_and_ee_yml):
+    """
+    Test for issue 646 (https://github.com/ansible/ansible-builder/issues/646).
+    Also test that pip_install is installed into the custom builder image.
+    """
+    ee_data = """
+    version: 1
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "FROM $EE_BUILDER_IMAGE as builder" in c.steps
+    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
+
+
+def test_v2_builder_image(build_dir_and_ee_yml):
+    """
+    Test that pip_install is installed into the custom v2 builder image.
+    """
+    ee_data = """
+    version: 2
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+      builder_image:
+        name: quay.io/user/mycustombuilderimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "FROM $EE_BUILDER_IMAGE as builder" in c.steps
+    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
+    assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
+
+
+def test_v2_builder_image_default(build_dir_and_ee_yml):
+    """
+    Test that pip_install is NOT installed into the builder image when not defined.
+    """
+    ee_data = """
+    version: 2
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "FROM base as builder" in c.steps
+    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" not in c.steps

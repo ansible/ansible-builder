@@ -76,9 +76,11 @@ class Containerfile:
             "# Base build stage",
             "FROM $EE_BASE_IMAGE as base",
             "USER root",
+            "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
         ])
 
         self._insert_global_args()
+        self._create_folder_copy_files()
         self._insert_custom_steps('prepend_base')
 
         if not self.definition.builder_image:
@@ -86,13 +88,13 @@ class Containerfile:
                 step = 'RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi'
                 self.steps.append(step)
 
-            # We should always make sure pip is available for later stages.
-            self.steps.append('RUN $PYCMD -m ensurepip')
+            # pip needs to be available for later stages.
+            if self.definition.version >= 3 and not self.definition.options['skip_pip_install']:
+                self.steps.append('RUN /output/scripts/pip_install $PYCMD')
 
             if self.definition.ansible_ref_install_list:
                 self.steps.append('RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
 
-        self._create_folder_copy_files()
         self._insert_custom_steps('append_base')
 
         ######################################################################
@@ -124,7 +126,7 @@ class Containerfile:
         # Second stage (aka, builder): assemble (pip installs, bindep run)
         ######################################################################
 
-        if self.definition.builder_image:
+        if self.definition.builder_image or self.definition.version == 1:
             # Note: A builder image can be specified only in V1 or V2 schema.
             image = "$EE_BUILDER_IMAGE"
         else:
@@ -135,6 +137,7 @@ class Containerfile:
             "",
             "# Builder build stage",
             f"FROM {image} as builder",
+            "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
             "WORKDIR /build",
         ])
 
@@ -142,6 +145,11 @@ class Containerfile:
 
         if image == "base":
             self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml requirements-parser")
+        else:
+            # For an EE schema earlier than v3 with a custom builder image, we always make sure pip is available.
+            context_dir = Path(self.build_outputs_dir).stem
+            self.steps.append(f'COPY {context_dir}/scripts/pip_install /output/scripts/pip_install')
+            self.steps.append("RUN /output/scripts/pip_install $PYCMD")
 
         self._insert_custom_steps('prepend_builder')
         self._prepare_galaxy_copy_steps()
@@ -156,6 +164,7 @@ class Containerfile:
             "",
             "# Final build stage",
             "FROM base as final",
+            "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
         ])
 
         self._insert_global_args()
@@ -279,7 +288,7 @@ class Containerfile:
         scriptres = importlib.resources.files('ansible_builder._target_scripts')
         script_files = (
             'assemble', 'install-from-bindep', 'introspect.py', 'check_galaxy',
-            'check_ansible', 'entrypoint'
+            'check_ansible', 'pip_install', 'entrypoint'
         )
         for script in script_files:
             with importlib.resources.as_file(scriptres / script) as script_path:

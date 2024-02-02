@@ -365,6 +365,13 @@ builder runtime functionality. Valid keys for this section are:
       of Ansible and Ansible Runner is performed on the final image. Set this
       value to ``True`` to not perform this check. The default is ``False``.
 
+    ``skip_pip_install``
+      This boolean value controls whether or not we attempt to install pip into
+      the base image. Pip is necessary for Python requirement installation, among
+      other things. You may choose to disable this step and handle installing
+      pip manually if the current method of pip installation does not work for you.
+      The default is ``False``.
+
     ``relax_passwd_permissions``
       This boolean value controls whether the ``root`` group (GID 0) is explicitly granted
       write permission to ``/etc/passwd`` in the final container image. The default entrypoint
