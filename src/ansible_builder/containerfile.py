@@ -144,7 +144,7 @@ class Containerfile:
         self._insert_global_args()
 
         if image == "base":
-            self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml packaging")
+            self.steps.append("RUN $PYCMD -m pip install --no-cache-dir bindep pyyaml")
         else:
             # For an EE schema earlier than v3 with a custom builder image, we always make sure pip is available.
             context_dir = Path(self.build_outputs_dir).stem
@@ -425,7 +425,7 @@ class Containerfile:
         # The introspect/assemble block is valid if there are any form of requirements
         if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
 
-            introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect --sanitize"
+            introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect"
 
             requirements_file_exists = os.path.exists(os.path.join(
                 self.build_outputs_dir, constants.CONTEXT_FILES['python']

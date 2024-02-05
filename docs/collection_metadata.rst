@@ -35,7 +35,7 @@ If the ``meta/execution-environment.yml`` file is not present, by default, Ansib
 Dependency introspection
 ========================
 
-If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are found and sanitized (deduped) before container image assembly.
+If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are found before container image assembly.
 
 A user can see the introspection output during
 the builder intermediate phase using the ``build -v3`` option.
@@ -63,12 +63,10 @@ Run the ``introspect`` command against your collection path:
 
 ::
 
-    ansible-builder introspect --sanitize COLLECTION_PATH
+    ansible-builder introspect COLLECTION_PATH
 
 The default collection path used by the ``ansible-galaxy`` command is ``~/.ansible/collections/``.
 Read more about collection paths in the `Ansible configuration settings <https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths>`_ guide.
-
-The ``--sanitize`` option reviews all of the collection requirements and removes duplicates. It also removes any Python requirements that should normally be excluded (see :ref:`python_deps` below).
 
 .. note::
     Use the ``-v3`` option to ``introspect`` to see logging messages about requirements that are being excluded.
@@ -94,7 +92,7 @@ Then, if the ``ansible_collection`` directory is in your home directory, you can
 
 ::
 
-  ansible-builder introspect --sanitize ~/
+  ansible-builder introspect ~/
 
 .. _python_deps:
 
