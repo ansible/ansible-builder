@@ -38,5 +38,5 @@ def test_create_help(cli):
 def test_introspect_help(cli):
     result = cli('ansible-builder introspect --help', check=False)
     help_text = result.stdout
-    assert 'usage: ansible-builder introspect [-h] [--sanitize]' in help_text
+    assert 'usage: ansible-builder introspect [-h]' in help_text
     assert re.search(r'Loops over collections in folder', help_text)
