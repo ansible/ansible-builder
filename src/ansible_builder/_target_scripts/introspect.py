@@ -5,14 +5,11 @@ import re
 import sys
 import yaml
 
-from packaging.requirements import InvalidRequirement, Requirement
-from packaging.specifiers import SpecifierSet
-from packaging.utils import canonicalize_name
-
 base_collections_path = '/usr/share/ansible/collections'
 logger = logging.getLogger(__name__)
 
-COMMENT_RE = re.compile(r'\s*#.*$')
+REQ_NORM_RE = re.compile(r'[-_.]+')
+REQ_NAME_RE = re.compile(r'^([-\w.]+)')
 
 
 def line_is_empty(line):
@@ -206,6 +203,12 @@ def simple_combine(reqs):
                 continue
 
             base_line = line.split('#')[0].strip()
+            name_match = REQ_NAME_RE.match(base_line)
+            name = REQ_NORM_RE.sub('-', name_match.group(1))
+            if name in EXCLUDE_REQUIREMENTS and collection != 'user':
+                logger.debug('# Excluding requirement %s from %s', name, collection)
+                continue
+
             if base_line in consolidated:
                 i = consolidated.index(base_line)
                 fancy_lines[i] += f', {collection}'
@@ -239,24 +242,17 @@ def parse_args(args=None):
 
 def run_introspect(args, log):
     data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
-    if args.sanitize:
-        log.info('# Sanitized dependencies for %s', args.folder)
-        data_for_write = data
-        data['python'] = sanitize_requirements(data['python'])
-        data['system'] = simple_combine(data['system'])
-    else:
-        log.info('# Dependency data for %s', args.folder)
-        data_for_write = data.copy()
-        data_for_write['python'] = simple_combine(data['python'])
-        data_for_write['system'] = simple_combine(data['system'])
+    log.info('# Dependency data for %s', args.folder)
+    data['python'] = simple_combine(data['python'])
+    data['system'] = simple_combine(data['system'])
 
     print('---')
     print(yaml.dump(data, default_flow_style=False))
 
     if args.write_pip and data.get('python'):
-        write_file(args.write_pip, data_for_write.get('python') + [''])
+        write_file(args.write_pip, data.get('python') + [''])
     if args.write_bindep and data.get('system'):
-        write_file(args.write_bindep, data_for_write.get('system') + [''])
+        write_file(args.write_bindep, data.get('system') + [''])
 
     sys.exit(0)
 
@@ -272,9 +268,7 @@ def create_introspect_parser(parser):
         )
     )
     introspect_parser.add_argument('--sanitize', action='store_true',
-                                   help=('Sanitize and de-duplicate requirements. '
-                                         'This is normally done separately from the introspect script, but this '
-                                         'option is given to more accurately test collection content.'))
+                                   help=argparse.SUPPRESS)
 
     introspect_parser.add_argument(
         'folder', default=base_collections_path, nargs='?',
@@ -317,58 +311,6 @@ EXCLUDE_REQUIREMENTS = frozenset((
     # already present in image for py3 environments
     'yaml', 'pyyaml', 'json',
 ))
-
-
-def sanitize_requirements(collection_py_reqs):
-    """
-    Cleanup Python requirements by removing duplicates and excluded packages.
-
-    The user requirements file will go through the deduplication process, but
-    skips the special package exclusion process.
-
-    :param dict collection_py_reqs: A dict of lists of Python requirements, keyed
-        by fully qualified collection name. The special key `user` holds requirements
-        from the user specified requirements file from the ``--user-pip`` CLI option.
-
-    :returns: A finalized list of sanitized Python requirements.
-    """
-    # de-duplication
-    consolidated = {}
-
-    for collection, lines in collection_py_reqs.items():
-        for line in lines:
-            if not (line := COMMENT_RE.sub('', line.strip())):
-                continue
-            try:
-                req = Requirement(line)
-            except InvalidRequirement as e:
-                logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
-                continue
-            req.name = canonicalize_name(req.name)
-            req.collections = {collection: None}  # add backref for later
-            key = (req.name, req.marker)
-            if (prior_req := consolidated.get(key)):
-                specifiers = f'{prior_req.specifier},{req.specifier}'
-                prior_req.specifier = SpecifierSet(specifiers)
-                if not prior_req.url and req.url:
-                    # An explicit install URL is preferred over none
-                    # The first URL seen wins
-                    prior_req.url = req.url
-                prior_req.extras.update(req.extras)
-                prior_req.collections.update({collection: None})
-                continue
-            consolidated[key] = req
-
-    # removal of unwanted packages
-    sanitized = []
-    for (name, _marker), req in consolidated.items():
-        # Exclude packages, unless it was present in the user supplied requirements.
-        if name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
-            logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
-            continue
-        sanitized.append(f'{req}  # from collection {",".join(req.collections)}')
-
-    return sanitized
 
 
 def write_file(filename: str, lines: list) -> bool:
