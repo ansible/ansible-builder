@@ -84,7 +84,8 @@ class TestPolicies:
         assert f"--signature-policy={tmp_path}/policy.json" in result.stdout
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
-    def test_system(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.parametrize('version', ('v2', 'v3'))
+    def test_system(self, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that a system level policy.json file will be used with the
         `system` policy.
@@ -92,7 +93,7 @@ class TestPolicies:
         Expect `--pull-always` to be present in the podman command and that
         a policy.json file is not present with the podman command.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
+        ee_def = data_dir / version / 'sig_req' / 'ee-good.yml'
 
         # Make a system policy that accepts everything.
         policy = IgnoreAll()
@@ -109,13 +110,14 @@ class TestPolicies:
         assert f"--signature-policy={tmp_path}/policy.json" not in result.stdout
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
-    def test_signature_required_success(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.parametrize('version', ('v2', 'v3'))
+    def test_signature_required_success(self, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that signed images are validated when using the signature_required policy.
 
         ee-good.yml is valid and should pass with the RPM-GPG-KEY-redhat-release keyring.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
+        ee_def = data_dir / version / 'sig_req' / 'ee-good.yml'
         keyring = data_dir / 'v2' / 'RPM-GPG-KEY-redhat-release'
         result = cli(
             f'ansible-builder build -c {tmp_path} -f {ee_def} -t {podman_ee_tag} '
@@ -129,13 +131,14 @@ class TestPolicies:
         assert "Checking if image destination supports signatures" in result.stdout
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
-    def test_signature_required_fail(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.parametrize('version', ('v2', 'v3'))
+    def test_signature_required_fail(self, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that failure to validate a signed image will fail.
 
         We force failure by supplying an empty keyring.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-good.yml'
+        ee_def = data_dir / version / 'sig_req' / 'ee-good.yml'
         keyring = data_dir / 'v2' / 'invalid-keyring'
 
         with pytest.raises(subprocess.CalledProcessError) as einfo:
@@ -146,13 +149,14 @@ class TestPolicies:
 
         assert "Source image rejected: None of the signatures were accepted" in einfo.value.stdout
 
-    def test_signature_required_no_orig(self, cli, tmp_path, data_dir, podman_ee_tag):
+    @pytest.mark.parametrize('version', ('v2', 'v3'))
+    def test_signature_required_no_orig(self, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that using a signed image, but not specifying the original image name, fails.
 
         ee-no-orig.yml is identical to ee-good.yml, except the signature_original_name is missing on an image.
         """
-        ee_def = data_dir / 'v2' / 'sig_req' / 'ee-no-orig.yml'
+        ee_def = data_dir / version / 'sig_req' / 'ee-no-orig.yml'
         keyring = data_dir / 'v2' / 'invalid-keyring'
 
         with pytest.raises(subprocess.CalledProcessError) as einfo:

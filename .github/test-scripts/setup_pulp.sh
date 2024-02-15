@@ -61,9 +61,9 @@ EOF
 PULP_IMAGE="pulp:3.23.3"
 podman pull docker.io/pulp/$PULP_IMAGE
 
-mkdir pulp
+mkdir -p pulp
 cd pulp
-mkdir settings pulp_storage pgsql containers
+mkdir -p settings pulp_storage pgsql containers
 
 echo "CONTENT_ORIGIN='http://$(hostname):8080'
 ANSIBLE_API_HOSTNAME='http://$(hostname):8080'
@@ -127,7 +127,7 @@ pulp container repository create --name testrepo
 ##############################################################################
 
 export XDG_RUNTIME_DIR=/tmp/pulptests
-mkdir $XDG_RUNTIME_DIR
+mkdir -p $XDG_RUNTIME_DIR
 
 skopeo login --username admin --password password localhost:8080 --tls-verify=false
 skopeo copy docker://registry.access.redhat.com/ubi9/ubi-minimal:latest docker://localhost:8080/testrepo/ubi-minimal --dest-tls-verify=false
