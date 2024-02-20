@@ -117,13 +117,14 @@ def test_build_prune_images(good_exec_env_definition_path, tmp_path):
     assert not aee_no_prune_images.prune_images
 
 
-def test_container_policy_default(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_default(exec_env_definition_file, tmp_path, version):
     '''
     Test default policy file behavior.
 
     Do not expect a policy file or forced pulls.
     '''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build', '-f', path, '-c', str(tmp_path)])
     assert aee.container_policy is None
@@ -131,13 +132,14 @@ def test_container_policy_default(exec_env_definition_file, tmp_path):
     assert '--pull-always' not in aee.build_command
 
 
-def test_container_policy_signature_required(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_signature_required(exec_env_definition_file, tmp_path, version):
     '''
     Test signature_required policy.
 
     Expect a policy file to be specified, and forced pulls.
     '''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
 
     keyring = tmp_path / 'keyring.gpg'
@@ -156,13 +158,14 @@ def test_container_policy_signature_required(exec_env_definition_file, tmp_path)
     assert '--pull-always' in aee.build_command
 
 
-def test_container_policy_system(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_system(exec_env_definition_file, tmp_path, version):
     '''
     Test system policy.
 
     Do NOT expect a policy file, but do expect forced pulls.
     '''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
     aee = prepare(['build',
                    '-f', path,
@@ -175,9 +178,10 @@ def test_container_policy_system(exec_env_definition_file, tmp_path):
     assert '--pull-always' in aee.build_command
 
 
-def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_not_podman(exec_env_definition_file, tmp_path, version):
     '''Test --container-policy usage fails with non-podman runtime'''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
 
     with pytest.raises(ValueError, match='--container-policy is only valid with the podman runtime'):
@@ -190,9 +194,10 @@ def test_container_policy_not_podman(exec_env_definition_file, tmp_path):
                  ])
 
 
-def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path, version):
     '''Test that a container policy that requires a keyring fails when it is missing.'''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(ValueError, match='--container-policy=signature_required requires --container-keyring'):
         prepare(['build',
@@ -204,9 +209,10 @@ def test_container_policy_missing_keyring(exec_env_definition_file, tmp_path):
 
 
 @pytest.mark.parametrize('policy', ('system', 'ignore_all'))
-def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path, policy):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path, policy, version):
     '''Test that a container policy that doesn't require a keyring fails when it is supplied.'''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(ValueError, match=f'--container-keyring is not valid with --container-policy={policy}'):
         prepare(['build',
@@ -218,9 +224,10 @@ def test_container_policy_unnecessary_keyring(exec_env_definition_file, tmp_path
                  ])
 
 
-def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_path):
+@pytest.mark.parametrize('version', (2, 3))
+def test_container_policy_with_build_args_cli_opt(exec_env_definition_file, tmp_path, version):
     '''Test specifying image with --build-arg opt will fail'''
-    content = {'version': 2}
+    content = {'version': version}
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(ValueError, match='EE_BASE_IMAGE not allowed in --build-arg option with version 2 format'):
         prepare(['build',
