@@ -126,7 +126,7 @@ class AnsibleBuilder:
         resolved_keyring = None
 
         if policy is not None:
-            if self.version != 2:
+            if self.version == 1:
                 raise ValueError(f'--container-policy not valid with version {self.version} format')
 
             # Require podman runtime
