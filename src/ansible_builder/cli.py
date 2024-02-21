@@ -194,7 +194,13 @@ def parse_args(args=None):
 
     add_container_options(subparsers)
 
-    return parser.parse_args(args)
+    args = parser.parse_args(args)
+
+    # Tag default must be handled differently. See comment for --tag option.
+    if 'tag' not in vars(args) or not args.tag:
+        args.tag = [constants.default_tag]
+
+    return args
 
 
 class BuildArgAction(argparse.Action):

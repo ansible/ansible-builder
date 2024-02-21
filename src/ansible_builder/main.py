@@ -46,13 +46,7 @@ class AnsibleBuilder:
         self.definition = UserDefinition(filename=filename)
         self.definition.validate()
 
-        self.tags = [constants.default_tag]
-        if self.definition.version >= 3 and self.definition.options['tags']:
-            self.tags = self.definition.options['tags']
-
-        if tag:
-            self.tags = tag
-
+        self.tags = tag or []
         self.build_context = build_context
         self.build_outputs_dir = os.path.join(
             build_context, constants.user_content_subfolder)
