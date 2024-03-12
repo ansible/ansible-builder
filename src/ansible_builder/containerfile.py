@@ -24,7 +24,8 @@ class Containerfile:
                  output_filename: str | None = None,
                  galaxy_keyring: str | None = None,
                  galaxy_required_valid_signature_count: int | None = None,
-                 galaxy_ignore_signature_status_codes: list | None = None
+                 galaxy_ignore_signature_status_codes: list | None = None,
+                 mounts: list | None = None,
                  ) -> None:
         """
         Initialize a Containerfile object for instruction file creation.
@@ -53,6 +54,7 @@ class Containerfile:
         self.copied_galaxy_keyring = None
         self.galaxy_required_valid_signature_count = galaxy_required_valid_signature_count
         self.galaxy_ignore_signature_status_codes = galaxy_ignore_signature_status_codes
+        self.mounts = " ".join(f"--mount={m}" for m in mounts or [])
         self.steps: list = []
 
     def prepare(self) -> None:
@@ -207,6 +209,7 @@ class Containerfile:
         """
         with open(self.path, 'w') as f:
             for step in self.steps:
+                step = self._add_mounts_for_run_step(step)
                 f.write(step + self.newline_char)
 
     def _insert_global_args(self, include_values: bool = False) -> None:
@@ -473,3 +476,14 @@ class Containerfile:
 
     def _prepare_user_steps(self, uid) -> None:
         self.steps.append(f"USER {uid}")
+
+    def _add_mounts_for_run_step(self, step: str) -> str:
+        if not self.mounts:
+            return step
+
+        if step.startswith("RUN "):
+            run_cmd = step.split(" ")
+            run_cmd.insert(1, self.mounts)
+            return " ".join(run_cmd)
+
+        return step

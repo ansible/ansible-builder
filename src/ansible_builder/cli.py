@@ -120,6 +120,20 @@ def add_container_options(parser):
     )
 
     build_command_parser.add_argument(
+        '--secret',
+        action='append',
+        dest='secrets',
+        help='Build-time secrets references to pass over to docker/podman '
+             'build command. Use in combination with `--mount` argument')
+
+    build_command_parser.add_argument(
+        '--ssh',
+        action='append',
+        dest='ssh_sockets',
+        help='Build-time SSH sockets references to pass over to docker/podman '
+             'build command. Use in combination with `--mount` argument')
+
+    build_command_parser.add_argument(
         '--no-cache',
         action='store_true',
         help='Do not use cache when building the image',
@@ -168,6 +182,14 @@ def add_container_options(parser):
                             '(default depends on --container-runtime, '
                             f"{' and '.join([' for '.join([v, k]) for k, v in constants.runtime_files.items()])}"
                        )
+
+        p.add_argument(
+            '--mount',
+            action='append',
+            dest='mounts',
+            help="Mounts for all Dockerfile/Containerfile's `RUN` instructions. "
+                 'These should reference the same mounts provided in `--secret` and '
+                 '`--ssh` arguments')
 
         p.add_argument('--galaxy-keyring',
                        help='Keyring for collection signature verification during installs from Galaxy. '
