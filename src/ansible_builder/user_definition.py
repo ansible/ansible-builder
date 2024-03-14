@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import textwrap
@@ -179,12 +180,17 @@ class UserDefinition:
     def options(self):
         return self.raw.get('options', {})
 
-    def get_dep_abs_path(self, entry):
+    @functools.cache
+    def get_dep_abs_path(self, entry, exclude=False):
         """Unique to the user EE definition, files can be referenced by either
         an absolute path or a path relative to the EE definition folder
         This method will return the absolute path.
         """
-        req_file = self.raw.get('dependencies', {}).get(entry)
+        deps = self.raw.get('dependencies', {})
+        if exclude:
+            deps = deps.get('exclude', {})
+
+        req_file = deps.get(entry)
 
         if not req_file:
             return None
@@ -240,10 +246,11 @@ class UserDefinition:
             # HACK: non-file deps for dynamic base/builder
             if not value:
                 continue
-            requirement_path = self.get_dep_abs_path(item)
-            if requirement_path:
-                if not os.path.exists(requirement_path):
-                    raise DefinitionError(f"Dependency file {requirement_path} does not exist.")
+            for exclude in (False, True):
+                requirement_path = self.get_dep_abs_path(item, exclude=exclude)
+                if requirement_path:
+                    if not os.path.exists(requirement_path):
+                        raise DefinitionError(f"Dependency file {requirement_path} does not exist.")
 
         # Validate and set any user-specified build arguments
         build_arg_defaults = self.raw.get('build_arg_defaults')

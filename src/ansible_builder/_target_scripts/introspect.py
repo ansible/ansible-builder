@@ -78,7 +78,8 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
+def process(data_dir=base_collections_path, user_pip=None, user_bindep=None,
+            user_pip_exclude=None, user_bindep_exclude=None):
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
 
@@ -115,10 +116,18 @@ def process(data_dir=base_collections_path, user_pip=None, user_bindep=None):
         col_pip_lines = pip_file_data(user_pip)
         if col_pip_lines:
             py_req['user'] = col_pip_lines
+    if user_pip_exclude:
+        col_pip_exclude_lines = pip_file_data(user_pip_exclude)
+        if col_pip_exclude_lines:
+            py_req['exclude'] = col_pip_exclude_lines
     if user_bindep:
         col_sys_lines = bindep_file_data(user_bindep)
         if col_sys_lines:
             sys_req['user'] = col_sys_lines
+    if user_bindep_exclude:
+        col_sys_exclude_lines = bindep_file_data(user_bindep_exclude)
+        if col_sys_exclude_lines:
+            sys_req['exclude'] = col_sys_exclude_lines
 
     return {
         'python': py_req,
@@ -238,11 +247,15 @@ def parse_args(args=None):
 
 
 def run_introspect(args, log):
-    data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep)
+    data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep,
+                   user_pip_exclude=args.user_pip_exclude, user_bindep_exclude=args.user_bindep_exclude)
     if args.sanitize:
         log.info('# Sanitized dependencies for %s', args.folder)
         data_for_write = data
-        data['python'] = sanitize_requirements(data['python'])
+        data['python'] = sanitize_requirements(
+            data['python'],
+            exclude=sanitize_requirements({'exclude': data['python'].pop('exclude', {})}, name_only=True)
+        )
         data['system'] = simple_combine(data['system'])
     else:
         log.info('# Dependency data for %s', args.folder)
@@ -291,8 +304,16 @@ def create_introspect_parser(parser):
         help='An additional file to combine with collection pip requirements.'
     )
     introspect_parser.add_argument(
+        '--user-pip-exclude', dest='user_pip_exclude',
+        help='An additional file to exclude specific pip requirements.'
+    )
+    introspect_parser.add_argument(
         '--user-bindep', dest='user_bindep',
         help='An additional file to combine with collection bindep requirements.'
+    )
+    introspect_parser.add_argument(
+        '--user-bindep-exclude', dest='user_bindep_exclude',
+        help='An additional file to exclude specific bindep requirements.'
     )
     introspect_parser.add_argument(
         '--write-pip', dest='write_pip',
@@ -319,7 +340,7 @@ EXCLUDE_REQUIREMENTS = frozenset((
 ))
 
 
-def sanitize_requirements(collection_py_reqs):
+def sanitize_requirements(collection_py_reqs, exclude=None, name_only=False):
     """
     Cleanup Python requirements by removing duplicates and excluded packages.
 
@@ -332,6 +353,9 @@ def sanitize_requirements(collection_py_reqs):
 
     :returns: A finalized list of sanitized Python requirements.
     """
+    if exclude is None:
+        exclude = []
+
     # de-duplication
     consolidated = {}
 
@@ -366,7 +390,13 @@ def sanitize_requirements(collection_py_reqs):
         if name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
             logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
             continue
-        sanitized.append(f'{req}  # from collection {",".join(req.collections)}')
+        if name in exclude and 'user' not in req.collections:
+            logger.debug('# Explicitly excluding requirement %s from %s', req.name, req.collections)
+            continue
+        if name_only:
+            sanitized.append(f'{req.name}')
+        else:
+            sanitized.append(f'{req}  # from collection {",".join(req.collections)}')
 
     return sanitized
 
