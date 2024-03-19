@@ -476,7 +476,7 @@ class Containerfile:
                     constants.user_content_subfolder,
                     f"exclude-{constants.CONTEXT_FILES['system']}"
                 )
-                self.steps.append(f"COPY {relative_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
+                self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
                 introspect_cmd += f" --user-bindep-exclude=exclude-{constants.CONTEXT_FILES['system']}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"

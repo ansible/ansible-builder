@@ -394,7 +394,6 @@ schema_v3 = {
 schema_v31 = deepcopy(schema_v3)
 schema_v31['properties']['dependencies']['properties']['exclude'] = {
     "python": TYPE_StringOrListOfStrings,
-    "galaxy": TYPE_DictOrStringOrListOfStrings,
     "system": TYPE_StringOrListOfStrings,
 }
 

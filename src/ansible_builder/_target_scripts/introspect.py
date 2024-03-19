@@ -202,11 +202,14 @@ class CollectionDefinition:
         return req_file
 
 
-def simple_combine(reqs):
+def simple_combine(reqs, exclude=None, name_only=False):
     """Given a dictionary of requirement lines keyed off collections,
     return a list with the most basic of de-duplication logic,
     and comments indicating the sources based off the collection keys
     """
+    if exclude is None:
+        exclude = []
+
     consolidated = []
     fancy_lines = []
     for collection, lines in reqs.items():
@@ -215,11 +218,20 @@ def simple_combine(reqs):
                 continue
 
             base_line = line.split('#')[0].strip()
+            pkg_name = base_line.split()[0].lower()
+            if pkg_name in exclude:
+                logger.debug(f'# Explicitly excluding requirement {pkg_name} from {collection}')
+                continue
+
             if base_line in consolidated:
                 i = consolidated.index(base_line)
-                fancy_lines[i] += f', {collection}'
+                if not name_only:
+                    fancy_lines[i] += f', {collection}'
             else:
-                fancy_line = f'{base_line}  # from collection {collection}'
+                if name_only:
+                    fancy_line = pkg_name
+                else:
+                    fancy_line = f'{base_line}  # from collection {collection}'
                 consolidated.append(base_line)
                 fancy_lines.append(fancy_line)
 
@@ -256,7 +268,10 @@ def run_introspect(args, log):
             data['python'],
             exclude=sanitize_requirements({'exclude': data['python'].pop('exclude', {})}, name_only=True)
         )
-        data['system'] = simple_combine(data['system'])
+        data['system'] = simple_combine(
+            data['system'],
+            exclude=simple_combine({'exclude': data['system'].pop('exclude', {})}, name_only=True)
+        )
     else:
         log.info('# Dependency data for %s', args.folder)
         data_for_write = data.copy()
@@ -369,6 +384,10 @@ def sanitize_requirements(collection_py_reqs, exclude=None, name_only=False):
                 logger.warning('Warning: failed to parse requirements from %s, error: %s', collection, e)
                 continue
             req.name = canonicalize_name(req.name)
+            if req.name in exclude and collection != 'user':
+                logger.debug(f'# Explicitly excluding requirement {req.name} from {collection}')
+                continue
+
             req.collections = {collection: None}  # add backref for later
             key = (req.name, req.marker)
             if (prior_req := consolidated.get(key)):
@@ -389,9 +408,6 @@ def sanitize_requirements(collection_py_reqs, exclude=None, name_only=False):
         # Exclude packages, unless it was present in the user supplied requirements.
         if name.lower() in EXCLUDE_REQUIREMENTS and 'user' not in req.collections:
             logger.debug('# Excluding requirement %s from %s', req.name, req.collections)
-            continue
-        if name in exclude and 'user' not in req.collections:
-            logger.debug('# Explicitly excluding requirement %s from %s', req.name, req.collections)
             continue
         if name_only:
             sanitized.append(f'{req.name}')
