@@ -406,6 +406,7 @@ def float_or_int(v):
             return float(v)
     return int(v)
 
+
 def validate_schema(ee_def: dict):
     schema_version = 1
     if 'version' in ee_def:
