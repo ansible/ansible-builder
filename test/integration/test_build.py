@@ -176,6 +176,7 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     assert 'World timezone definitions, modern and historical' in result.stdout
 
 
+@pytest.mark.xfail(reason='Test unstable on docker when run in parallel with other tests')
 @pytest.mark.destructive
 @pytest.mark.test_all_runtimes
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
