@@ -387,10 +387,10 @@ class Containerfile:
         ])
 
     def _prepare_build_context(self) -> None:
-        deps = []
+        deps: list[str] = []
         for exclude in (False, True):
             deps.extend(
-                self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')
+                self.definition.get_dep_abs_path(thing, exclude=exclude) for thing in ('galaxy', 'system', 'python')
             )
         if any(deps):
             self.steps.extend([
@@ -431,10 +431,10 @@ class Containerfile:
 
     def _prepare_introspect_assemble_steps(self) -> None:
         # The introspect/assemble block is valid if there are any form of requirements
-        deps = []
+        deps: list[str] = []
         for exclude in (False, True):
             deps.extend(
-                self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')
+                self.definition.get_dep_abs_path(thing, exclude=exclude) for thing in ('galaxy', 'system', 'python')
             )
         if any(deps):
             introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect --sanitize"

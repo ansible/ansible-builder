@@ -391,7 +391,7 @@ schema_v3 = {
     },
 }
 
-schema_v31 = deepcopy(schema_v3)
+schema_v31: dict = deepcopy(schema_v3)
 schema_v31['properties']['dependencies']['properties']['exclude'] = {
     "python": TYPE_StringOrListOfStrings,
     "system": TYPE_StringOrListOfStrings,
@@ -401,7 +401,7 @@ schema_v31['properties']['dependencies']['properties']['exclude'] = {
 def float_or_int(v):
     if isinstance(v, (float, int)):
         return v
-    elif isinstance(v, str):
+    if isinstance(v, str):
         if '.' in v:
             return float(v)
     return int(v)

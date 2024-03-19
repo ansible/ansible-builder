@@ -220,7 +220,7 @@ def simple_combine(reqs, exclude=None, name_only=False):
             base_line = line.split('#')[0].strip()
             pkg_name = base_line.split()[0].lower()
             if pkg_name in exclude:
-                logger.debug(f'# Explicitly excluding requirement {pkg_name} from {collection}')
+                logger.debug('# Explicitly excluding requirement %s from %s', pkg_name, collection)
                 continue
 
             if base_line in consolidated:
@@ -385,7 +385,7 @@ def sanitize_requirements(collection_py_reqs, exclude=None, name_only=False):
                 continue
             req.name = canonicalize_name(req.name)
             if req.name in exclude and collection != 'user':
-                logger.debug(f'# Explicitly excluding requirement {req.name} from {collection}')
+                logger.debug('# Explicitly excluding requirement %s from %s', req.name, collection)
                 continue
 
             req.collections = {collection: None}  # add backref for later
