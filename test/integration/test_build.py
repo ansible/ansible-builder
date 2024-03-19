@@ -176,6 +176,7 @@ def test_has_pytz(cli, runtime, data_dir, ee_tag, tmp_path):
     assert 'World timezone definitions, modern and historical' in result.stdout
 
 
+@pytest.mark.serial
 @pytest.mark.destructive
 @pytest.mark.test_all_runtimes
 def test_build_layer_reuse(cli, runtime, data_dir, ee_tag, tmp_path):
@@ -265,9 +266,3 @@ def test_galaxy_signing_extra_args(cli, runtime, data_dir, ee_tag, tmp_path):
 
     assert "--ignore-signature-status-code NODATA" in result.stdout
     assert "--required-valid-signature-count 3" in result.stdout
-
-
-@pytest.mark.serial
-def test_placeholder_serial():
-    # easiest way to prevent failures when there are no serial tests
-    pass
