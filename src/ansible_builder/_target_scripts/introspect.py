@@ -8,6 +8,7 @@ import yaml
 base_collections_path = '/usr/share/ansible/collections'
 logger = logging.getLogger(__name__)
 
+# https://peps.python.org/pep-0503/#normalized-names
 REQ_NORM_RE = re.compile(r'[-_.]+')
 REQ_NAME_RE = re.compile(r'^([-\w.]+)')
 
