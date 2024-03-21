@@ -259,16 +259,19 @@ class Containerfile:
             if not new_name:
                 continue
 
-            requirement_path = self.definition.get_dep_abs_path(item)
-            if requirement_path is None:
-                continue
-            dest = os.path.join(
-                self.build_context, constants.user_content_subfolder, new_name)
+            for exclude in (False, True):
+                if exclude is True:
+                    new_name = f'exclude-{new_name}'
+                requirement_path = self.definition.get_dep_abs_path(item, exclude=exclude)
+                if requirement_path is None:
+                    continue
+                dest = os.path.join(
+                    self.build_context, constants.user_content_subfolder, new_name)
 
-            # Ignore modification time of the requirement file because we could
-            # be writing it out dynamically (inline EE reqs), and we only care
-            # about the contents anyway.
-            copy_file(requirement_path, dest, ignore_mtime=True)
+                # Ignore modification time of the requirement file because we could
+                # be writing it out dynamically (inline EE reqs), and we only care
+                # about the contents anyway.
+                copy_file(requirement_path, dest, ignore_mtime=True)
 
         if self.original_galaxy_keyring:
             copy_file(
@@ -384,7 +387,12 @@ class Containerfile:
         ])
 
     def _prepare_build_context(self) -> None:
-        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
+        deps: list[str] = []
+        for exclude in (False, True):
+            deps.extend(
+                self.definition.get_dep_abs_path(thing, exclude=exclude) for thing in ('galaxy', 'system', 'python')
+            )
+        if any(deps):
             self.steps.extend([
                 f"COPY {constants.user_content_subfolder} /build",
                 "WORKDIR /build",
@@ -423,8 +431,12 @@ class Containerfile:
 
     def _prepare_introspect_assemble_steps(self) -> None:
         # The introspect/assemble block is valid if there are any form of requirements
-        if any(self.definition.get_dep_abs_path(thing) for thing in ('galaxy', 'system', 'python')):
-
+        deps: list[str] = []
+        for exclude in (False, True):
+            deps.extend(
+                self.definition.get_dep_abs_path(thing, exclude=exclude) for thing in ('galaxy', 'system', 'python')
+            )
+        if any(deps):
             introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect"
 
             requirements_file_exists = os.path.exists(os.path.join(
@@ -439,11 +451,34 @@ class Containerfile:
                 self.steps.append(f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
                 # WORKDIR is /build, so we use the (shorter) relative paths there
                 introspect_cmd += f" --user-pip={constants.CONTEXT_FILES['python']}"
+
+            pip_exclude_exists = os.path.exists(os.path.join(
+                self.build_outputs_dir, f"exclude-{constants.CONTEXT_FILES['python']}"
+            ))
+            if pip_exclude_exists:
+                relative_pip_exclude_path = os.path.join(
+                    constants.user_content_subfolder,
+                    f"exclude-{constants.CONTEXT_FILES['python']}"
+                )
+                self.steps.append(f"COPY {relative_pip_exclude_path} exclude-{constants.CONTEXT_FILES['python']}")
+                introspect_cmd += f" --user-pip-exclude=exclude-{constants.CONTEXT_FILES['python']}"
+
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
             if bindep_exists:
                 relative_bindep_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['system'])
                 self.steps.append(f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}")
                 introspect_cmd += f" --user-bindep={constants.CONTEXT_FILES['system']}"
+
+            exclude_bindep_exists = os.path.exists(os.path.join(
+                self.build_outputs_dir, f"exclude-{constants.CONTEXT_FILES['system']}"
+            ))
+            if exclude_bindep_exists:
+                relative_exclude_bindep_path = os.path.join(
+                    constants.user_content_subfolder,
+                    f"exclude-{constants.CONTEXT_FILES['system']}"
+                )
+                self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
+                introspect_cmd += f" --user-bindep-exclude=exclude-{constants.CONTEXT_FILES['system']}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 
