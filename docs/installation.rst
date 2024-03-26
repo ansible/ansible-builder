@@ -17,7 +17,7 @@ Requirements
 
    The **recommended** approach to install ``ansible-builder`` is using the
    ``ansible-dev-tools`` package.
-   `Ansible Development Tools (ADT) <https://ansible.readthedocs.io/projects/dev-tools/>`_
+   | `Ansible Development Tools (ADT) <https://ansible.readthedocs.io/projects/dev-tools/>`_
    aims to streamline the setup and usage of several tools needed in order to
    create `Ansible <https://www.ansible.com>`_ content. ADT combines critical Ansible
    development packages into a unified Python package.
