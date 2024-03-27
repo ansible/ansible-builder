@@ -14,7 +14,7 @@ For Ansible Builder to find and install collection dependencies, those dependenc
 
 If you are a collection maintainer, make sure the controller-side dependencies are specified and :ref:`verified<verify_collection_metadata>`.
 
-We recommend you to specify paths to dependency files in the ``meta/execution-environment.yml`` file.
+We recommend you specify paths to dependency files in the ``meta/execution-environment.yml`` file.
 Here is an example of its content:
 
 .. code:: yaml
@@ -51,7 +51,7 @@ How to verify collection-level metadata
 
 Collection developers can verify that dependencies specified in the collection will be processed correctly by Ansible Builder.
 
-In order to do that, the collection has to be installed locally.
+To do that, the collection has to be installed locally.
 
 When installing collections using ansible-galaxy
 ------------------------------------------------
