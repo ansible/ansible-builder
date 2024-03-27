@@ -8,7 +8,7 @@ or ``execution-environment.yaml``. This file tells Ansible Builder how to create
 (``Containerfile`` for Podman, ``Dockerfile`` for Docker) and build context for your container image.
 
 .. note::
-   This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which offers substantially more configurability and functionality than previous versions.
+   This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which is more configurable and functional than previous versions.
 
 .. contents::
    :local:
@@ -376,7 +376,7 @@ builder runtime functionality. Valid keys for this section are:
       This boolean value controls whether the ``root`` group (GID 0) is explicitly granted
       write permission to ``/etc/passwd`` in the final container image. The default entrypoint
       script may attempt to update ``/etc/passwd`` under some container runtimes with dynamically
-      created users to ensure a fully-functional POSIX user environment and home directory. Disabling
+      created users to ensure a fully functional POSIX user environment and home directory. Disabling
       this capability can cause failures of software features that require users to be listed in
       ``/etc/passwd`` with a valid and writeable home directory (eg, ``async`` in ansible-core, and the
       ``~username`` shell expansion). The default is ``True``.
