@@ -1,0 +1,2 @@
+tacacs_plus
+pyvcloud>=18.0.10  # duplicate with test.metadata collection

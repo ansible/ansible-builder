@@ -1,5 +1,4 @@
 pytz
 python-dateutil>=2.8.2    # intentional dash
 jinja2>=3.0    # intentional lowercase
-tacacs_plus
-pyvcloud>=18.0.10  # duplicate with test.metadata collection
+-r extra_req.txt
