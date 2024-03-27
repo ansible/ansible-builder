@@ -13,7 +13,7 @@ Requirements
 - The ``--container-runtime`` option must correspond to the containerization tool you use.
 - ``ansible-builder`` version ``3.x`` requires Python ``3.9`` or higher.
 
-Install from PyPi
+Install from PyPI
 *****************
 
 .. code-block:: shell
