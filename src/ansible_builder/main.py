@@ -18,6 +18,9 @@ class AnsibleBuilder:
                  action: str,
                  filename: str | None = None,
                  build_args: dict[str, str] | None = None,
+                 secrets: list[str] | None = None,
+                 ssh_sockets: list[str] | None = None,
+                 mounts: list[str] | None = None,
                  build_context: str = constants.default_build_context,
                  tag: list | None = None,
                  container_runtime: str = constants.default_container_runtime,
@@ -83,6 +86,9 @@ class AnsibleBuilder:
             build_context, constants.user_content_subfolder)
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
+        self.secrets = secrets or []
+        self.ssh_sockets = ssh_sockets or []
+        self.mounts = mounts or []
         self.no_cache = no_cache
         self.prune_images = prune_images
 
@@ -93,7 +99,8 @@ class AnsibleBuilder:
             output_filename=output_filename,
             galaxy_keyring=galaxy_keyring,
             galaxy_required_valid_signature_count=galaxy_required_valid_signature_count,
-            galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes)
+            galaxy_ignore_signature_status_codes=galaxy_ignore_signature_status_codes,
+            mounts=self.mounts)
 
         self.verbosity = verbosity
         self.container_policy, self.container_keyring = self._handle_image_validation_opts(
@@ -200,6 +207,9 @@ class AnsibleBuilder:
                 build_arg = f"--build-arg={key}"
 
             command.append(build_arg)
+
+        command.extend(f"--secret={s}" for s in self.secrets)
+        command.extend(f"--ssh={s}" for s in self.ssh_sockets)
 
         if self.no_cache:
             command.append('--no-cache')
