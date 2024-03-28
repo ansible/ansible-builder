@@ -1,4 +1,3 @@
-from copy import deepcopy
 import os
 
 from jsonschema import validate, SchemaError, ValidationError
@@ -273,6 +272,10 @@ schema_v3 = {
                         {"required": ["package_pip"]},
                     ],
                 },
+                "exclude": {
+                    "python": TYPE_StringOrListOfStrings,
+                    "system": TYPE_StringOrListOfStrings,
+                },
             },
         },
 
@@ -391,31 +394,16 @@ schema_v3 = {
     },
 }
 
-schema_v31: dict = deepcopy(schema_v3)
-schema_v31['properties']['dependencies']['properties']['exclude'] = {
-    "python": TYPE_StringOrListOfStrings,
-    "system": TYPE_StringOrListOfStrings,
-}
-
-
-def float_or_int(v):
-    if isinstance(v, (float, int)):
-        return v
-    if isinstance(v, str):
-        if '.' in v:
-            return float(v)
-    return int(v)
-
 
 def validate_schema(ee_def: dict):
     schema_version = 1
     if 'version' in ee_def:
         try:
-            schema_version = float_or_int(ee_def['version'])
+            schema_version = int(ee_def['version'])
         except ValueError as e:
             raise DefinitionError(f"Schema version not an integer: {ee_def['version']}") from e
 
-    if schema_version not in (1, 2, 3, 3.1):
+    if schema_version not in (1, 2, 3):
         raise DefinitionError(f"Unsupported schema version: {schema_version}")
 
     try:
@@ -425,8 +413,6 @@ def validate_schema(ee_def: dict):
             validate(instance=ee_def, schema=schema_v2)
         elif schema_version == 3:
             validate(instance=ee_def, schema=schema_v3)
-        elif schema_version == 3.1:
-            validate(instance=ee_def, schema=schema_v31)
     except (SchemaError, ValidationError) as e:
         raise DefinitionError(msg=e.message, path=e.absolute_schema_path) from e
 

@@ -50,6 +50,11 @@ Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify
         - six
         - psutil
       system: bindep.txt
+      exclude:
+        python:
+          - docker
+        system:
+          - python3-Cython
 
     images:
       base_image:
@@ -244,6 +249,28 @@ The following keys are valid for this section:
     ``system``
       The system packages to be installed, in bindep format. This may either
       be a filename, or a list of requirements (see below for an example).
+
+    ``exclude``
+      A list of Python or system requirements to be excluded from the top-level dependency requirements
+      of referenced collections. These exclusions will not apply to the user supplied Python or system
+      dependencies, nor will they apply to dependencies of dependencies (top-level only). Python dependency
+      exclusions should be a list of package names appearing under the ``python`` key name. System dependency
+      exclusions should be a list of system package names appearing under the ``system`` key name.
+
+      Example:
+
+      .. code:: yaml
+
+        dependencies:
+            exclude:
+                python:
+                    - docker
+                system:
+                    - python3-Cython
+
+      .. note::
+        The ``exclude`` option requires ``ansible-builder`` version ``3.1`` or newer.
+
 
 The following example uses filenames that contain various dependencies:
 
