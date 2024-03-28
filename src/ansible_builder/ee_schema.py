@@ -272,6 +272,10 @@ schema_v3 = {
                         {"required": ["package_pip"]},
                     ],
                 },
+                "exclude": {
+                    "python": TYPE_StringOrListOfStrings,
+                    "system": TYPE_StringOrListOfStrings,
+                },
             },
         },
 
