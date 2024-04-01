@@ -8,9 +8,12 @@ import yaml
 base_collections_path = '/usr/share/ansible/collections'
 logger = logging.getLogger(__name__)
 
+# regex for a comment at the start of a line, or embedded with leading space(s)
+COMMENT_RE = re.compile(r'(?:^|\s+)#.*$')
+
 # https://peps.python.org/pep-0503/#normalized-names
 REQ_NORM_RE = re.compile(r'[-_.]+')
-REQ_NAME_RE = re.compile(r'^([-\w.]+)')
+REQ_NAME_RE = re.compile(r'^([^-][-\w.]+)')
 
 
 def line_is_empty(line):
@@ -201,9 +204,12 @@ class CollectionDefinition:
 
 
 def simple_combine(reqs, exclude=None, name_only=False):
-    """Given a dictionary of requirement lines keyed off collections,
-    return a list with the most basic of de-duplication logic,
-    and comments indicating the sources based off the collection keys
+    """
+    Given a dictionary of Python requirement lines keyed off collections,
+    return a list a cleaned up (no source comments) requirements annotated
+    with comments indicating the sources based off the collection keys.
+
+    Currently, non-pep508 compliant entries are passed through.
     """
     if exclude is None:
         exclude = []
@@ -212,11 +218,17 @@ def simple_combine(reqs, exclude=None, name_only=False):
     fancy_lines = []
     for collection, lines in reqs.items():
         for line in lines:
-            if line_is_empty(line):
+            # strip comments
+            if not (base_line := COMMENT_RE.sub('', line.strip())):
                 continue
 
-            base_line = line.split('#')[0].strip()
-            name_match = REQ_NAME_RE.match(base_line)
+            # Did not match expected name format (maybe a pip option?), just pass thru
+            if not (name_match := REQ_NAME_RE.match(base_line)):
+                logger.warning("Passing through unparsable requirement: %s", base_line)
+                fancy_line = f'{base_line}  # from collection {collection}'
+                fancy_lines.append(fancy_line)
+                continue
+
             name = REQ_NORM_RE.sub('-', name_match.group(1))
             if name in exclude and collection not in {'user', 'exclude'}:
                 logger.debug('# Explicitly excluding requirement %s from %s', name, collection)

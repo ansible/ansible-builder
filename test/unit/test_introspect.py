@@ -129,3 +129,65 @@ def test_sanitize_pep508():
     ]
 
     assert simple_combine(reqs) == expected
+
+
+def test_comment_parsing():
+    """
+    Test that simple_combine() does not remove embedded URL anchors due to comment parsing.
+    """
+    reqs = {
+        'a.b': [
+            '# comment 1',
+            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+            'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage  # inline comment',
+            'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage #inline comment that hates leading spaces',
+            '    # crazy indented comment (waka waka!)',
+            '####### something informative'
+            '    ',
+            '',
+        ]
+    }
+
+    expected = [
+        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
+        'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage  # from collection a.b',
+        'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage  # from collection a.b',
+    ]
+
+    assert simple_combine(reqs) == expected
+
+
+def test_pass_thru():
+    """
+    Test that simple_combine() will pass through non-pep508 data.
+    """
+    reqs = {
+        # various VCS and URL options
+        'a.b': [
+            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+            'svn+svn://svn.repo/some_pkg/trunk/#egg=SomePackage',
+            'https://example.com/foo/foo-0.26.0-py2.py3-none-any.whl',
+            'http://my.package.repo/SomePackage-1.0.4.zip',
+        ],
+
+        # various 'pip install' options
+        'c.d': [
+            '-i https://pypi.org/simple',
+            '--extra-index-url http://my.package.repo/simple',
+            '--no-clean',
+            '-e svn+http://svn.example.com/svn/MyProject/trunk@2019#egg=MyProject',
+        ]
+    }
+
+    expected = [
+        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
+        'svn+svn://svn.repo/some_pkg/trunk/#egg=SomePackage  # from collection a.b',
+        'https://example.com/foo/foo-0.26.0-py2.py3-none-any.whl  # from collection a.b',
+        'http://my.package.repo/SomePackage-1.0.4.zip  # from collection a.b',
+        '-i https://pypi.org/simple  # from collection c.d',
+        '--extra-index-url http://my.package.repo/simple  # from collection c.d',
+        '--no-clean  # from collection c.d',
+        '-e svn+http://svn.example.com/svn/MyProject/trunk@2019#egg=MyProject  # from collection c.d',
+    ]
+
+    assert simple_combine(reqs) == expected
