@@ -191,3 +191,32 @@ def test_pass_thru():
     ]
 
     assert simple_combine(reqs) == expected
+
+
+def test_excluded_requirements():
+    reqs = {
+        'a.b': [
+            'req1',
+            'req2==0.1.0',
+            'req4 ; python_version<=3.9',
+            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+        ],
+        'c.d': [
+            'req1<=2.0.0',
+            'req3',
+        ]
+    }
+
+    excluded = [
+        'req1',
+        'req4',
+        'git',   # This currently breaks this test since it matches the git+https url after regex parsing
+    ]
+
+    expected = [
+        'req2==0.1.0  # from collection a.b',
+        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
+        'req3  # from collection c.d',
+    ]
+
+    assert simple_combine(reqs, excluded) == expected

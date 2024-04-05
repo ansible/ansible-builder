@@ -13,6 +13,8 @@ COMMENT_RE = re.compile(r'(?:^|\s+)#.*$')
 
 # https://peps.python.org/pep-0503/#normalized-names
 REQ_NORM_RE = re.compile(r'[-_.]+')
+
+# match anything that doesn't start with a '-'
 REQ_NAME_RE = re.compile(r'^([^-][-\w.]+)')
 
 
@@ -79,8 +81,28 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=base_collections_path, user_pip=None, user_bindep=None,
-            user_pip_exclude=None, user_bindep_exclude=None):
+def process(data_dir=base_collections_path,
+            user_pip=None,
+            user_bindep=None,
+            user_pip_exclude=None,
+            user_bindep_exclude=None):
+    """
+    Build a dictionary of Python and system requirements from any collections
+    installed in data_dir, and any user specified requirements.
+
+    Example return dict:
+       {
+          'python': {
+              'collection.a': ['abc', 'def'],
+              'collection.b': ['ghi'],
+              'user': ['jkl'],
+          },
+          'system': {
+              'collection.a': ['ZYX'],
+              'user': ['WVU'],
+          },
+       }
+    """
     paths = []
     path_root = os.path.join(data_dir, 'ansible_collections')
 
@@ -210,6 +232,10 @@ def simple_combine(reqs, exclude=None, name_only=False):
     with comments indicating the sources based off the collection keys.
 
     Currently, non-pep508 compliant entries are passed through.
+
+    :param dict reqs: A dict of Python requirements, keyed by collection name.
+    :param exclude:
+    :param bool name_only: If true, requirements will be only the simple name (no versions or annotation).
     """
     if exclude is None:
         exclude = []
@@ -273,8 +299,11 @@ def parse_args(args=None):
 
 
 def run_introspect(args, log):
-    data = process(args.folder, user_pip=args.user_pip, user_bindep=args.user_bindep,
-                   user_pip_exclude=args.user_pip_exclude, user_bindep_exclude=args.user_bindep_exclude)
+    data = process(args.folder,
+                   user_pip=args.user_pip,
+                   user_bindep=args.user_bindep,
+                   user_pip_exclude=args.user_pip_exclude,
+                   user_bindep_exclude=args.user_bindep_exclude)
     log.info('# Dependency data for %s', args.folder)
     data['python'] = simple_combine(
         data['python'],
