@@ -5,6 +5,9 @@ import re
 import sys
 import yaml
 
+from packaging.requirements import InvalidRequirement, Requirement
+
+
 base_collections_path = '/usr/share/ansible/collections'
 logger = logging.getLogger(__name__)
 
@@ -225,7 +228,33 @@ class CollectionDefinition:
         return req_file
 
 
-def simple_combine(reqs, exclude=None, name_only=False):
+def is_pep508_compliant(req: str):
+    try:
+        Requirement(req)
+    except InvalidRequirement:
+        return False
+    return True
+
+
+def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
+    """
+    Filter any comments out of the Python collection requirements input.
+
+    :param dict reqs: A dict of Python requirements, keyed by collection name.
+
+    :return: Same as the input parameter, except with no comment lines.
+    """
+    result: dict[str, list] = {}
+    for collection, lines in reqs.items():
+        for line in lines:
+            # strip comments
+            if (base_line := COMMENT_RE.sub('', line.strip())):
+                result.setdefault(collection, []).append(base_line)
+
+    return result
+
+
+def simple_combine(reqs, exclude=None, name_only=False, test_pep508=True):
     """
     Given a dictionary of Python requirement lines keyed off collections,
     return a list a cleaned up (no source comments) requirements annotated
@@ -236,43 +265,55 @@ def simple_combine(reqs, exclude=None, name_only=False):
     :param dict reqs: A dict of Python requirements, keyed by collection name.
     :param exclude:
     :param bool name_only: If true, requirements will be only the simple name (no versions or annotation).
+    :param bool test_pep508: If true, test each line for PEP508 compliance.
+
+    :return: A list of (possibly) annotated requirements.
     """
     if exclude is None:
         exclude = []
 
     consolidated = []
     fancy_lines = []
-    for collection, lines in reqs.items():
+
+    uncommented_reqs = strip_comments(reqs)
+
+    for collection, lines in uncommented_reqs.items():
         for line in lines:
-            # strip comments
-            if not (base_line := COMMENT_RE.sub('', line.strip())):
+            if test_pep508 and not is_pep508_compliant(line):
+                logger.warning(
+                    "Passing through non-PEP508 compliant line '%s' from collection '%s'",
+                    line, collection
+                )
+                fancy_lines.append(line)  # We intentionally won't annotate these lines (multi-line?)
                 continue
 
-            # Did not match expected name format (maybe a pip option?), just pass thru
-            if not (name_match := REQ_NAME_RE.match(base_line)):
-                logger.warning("Passing through unparsable requirement: %s", base_line)
-                fancy_line = f'{base_line}  # from collection {collection}'
-                fancy_lines.append(fancy_line)
+            # Did not match expected name format, just pass thru
+            if not (name_match := REQ_NAME_RE.match(line)):
+                logger.warning(
+                    "Passing through unparsable requirement name '%s' from collection '%s'",
+                    line, collection
+                )
+                fancy_lines.append(line)
                 continue
 
             name = REQ_NORM_RE.sub('-', name_match.group(1))
             if name in exclude and collection not in {'user', 'exclude'}:
-                logger.debug('# Explicitly excluding requirement %s from %s', name, collection)
+                logger.debug("# Explicitly excluding requirement '%s' from '%s'", name, collection)
                 continue
             if name in EXCLUDE_REQUIREMENTS and collection not in {'user', 'exclude'}:
-                logger.debug('# Excluding requirement %s from %s', name, collection)
+                logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
                 continue
 
-            if base_line in consolidated:
-                i = consolidated.index(base_line)
+            if line in consolidated:
+                i = consolidated.index(line)
                 if not name_only:
                     fancy_lines[i] += f', {collection}'
             else:
                 if name_only:
                     fancy_line = name
                 else:
-                    fancy_line = f'{base_line}  # from collection {collection}'
-                consolidated.append(base_line)
+                    fancy_line = f'{line}  # from collection {collection}'
+                consolidated.append(line)
                 fancy_lines.append(fancy_line)
 
     return fancy_lines
@@ -311,7 +352,8 @@ def run_introspect(args, log):
     )
     data['system'] = simple_combine(
         data['system'],
-        exclude=simple_combine({'exclude': data['system'].pop('exclude', {})}, name_only=True)
+        exclude=simple_combine({'exclude': data['system'].pop('exclude', {})}, name_only=True),
+        test_pep508=False
     )
 
     print('---')

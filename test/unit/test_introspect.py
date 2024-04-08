@@ -1,16 +1,18 @@
 import os
 import pytest
 
-from ansible_builder._target_scripts.introspect import process, process_collection
-from ansible_builder._target_scripts.introspect import simple_combine
-from ansible_builder._target_scripts.introspect import parse_args
+from ansible_builder._target_scripts.introspect import (parse_args,
+                                                        process,
+                                                        process_collection,
+                                                        simple_combine,
+                                                        strip_comments)
 
 
 def test_multiple_collection_metadata(data_dir):
 
     files = process(data_dir)
     files['python'] = simple_combine(files['python'])
-    files['system'] = simple_combine(files['system'])
+    files['system'] = simple_combine(files['system'], test_pep508=False)
 
     assert files == {'python': [
         'pyvcloud>=14  # from collection test.metadata',
@@ -115,7 +117,7 @@ def test_sanitize_pep508():
     expected = [
         'foo[ext1,ext3] == 1  # from collection a.b',
         'bar; python_version < "2.7"  # from collection a.b',
-        'A  # from collection a.b',
+        'A',
         'name  # from collection a.b',
         'FOO >= 1  # from collection c.d',
         'bar; python_version < "3.6"  # from collection c.d',
@@ -149,12 +151,47 @@ def test_comment_parsing():
     }
 
     expected = [
-        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
-        'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage  # from collection a.b',
-        'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage  # from collection a.b',
+        'git+https://git.repo/some_pkg.git#egg=SomePackage',
+        'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage',
+        'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage',
     ]
 
     assert simple_combine(reqs) == expected
+
+
+def test_strip_comments():
+    """
+    Test that strip_comments() properly removes comments from Python requirements input.
+    """
+    reqs = {
+        'a.b': [
+            '# comment 1',
+            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+            'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage  # inline comment',
+            'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage #inline comment that hates leading spaces',
+            '    # crazy indented comment (waka waka!)',
+            '####### something informative'
+            '    ',
+            '',
+        ],
+        'c.d': [
+            '# comment 2',
+            'git',
+        ]
+    }
+
+    expected = {
+        'a.b': [
+            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+            'git+https://git.repo/some_pkg.git#egg=SomeOtherPackage',
+            'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage',
+        ],
+        'c.d': [
+            'git',
+        ]
+    }
+
+    assert strip_comments(reqs) == expected
 
 
 def test_pass_thru():
@@ -180,14 +217,14 @@ def test_pass_thru():
     }
 
     expected = [
-        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
-        'svn+svn://svn.repo/some_pkg/trunk/#egg=SomePackage  # from collection a.b',
-        'https://example.com/foo/foo-0.26.0-py2.py3-none-any.whl  # from collection a.b',
-        'http://my.package.repo/SomePackage-1.0.4.zip  # from collection a.b',
-        '-i https://pypi.org/simple  # from collection c.d',
-        '--extra-index-url http://my.package.repo/simple  # from collection c.d',
-        '--no-clean  # from collection c.d',
-        '-e svn+http://svn.example.com/svn/MyProject/trunk@2019#egg=MyProject  # from collection c.d',
+        'git+https://git.repo/some_pkg.git#egg=SomePackage',
+        'svn+svn://svn.repo/some_pkg/trunk/#egg=SomePackage',
+        'https://example.com/foo/foo-0.26.0-py2.py3-none-any.whl',
+        'http://my.package.repo/SomePackage-1.0.4.zip',
+        '-i https://pypi.org/simple',
+        '--extra-index-url http://my.package.repo/simple',
+        '--no-clean',
+        '-e svn+http://svn.example.com/svn/MyProject/trunk@2019#egg=MyProject',
     ]
 
     assert simple_combine(reqs) == expected
@@ -195,28 +232,28 @@ def test_pass_thru():
 
 def test_excluded_requirements():
     reqs = {
-        'a.b': [
-            'req1',
-            'req2==0.1.0',
-            'req4 ; python_version<=3.9',
-            'git+https://git.repo/some_pkg.git#egg=SomePackage',
+        "a.b": [
+            "req1",
+            "req2==0.1.0",
+            "req4 ; python_version<='3.9'",
+            "git+https://git.repo/some_pkg.git#egg=SomePackage",
         ],
-        'c.d': [
-            'req1<=2.0.0',
-            'req3',
+        "c.d": [
+            "req1<=2.0.0",
+            "req3",
         ]
     }
 
     excluded = [
-        'req1',
-        'req4',
-        'git',   # This currently breaks this test since it matches the git+https url after regex parsing
+        "req1",
+        "req4",
+        "git",
     ]
 
     expected = [
-        'req2==0.1.0  # from collection a.b',
-        'git+https://git.repo/some_pkg.git#egg=SomePackage  # from collection a.b',
-        'req3  # from collection c.d',
+        "req2==0.1.0  # from collection a.b",
+        "git+https://git.repo/some_pkg.git#egg=SomePackage",
+        "req3  # from collection c.d",
     ]
 
     assert simple_combine(reqs, excluded) == expected
