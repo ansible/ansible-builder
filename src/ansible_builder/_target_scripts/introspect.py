@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import logging
 import os
@@ -93,16 +95,20 @@ def process(data_dir=base_collections_path,
     Build a dictionary of Python and system requirements from any collections
     installed in data_dir, and any user specified requirements.
 
+    Excluded requirements, if any, will be inserted into the return dict.
+
     Example return dict:
        {
           'python': {
               'collection.a': ['abc', 'def'],
               'collection.b': ['ghi'],
               'user': ['jkl'],
+              'exclude: ['abc'],
           },
           'system': {
               'collection.a': ['ZYX'],
               'user': ['WVU'],
+              'exclude': ['ZYX'],
           },
        }
     """
@@ -228,14 +234,6 @@ class CollectionDefinition:
         return req_file
 
 
-def is_pep508_compliant(req: str):
-    try:
-        Requirement(req)
-    except InvalidRequirement:
-        return False
-    return True
-
-
 def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     """
     Filter any comments out of the Python collection requirements input.
@@ -254,65 +252,67 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     return result
 
 
-def simple_combine(reqs, exclude=None, name_only=False, test_pep508=True):
+def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_python: bool = True) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
-    return a list a cleaned up (no source comments) requirements annotated
-    with comments indicating the sources based off the collection keys.
+    return a consolidated list of cleaned up (no source comments) requirements
+    annotated with comments indicating the sources based off the collection keys.
 
-    Currently, non-pep508 compliant entries are passed through.
+    Currently, non-pep508 compliant Python entries are passed through. We also no
+    longer attempt to normalize names (replace '_' with '-', etc), other than
+    lowercasing it for exclusion matching, since we no longer are attempting
+    to combine similar entries.
 
-    :param dict reqs: A dict of Python requirements, keyed by collection name.
-    :param exclude:
-    :param bool name_only: If true, requirements will be only the simple name (no versions or annotation).
-    :param bool test_pep508: If true, test each line for PEP508 compliance.
+    :param dict reqs: A dict of either Python or system requirements, keyed by collection name.
+    :param list exclude: A list of requirements to be excluded from the output.
+    :param bool is_python: This should be set to True for Python requirements, as each
+        will be tested for PEP508 compliance. This should be set to False for system requirements.
 
     :return: A list of (possibly) annotated requirements.
     """
     if exclude is None:
         exclude = []
+    else:
+        exclude = [r.lower() for r in exclude]
 
-    consolidated = []
-    fancy_lines = []
+    consolidated: list[str] = []
+    fancy_lines: list[str] = []
 
     uncommented_reqs = strip_comments(reqs)
 
     for collection, lines in uncommented_reqs.items():
         for line in lines:
-            if test_pep508 and not is_pep508_compliant(line):
-                logger.warning(
-                    "Passing through non-PEP508 compliant line '%s' from collection '%s'",
-                    line, collection
-                )
-                fancy_lines.append(line)  # We intentionally won't annotate these lines (multi-line?)
-                continue
 
-            # Did not match expected name format, just pass thru
-            if not (name_match := REQ_NAME_RE.match(line)):
-                logger.warning(
-                    "Passing through unparsable requirement name '%s' from collection '%s'",
-                    line, collection
-                )
-                fancy_lines.append(line)
-                continue
+            # Determine the simple name based on type of requirement
+            if is_python:
+                try:
+                    parsed_req = Requirement(line)
+                    name = parsed_req.name
+                except InvalidRequirement:
+                    logger.warning(
+                        "Passing through non-PEP508 compliant line '%s' from collection '%s'",
+                        line, collection
+                    )
+                    fancy_lines.append(line)  # We intentionally won't annotate these lines (multi-line?)
+                    continue
+            else:
+                # bindep system requirements have the package name as the first "word" on the line
+                name = line.split(maxsplit=1)[0]
 
-            name = REQ_NORM_RE.sub('-', name_match.group(1))
-            if name in exclude and collection not in {'user', 'exclude'}:
+            lower_name = name.lower()
+
+            if lower_name in exclude and collection not in {'user', 'exclude'}:
                 logger.debug("# Explicitly excluding requirement '%s' from '%s'", name, collection)
                 continue
-            if name in EXCLUDE_REQUIREMENTS and collection not in {'user', 'exclude'}:
+            if lower_name in EXCLUDE_REQUIREMENTS and collection not in {'user', 'exclude'}:
                 logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
                 continue
 
             if line in consolidated:
                 i = consolidated.index(line)
-                if not name_only:
-                    fancy_lines[i] += f', {collection}'
+                fancy_lines[i] += f', {collection}'
             else:
-                if name_only:
-                    fancy_line = name
-                else:
-                    fancy_line = f'{line}  # from collection {collection}'
+                fancy_line = f'{line}  # from collection {collection}'
                 consolidated.append(line)
                 fancy_lines.append(fancy_line)
 
@@ -348,12 +348,12 @@ def run_introspect(args, log):
     log.info('# Dependency data for %s', args.folder)
     data['python'] = simple_combine(
         data['python'],
-        exclude=simple_combine({'exclude': data['python'].pop('exclude', {})}, name_only=True)
+        exclude=data['python'].pop('exclude', []),
     )
     data['system'] = simple_combine(
         data['system'],
-        exclude=simple_combine({'exclude': data['system'].pop('exclude', {})}, name_only=True),
-        test_pep508=False
+        exclude=data['system'].pop('exclude', []),
+        is_python=False
     )
 
     print('---')

@@ -12,7 +12,7 @@ def test_multiple_collection_metadata(data_dir):
 
     files = process(data_dir)
     files['python'] = simple_combine(files['python'])
-    files['system'] = simple_combine(files['system'], test_pep508=False)
+    files['system'] = simple_combine(files['system'], is_python=False)
 
     assert files == {'python': [
         'pyvcloud>=14  # from collection test.metadata',
@@ -117,7 +117,7 @@ def test_sanitize_pep508():
     expected = [
         'foo[ext1,ext3] == 1  # from collection a.b',
         'bar; python_version < "2.7"  # from collection a.b',
-        'A',
+        'A  # from collection a.b',
         'name  # from collection a.b',
         'FOO >= 1  # from collection c.d',
         'bar; python_version < "3.6"  # from collection c.d',
@@ -194,7 +194,7 @@ def test_strip_comments():
     assert strip_comments(reqs) == expected
 
 
-def test_pass_thru():
+def test_python_pass_thru():
     """
     Test that simple_combine() will pass through non-pep508 data.
     """
@@ -230,7 +230,38 @@ def test_pass_thru():
     assert simple_combine(reqs) == expected
 
 
-def test_excluded_requirements():
+def test_excluded_system_requirements():
+    reqs = {
+        'a.b': [
+            'libxml2-dev [platform:dpkg]',
+            'dev-libs/libxml2',
+            'python3-lxml [(platform:redhat platform:base-py3)]',
+            'foo [platform:bar]',
+        ],
+        'c.d': [
+            '# python is in EXCLUDED_REQUIREMENTS',
+            'python [platform:brew] ==3.7.3',
+            'libxml2-dev [platform:dpkg]',
+            'python3-all-dev [platform:dpkg !platform:ubuntu-precise]',
+        ],
+        'user': [
+            'foo',   # should never exclude from user reqs
+        ]
+    }
+
+    excluded = ['python3-lxml', 'foo']
+
+    expected = [
+        'libxml2-dev [platform:dpkg]  # from collection a.b, c.d',
+        'dev-libs/libxml2  # from collection a.b',
+        'python3-all-dev [platform:dpkg !platform:ubuntu-precise]  # from collection c.d',
+        'foo  # from collection user',
+    ]
+
+    assert simple_combine(reqs, exclude=excluded, is_python=False) == expected
+
+
+def test_excluded_python_requirements():
     reqs = {
         "a.b": [
             "req1",
@@ -241,6 +272,9 @@ def test_excluded_requirements():
         "c.d": [
             "req1<=2.0.0",
             "req3",
+        ],
+        "user": [
+            "req1"   # should never exclude from user reqs
         ]
     }
 
@@ -254,6 +288,7 @@ def test_excluded_requirements():
         "req2==0.1.0  # from collection a.b",
         "git+https://git.repo/some_pkg.git#egg=SomePackage",
         "req3  # from collection c.d",
+        "req1  # from collection user",
     ]
 
     assert simple_combine(reqs, excluded) == expected

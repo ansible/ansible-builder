@@ -257,6 +257,11 @@ The following keys are valid for this section:
       exclusions should be a list of package names appearing under the ``python`` key name. System dependency
       exclusions should be a list of system package names appearing under the ``system`` key name.
 
+      The exclusion string should be the simple name of the requirement you want excluded. For example,
+      if you need to exclude the system requirement that appears as ``foo [!platform:gentoo]`` within
+      an included collection, then your exclusion string should be ``foo``. To exclude the Python
+      requirement ``bar == 1.0.0``, your exclusion string would be ``bar``.
+
       Example:
 
       .. code:: yaml
