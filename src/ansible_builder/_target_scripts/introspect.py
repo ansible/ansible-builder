@@ -10,11 +10,83 @@ import yaml
 from packaging.requirements import InvalidRequirement, Requirement
 
 
-base_collections_path = '/usr/share/ansible/collections'
-logger = logging.getLogger(__name__)
+BASE_COLLECTIONS_PATH = '/usr/share/ansible/collections'
+
 
 # regex for a comment at the start of a line, or embedded with leading space(s)
 COMMENT_RE = re.compile(r'(?:^|\s+)#.*$')
+
+
+EXCLUDE_REQUIREMENTS = frozenset((
+    # obviously already satisfied or unwanted
+    'ansible', 'ansible-base', 'python', 'ansible-core',
+    # general python test requirements
+    'tox', 'pycodestyle', 'yamllint', 'pylint',
+    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock', 'testinfra',
+    # test requirements highly specific to Ansible testing
+    'ansible-lint', 'molecule', 'galaxy-importer', 'voluptuous',
+    # already present in image for py3 environments
+    'yaml', 'pyyaml', 'json',
+))
+
+
+logger = logging.getLogger(__name__)
+
+
+class CollectionDefinition:
+    """
+    This class represents the dependency metadata for a collection
+    should be replaced by logic to hit the Galaxy API if made available
+    """
+
+    def __init__(self, collection_path):
+        self.reference_path = collection_path
+
+        # NOTE: Filenames should match constants.DEAFULT_EE_BASENAME and constants.YAML_FILENAME_EXTENSIONS.
+        meta_file_base = os.path.join(collection_path, 'meta', 'execution-environment')
+        ee_exists = False
+        for ext in ('yml', 'yaml'):
+            meta_file = f"{meta_file_base}.{ext}"
+            if os.path.exists(meta_file):
+                with open(meta_file, 'r') as f:
+                    self.raw = yaml.safe_load(f)
+                ee_exists = True
+                break
+
+        if not ee_exists:
+            self.raw = {'version': 1, 'dependencies': {}}
+            # Automatically infer requirements for collection
+            for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
+                candidate_file = os.path.join(collection_path, filename)
+                if has_content(candidate_file):
+                    self.raw['dependencies'][entry] = filename
+
+    def target_dir(self):
+        namespace, name = self.namespace_name()
+        return os.path.join(
+            BASE_COLLECTIONS_PATH, 'ansible_collections',
+            namespace, name
+        )
+
+    def namespace_name(self):
+        "Returns 2-tuple of namespace and name"
+        path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
+        return tuple(path_parts[-2:])
+
+    def get_dependency(self, entry):
+        """A collection is only allowed to reference a file by a relative path
+        which is relative to the collection root
+        """
+        req_file = self.raw.get('dependencies', {}).get(entry)
+        if req_file is None:
+            return None
+        if os.path.isabs(req_file):
+            raise RuntimeError(
+                'Collections must specify relative paths for requirements files. '
+                f'The file {req_file} specified by {self.reference_path} violates this.'
+            )
+
+        return req_file
 
 
 def line_is_empty(line):
@@ -65,14 +137,14 @@ def process_collection(path):
 
     :param str path: root directory of collection (this would contain galaxy.yml file)
     """
-    CD = CollectionDefinition(path)
+    col_def = CollectionDefinition(path)
 
-    py_file = CD.get_dependency('python')
+    py_file = col_def.get_dependency('python')
     pip_lines = []
     if py_file:
         pip_lines = pip_file_data(os.path.join(path, py_file))
 
-    sys_file = CD.get_dependency('system')
+    sys_file = col_def.get_dependency('system')
     bindep_lines = []
     if sys_file:
         bindep_lines = bindep_file_data(os.path.join(path, sys_file))
@@ -80,7 +152,7 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=base_collections_path,
+def process(data_dir=BASE_COLLECTIONS_PATH,
             user_pip=None,
             user_bindep=None,
             user_pip_exclude=None,
@@ -127,8 +199,8 @@ def process(data_dir=base_collections_path,
     sys_req = {}
     for path in paths:
         col_pip_lines, col_sys_lines = process_collection(path)
-        CD = CollectionDefinition(path)
-        namespace, name = CD.namespace_name()
+        col_def = CollectionDefinition(path)
+        namespace, name = col_def.namespace_name()
         key = f'{namespace}.{name}'
 
         if col_pip_lines:
@@ -173,61 +245,6 @@ def has_content(candidate_file):
     return bool(content.strip().strip('\n'))
 
 
-class CollectionDefinition:
-    """This class represents the dependency metadata for a collection
-    should be replaced by logic to hit the Galaxy API if made available
-    """
-
-    def __init__(self, collection_path):
-        self.reference_path = collection_path
-
-        # NOTE: Filenames should match constants.DEAFULT_EE_BASENAME and constants.YAML_FILENAME_EXTENSIONS.
-        meta_file_base = os.path.join(collection_path, 'meta', 'execution-environment')
-        ee_exists = False
-        for ext in ('yml', 'yaml'):
-            meta_file = f"{meta_file_base}.{ext}"
-            if os.path.exists(meta_file):
-                with open(meta_file, 'r') as f:
-                    self.raw = yaml.safe_load(f)
-                ee_exists = True
-                break
-
-        if not ee_exists:
-            self.raw = {'version': 1, 'dependencies': {}}
-            # Automatically infer requirements for collection
-            for entry, filename in [('python', 'requirements.txt'), ('system', 'bindep.txt')]:
-                candidate_file = os.path.join(collection_path, filename)
-                if has_content(candidate_file):
-                    self.raw['dependencies'][entry] = filename
-
-    def target_dir(self):
-        namespace, name = self.namespace_name()
-        return os.path.join(
-            base_collections_path, 'ansible_collections',
-            namespace, name
-        )
-
-    def namespace_name(self):
-        "Returns 2-tuple of namespace and name"
-        path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
-        return tuple(path_parts[-2:])
-
-    def get_dependency(self, entry):
-        """A collection is only allowed to reference a file by a relative path
-        which is relative to the collection root
-        """
-        req_file = self.raw.get('dependencies', {}).get(entry)
-        if req_file is None:
-            return None
-        if os.path.isabs(req_file):
-            raise RuntimeError(
-                'Collections must specify relative paths for requirements files. '
-                f'The file {req_file} specified by {self.reference_path} violates this.'
-            )
-
-        return req_file
-
-
 def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     """
     Filter any comments out of the Python collection requirements input.
@@ -246,7 +263,9 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     return result
 
 
-def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_python: bool = True) -> list[str]:
+def simple_combine(reqs: dict[str, list],
+                   exclude: list[str] | None = None,
+                   is_python: bool = True) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
     return a list of cleaned up (no source comments) requirements
@@ -262,7 +281,7 @@ def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_p
     :param bool is_python: This should be set to True for Python requirements, as each
         will be tested for PEP508 compliance. This should be set to False for system requirements.
 
-    :return: A list of (possibly) annotated requirements.
+    :return: A list of annotated requirements.
     """
     exclusions: list[str] = []
     if exclude:
@@ -299,8 +318,7 @@ def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_p
                 logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
                 continue
 
-            annotated_line = f'{line}  # from collection {collection}'
-            annotated_lines.append(annotated_line)
+            annotated_lines.append(f'{line}  # from collection {collection}')
 
     return annotated_lines
 
@@ -332,10 +350,12 @@ def run_introspect(args, log):
                    user_pip_exclude=args.user_pip_exclude,
                    user_bindep_exclude=args.user_bindep_exclude)
     log.info('# Dependency data for %s', args.folder)
+
     data['python'] = simple_combine(
         data['python'],
         exclude=data['python'].pop('exclude', []),
     )
+
     data['system'] = simple_combine(
         data['system'],
         exclude=data['system'].pop('exclude', []),
@@ -367,7 +387,7 @@ def create_introspect_parser(parser):
                                    help=argparse.SUPPRESS)
 
     introspect_parser.add_argument(
-        'folder', default=base_collections_path, nargs='?',
+        'folder', default=BASE_COLLECTIONS_PATH, nargs='?',
         help=(
             'Ansible collections path(s) to introspect. '
             'This should have a folder named ansible_collections inside of it.'
@@ -402,19 +422,6 @@ def create_introspect_parser(parser):
     )
 
     return introspect_parser
-
-
-EXCLUDE_REQUIREMENTS = frozenset((
-    # obviously already satisfied or unwanted
-    'ansible', 'ansible-base', 'python', 'ansible-core',
-    # general python test requirements
-    'tox', 'pycodestyle', 'yamllint', 'pylint',
-    'flake8', 'pytest', 'pytest-xdist', 'coverage', 'mock', 'testinfra',
-    # test requirements highly specific to Ansible testing
-    'ansible-lint', 'molecule', 'galaxy-importer', 'voluptuous',
-    # already present in image for py3 environments
-    'yaml', 'pyyaml', 'json',
-))
 
 
 def write_file(filename: str, lines: list) -> bool:
