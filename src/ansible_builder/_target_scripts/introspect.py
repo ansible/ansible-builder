@@ -16,12 +16,6 @@ logger = logging.getLogger(__name__)
 # regex for a comment at the start of a line, or embedded with leading space(s)
 COMMENT_RE = re.compile(r'(?:^|\s+)#.*$')
 
-# https://peps.python.org/pep-0503/#normalized-names
-REQ_NORM_RE = re.compile(r'[-_.]+')
-
-# match anything that doesn't start with a '-'
-REQ_NAME_RE = re.compile(r'^([^-][-\w.]+)')
-
 
 def line_is_empty(line):
     return bool((not line.strip()) or line.startswith('#'))
@@ -255,7 +249,7 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
 def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_python: bool = True) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
-    return a consolidated list of cleaned up (no source comments) requirements
+    return a list of cleaned up (no source comments) requirements
     annotated with comments indicating the sources based off the collection keys.
 
     Currently, non-pep508 compliant Python entries are passed through. We also no
@@ -270,14 +264,11 @@ def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_p
 
     :return: A list of (possibly) annotated requirements.
     """
-    if exclude is None:
-        exclude = []
-    else:
-        exclude = [r.lower() for r in exclude]
+    exclusions: list[str] = []
+    if exclude:
+        exclusions = [r.lower() for r in exclude]
 
-    consolidated: list[str] = []
-    fancy_lines: list[str] = []
-
+    annotated_lines: list[str] = []
     uncommented_reqs = strip_comments(reqs)
 
     for collection, lines in uncommented_reqs.items():
@@ -293,7 +284,7 @@ def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_p
                         "Passing through non-PEP508 compliant line '%s' from collection '%s'",
                         line, collection
                     )
-                    fancy_lines.append(line)  # We intentionally won't annotate these lines (multi-line?)
+                    annotated_lines.append(line)  # We intentionally won't annotate these lines (multi-line?)
                     continue
             else:
                 # bindep system requirements have the package name as the first "word" on the line
@@ -301,22 +292,17 @@ def simple_combine(reqs: dict[str, list], exclude: list[str] | None = None, is_p
 
             lower_name = name.lower()
 
-            if lower_name in exclude and collection not in {'user', 'exclude'}:
+            if lower_name in exclusions and collection not in {'user', 'exclude'}:
                 logger.debug("# Explicitly excluding requirement '%s' from '%s'", name, collection)
                 continue
             if lower_name in EXCLUDE_REQUIREMENTS and collection not in {'user', 'exclude'}:
                 logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
                 continue
 
-            if line in consolidated:
-                i = consolidated.index(line)
-                fancy_lines[i] += f', {collection}'
-            else:
-                fancy_line = f'{line}  # from collection {collection}'
-                consolidated.append(line)
-                fancy_lines.append(fancy_line)
+            annotated_line = f'{line}  # from collection {collection}'
+            annotated_lines.append(annotated_line)
 
-    return fancy_lines
+    return annotated_lines
 
 
 def parse_args(args=None):

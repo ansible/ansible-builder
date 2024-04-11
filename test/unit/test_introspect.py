@@ -252,8 +252,9 @@ def test_excluded_system_requirements():
     excluded = ['python3-lxml', 'foo']
 
     expected = [
-        'libxml2-dev [platform:dpkg]  # from collection a.b, c.d',
+        'libxml2-dev [platform:dpkg]  # from collection a.b',
         'dev-libs/libxml2  # from collection a.b',
+        'libxml2-dev [platform:dpkg]  # from collection c.d',
         'python3-all-dev [platform:dpkg !platform:ubuntu-precise]  # from collection c.d',
         'foo  # from collection user',
     ]
