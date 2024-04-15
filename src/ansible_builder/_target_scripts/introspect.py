@@ -155,8 +155,8 @@ def process_collection(path):
 def process(data_dir=BASE_COLLECTIONS_PATH,
             user_pip=None,
             user_bindep=None,
-            user_pip_exclude=None,
-            user_bindep_exclude=None):
+            exclude_pip=None,
+            exclude_bindep=None):
     """
     Build a dictionary of Python and system requirements from any collections
     installed in data_dir, and any user specified requirements.
@@ -214,16 +214,16 @@ def process(data_dir=BASE_COLLECTIONS_PATH,
         col_pip_lines = pip_file_data(user_pip)
         if col_pip_lines:
             py_req['user'] = col_pip_lines
-    if user_pip_exclude:
-        col_pip_exclude_lines = pip_file_data(user_pip_exclude)
+    if exclude_pip:
+        col_pip_exclude_lines = pip_file_data(exclude_pip)
         if col_pip_exclude_lines:
             py_req['exclude'] = col_pip_exclude_lines
     if user_bindep:
         col_sys_lines = bindep_file_data(user_bindep)
         if col_sys_lines:
             sys_req['user'] = col_sys_lines
-    if user_bindep_exclude:
-        col_sys_exclude_lines = bindep_file_data(user_bindep_exclude)
+    if exclude_bindep:
+        col_sys_exclude_lines = bindep_file_data(exclude_bindep)
         if col_sys_exclude_lines:
             sys_req['exclude'] = col_sys_exclude_lines
 
@@ -347,8 +347,8 @@ def run_introspect(args, log):
     data = process(args.folder,
                    user_pip=args.user_pip,
                    user_bindep=args.user_bindep,
-                   user_pip_exclude=args.user_pip_exclude,
-                   user_bindep_exclude=args.user_bindep_exclude)
+                   exclude_pip=args.exclude_pip,
+                   exclude_bindep=args.exclude_bindep)
     log.info('# Dependency data for %s', args.folder)
 
     data['python'] = simple_combine(
@@ -393,24 +393,22 @@ def create_introspect_parser(parser):
             'This should have a folder named ansible_collections inside of it.'
         )
     )
-    # Combine user requirements and collection requirements into single file
-    # in the future, could look into passing multilple files to
-    # python-builder scripts to be fed multiple files as opposed to this
+
     introspect_parser.add_argument(
         '--user-pip', dest='user_pip',
         help='An additional file to combine with collection pip requirements.'
-    )
-    introspect_parser.add_argument(
-        '--user-pip-exclude', dest='user_pip_exclude',
-        help='An additional file to exclude specific pip requirements.'
     )
     introspect_parser.add_argument(
         '--user-bindep', dest='user_bindep',
         help='An additional file to combine with collection bindep requirements.'
     )
     introspect_parser.add_argument(
-        '--user-bindep-exclude', dest='user_bindep_exclude',
-        help='An additional file to exclude specific bindep requirements.'
+        '--exclude-bindep-reqs', dest='exclude_bindep',
+        help='An additional file to exclude specific bindep requirements from collections.'
+    )
+    introspect_parser.add_argument(
+        '--exclude-pip-reqs', dest='exclude_pip',
+        help='An additional file to exclude specific pip requirements from collections.'
     )
     introspect_parser.add_argument(
         '--write-pip', dest='write_pip',

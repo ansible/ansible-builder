@@ -243,10 +243,7 @@ class UserDefinition:
         """
         validate_schema(self.raw)
 
-        for item, value in constants.CONTEXT_FILES.items():
-            # HACK: non-file deps for dynamic base/builder
-            if not value:
-                continue
+        for item in constants.CONTEXT_FILES:
             for exclude in (False, True):
                 requirement_path = self.get_dep_abs_path(item, exclude=exclude)
                 if requirement_path:

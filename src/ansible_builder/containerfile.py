@@ -254,11 +254,9 @@ class Containerfile:
         scripts_dir = str(Path(self.build_outputs_dir) / 'scripts')
         os.makedirs(scripts_dir, exist_ok=True)
 
+        # For the python, system, and galaxy requirements, get a file path to the contents and copy
+        # it into the context directory with an expected name to later be used during the container builds.
         for item, new_name in constants.CONTEXT_FILES.items():
-            # HACK: new dynamic base/builder
-            if not new_name:
-                continue
-
             for exclude in (False, True):
                 if exclude is True:
                     new_name = f'exclude-{new_name}'
@@ -461,7 +459,7 @@ class Containerfile:
                     f"exclude-{constants.CONTEXT_FILES['python']}"
                 )
                 self.steps.append(f"COPY {relative_pip_exclude_path} exclude-{constants.CONTEXT_FILES['python']}")
-                introspect_cmd += f" --user-pip-exclude=exclude-{constants.CONTEXT_FILES['python']}"
+                introspect_cmd += f" --exclude-pip=exclude-{constants.CONTEXT_FILES['python']}"
 
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
             if bindep_exists:
@@ -478,7 +476,7 @@ class Containerfile:
                     f"exclude-{constants.CONTEXT_FILES['system']}"
                 )
                 self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
-                introspect_cmd += f" --user-bindep-exclude=exclude-{constants.CONTEXT_FILES['system']}"
+                introspect_cmd += f" --exclude-bindep=exclude-{constants.CONTEXT_FILES['system']}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 
