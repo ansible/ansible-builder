@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.resources
 import logging
 import os
+import tempfile
 
 from pathlib import Path
 
@@ -256,6 +257,7 @@ class Containerfile:
 
         # For the python, system, and galaxy requirements, get a file path to the contents and copy
         # it into the context directory with an expected name to later be used during the container builds.
+        # The get_dep_abs_path() handles parsing the various requirements and any exclusions, if any.
         for item, new_name in constants.CONTEXT_FILES.items():
             for exclude in (False, True):
                 if exclude is True:
@@ -270,6 +272,17 @@ class Containerfile:
                 # be writing it out dynamically (inline EE reqs), and we only care
                 # about the contents anyway.
                 copy_file(requirement_path, dest, ignore_mtime=True)
+
+        # We need to handle dependencies.exclude.all_from_collections independently since
+        # it doesn't follow the same model as the other dependency requirements.
+        exclude_deps = self.definition.dependencies.get('exclude')
+        if exclude_deps and 'all_from_collections' in exclude_deps:
+            collection_ignore_list = exclude_deps['all_from_collections']
+            dest = os.path.join(self.build_context, constants.user_content_subfolder, "exclude-collections.txt")
+            with tempfile.NamedTemporaryFile('w') as fp:
+                fp.write('\n'.join(collection_ignore_list))
+                fp.flush()
+                copy_file(fp.name, dest, ignore_mtime=True)
 
         if self.original_galaxy_keyring:
             copy_file(
@@ -459,7 +472,7 @@ class Containerfile:
                     f"exclude-{constants.CONTEXT_FILES['python']}"
                 )
                 self.steps.append(f"COPY {relative_pip_exclude_path} exclude-{constants.CONTEXT_FILES['python']}")
-                introspect_cmd += f" --exclude-pip=exclude-{constants.CONTEXT_FILES['python']}"
+                introspect_cmd += f" --exclude-pip-reqs=exclude-{constants.CONTEXT_FILES['python']}"
 
             bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
             if bindep_exists:
@@ -476,7 +489,16 @@ class Containerfile:
                     f"exclude-{constants.CONTEXT_FILES['system']}"
                 )
                 self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
-                introspect_cmd += f" --exclude-bindep=exclude-{constants.CONTEXT_FILES['system']}"
+                introspect_cmd += f" --exclude-bindep-reqs=exclude-{constants.CONTEXT_FILES['system']}"
+
+            exclude_collections_exists = os.path.exists(os.path.join(
+                self.build_outputs_dir, "exclude-collections.txt"
+            ))
+            if exclude_collections_exists:
+                relative_exclude_collections_path = os.path.join(
+                    constants.user_content_subfolder, "exclude-collections.txt")
+                self.steps.append(f"COPY {relative_exclude_collections_path} exclude-collections.txt")
+                introspect_cmd += " --exclude-collection-reqs=exclude-collections.txt"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 

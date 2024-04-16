@@ -9,7 +9,6 @@ from ansible_builder._target_scripts.introspect import (parse_args,
 
 
 def test_multiple_collection_metadata(data_dir):
-
     files = process(data_dir)
     files['python'] = simple_combine(files['python'])
     files['system'] = simple_combine(files['system'], is_python=False)
@@ -25,6 +24,47 @@ def test_multiple_collection_metadata(data_dir):
         'subversion [platform:rpm]  # from collection test.bindep',
         'subversion [platform:dpkg]  # from collection test.bindep'
     ]}
+
+
+def test_process_returns_excluded_python(data_dir, tmp_path):
+    """
+    Test that process() return value is properly formatted for excluded Python reqs.
+    """
+    pip_ignore_file = tmp_path / "exclude-requirements.txt"
+    pip_ignore_file.write_text("req1\nreq2")
+
+    retval = process(data_dir, exclude_pip=str(pip_ignore_file))
+
+    assert 'python' in retval
+    assert 'exclude' in retval['python']
+    assert retval['python']['exclude'] == ['req1', 'req2']
+
+
+def test_process_returns_excluded_system(data_dir, tmp_path):
+    """
+    Test that process() return value is properly formatted for excluded system reqs.
+    """
+    bindep_ignore_file = tmp_path / "exclude-bindep.txt"
+    bindep_ignore_file.write_text("req1\nreq2")
+
+    retval = process(data_dir, exclude_bindep=str(bindep_ignore_file))
+
+    assert 'system' in retval
+    assert 'exclude' in retval['system']
+    assert retval['system']['exclude'] == ['req1', 'req2']
+
+
+def test_process_returns_excluded_collections(data_dir, tmp_path):
+    """
+    Test that process() return value is properly formatted for excluded collections.
+    """
+    col_ignore_file = tmp_path / "ignored_collections"
+    col_ignore_file.write_text("a.b\nc.d")
+
+    retval = process(data_dir, exclude_collections=str(col_ignore_file))
+
+    assert 'excluded_collections' in retval
+    assert retval['excluded_collections'] == ['a.b', 'c.d']
 
 
 def test_single_collection_metadata(data_dir):
@@ -293,3 +333,40 @@ def test_excluded_python_requirements():
     ]
 
     assert simple_combine(reqs, excluded) == expected
+
+
+def test_simple_combine_excludes_collections():
+    """
+    Test that excluding all requirements from a list of collections works in simple_combine().
+    """
+    reqs = {
+        "a.b": [
+            "req1",
+            "req2==0.1.0",
+            "req4 ; python_version<='3.9'",
+            "git+https://git.repo/some_pkg.git#egg=SomePackage",
+        ],
+        "c.d": [
+            "req1<=2.0.0",
+            "req3",
+        ],
+        "e.f": [
+            "req5",
+        ],
+        "user": [
+            "req1"   # should never exclude from user reqs
+        ]
+    }
+
+    excluded_collections = [
+        'a.b',
+        'e.f',
+    ]
+
+    expected = [
+        "req1<=2.0.0  # from collection c.d",
+        "req3  # from collection c.d",
+        "req1  # from collection user",
+    ]
+
+    assert simple_combine(reqs, exclude_collections=excluded_collections) == expected

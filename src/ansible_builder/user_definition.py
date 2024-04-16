@@ -180,6 +180,10 @@ class UserDefinition:
     def options(self):
         return self.raw.get('options', {})
 
+    @property
+    def dependencies(self):
+        return self.raw.get('dependencies', {})
+
     # This is the size of galaxy, python, system * exclude=True/False
     @functools.lru_cache(maxsize=6)
     def get_dep_abs_path(self, entry, exclude=False):
@@ -187,7 +191,7 @@ class UserDefinition:
         an absolute path or a path relative to the EE definition folder
         This method will return the absolute path.
         """
-        deps = self.raw.get('dependencies', {})
+        deps = self.dependencies
         if exclude:
             deps = deps.get('exclude', {})
 

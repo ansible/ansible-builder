@@ -267,6 +267,27 @@ class TestUserDefinition:
         value = definition.raw.get('options', {}).get('tags')
         assert value == ['ee_test:latest']
 
+    def test_v3_dependencies_property(self, exec_env_definition_file):
+        deps = {
+            'python': ['req1', 'req2'],
+            'system': ['sysreq1', 'sysreq2'],
+            'exclude': {
+                'all_from_collections': ['a.b', 'c.d'],
+            }
+        }
+
+        ee_content = {
+            'version': 3,
+            'dependencies': deps,
+        }
+
+        path = exec_env_definition_file(content=ee_content)
+        definition = UserDefinition(path)
+        definition.validate()
+
+        value = definition.dependencies
+        assert value == deps
+
 
 class TestImageDescription:
 

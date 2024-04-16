@@ -156,7 +156,8 @@ def process(data_dir=BASE_COLLECTIONS_PATH,
             user_pip=None,
             user_bindep=None,
             exclude_pip=None,
-            exclude_bindep=None):
+            exclude_bindep=None,
+            exclude_collections=None):
     """
     Build a dictionary of Python and system requirements from any collections
     installed in data_dir, and any user specified requirements.
@@ -176,6 +177,9 @@ def process(data_dir=BASE_COLLECTIONS_PATH,
               'user': ['WVU'],
               'exclude': ['ZYX'],
           },
+          'excluded_collections': [
+              'a.b',
+          ]
        }
     """
     paths = []
@@ -227,10 +231,19 @@ def process(data_dir=BASE_COLLECTIONS_PATH,
         if col_sys_exclude_lines:
             sys_req['exclude'] = col_sys_exclude_lines
 
-    return {
+    retval = {
         'python': py_req,
-        'system': sys_req
+        'system': sys_req,
     }
+
+    if exclude_collections:
+        # This file should just be a newline separated list of collection names,
+        # so reusing bindep_file_data() to read it should work fine.
+        excluded_collection_list = bindep_file_data(exclude_collections)
+        if excluded_collection_list:
+            retval['excluded_collections'] = excluded_collection_list
+
+    return retval
 
 
 def has_content(candidate_file):
@@ -265,6 +278,7 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
 
 def simple_combine(reqs: dict[str, list],
                    exclude: list[str] | None = None,
+                   exclude_collections: list[str] | None = None,
                    is_python: bool = True) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
@@ -278,21 +292,30 @@ def simple_combine(reqs: dict[str, list],
 
     :param dict reqs: A dict of either Python or system requirements, keyed by collection name.
     :param list exclude: A list of requirements to be excluded from the output.
+    :param list exclude_collections: A list of collection names from which to exclude all requirements.
     :param bool is_python: This should be set to True for Python requirements, as each
         will be tested for PEP508 compliance. This should be set to False for system requirements.
 
     :return: A list of annotated requirements.
     """
     exclusions: list[str] = []
+    collection_ignore_list: list[str] = []
+
     if exclude:
         exclusions = [r.lower() for r in exclude]
+    if exclude_collections:
+        collection_ignore_list = [c.lower() for c in exclude_collections]
 
     annotated_lines: list[str] = []
     uncommented_reqs = strip_comments(reqs)
 
     for collection, lines in uncommented_reqs.items():
-        for line in lines:
+        # Bypass this collection if we've been told to ignore all requirements from it.
+        if collection.lower() in collection_ignore_list:
+            logger.debug("# Excluding all requirements from collection '%s'", collection)
+            continue
 
+        for line in lines:
             # Determine the simple name based on type of requirement
             if is_python:
                 try:
@@ -348,17 +371,22 @@ def run_introspect(args, log):
                    user_pip=args.user_pip,
                    user_bindep=args.user_bindep,
                    exclude_pip=args.exclude_pip,
-                   exclude_bindep=args.exclude_bindep)
+                   exclude_bindep=args.exclude_bindep,
+                   exclude_collections=args.exclude_collections)
     log.info('# Dependency data for %s', args.folder)
+
+    excluded_collections = data.pop('excluded_collections', None)
 
     data['python'] = simple_combine(
         data['python'],
         exclude=data['python'].pop('exclude', []),
+        exclude_collections=excluded_collections,
     )
 
     data['system'] = simple_combine(
         data['system'],
         exclude=data['system'].pop('exclude', []),
+        exclude_collections=excluded_collections,
         is_python=False
     )
 
@@ -409,6 +437,10 @@ def create_introspect_parser(parser):
     introspect_parser.add_argument(
         '--exclude-pip-reqs', dest='exclude_pip',
         help='An additional file to exclude specific pip requirements from collections.'
+    )
+    introspect_parser.add_argument(
+        '--exclude-collection-reqs', dest='exclude_collections',
+        help='An additional file to exclude all requirements from the listed collections.'
     )
     introspect_parser.add_argument(
         '--write-pip', dest='write_pip',

@@ -48,3 +48,41 @@ def test_introspect_with_user_reqs(cli, data_dir, tmp_path):
     assert 'ansible  # from collection user' in r.stdout
     # 'pytest' allowed in user requirements
     assert 'pytest  # from collection user' in r.stdout
+
+
+def test_introspect_exclude_python(cli, data_dir, tmp_path):
+    exclude_file = tmp_path / 'exclude.txt'
+    exclude_file.write_text("pytz\npython-dateutil\n")
+
+    r = cli(f'ansible-builder introspect {data_dir} --exclude-pip-reqs={exclude_file}')
+    data = yaml.safe_load(r.stdout)
+
+    assert 'python' in data
+    assert 'system' in data
+    assert 'pytz' not in r.stdout
+    assert 'python-dateutil' not in r.stdout
+
+
+def test_introspect_exclude_system(cli, data_dir, tmp_path):
+    exclude_file = tmp_path / 'exclude.txt'
+    exclude_file.write_text("subversion\n")
+
+    r = cli(f'ansible-builder introspect {data_dir} --exclude-bindep-reqs={exclude_file}')
+    data = yaml.safe_load(r.stdout)
+
+    assert 'python' in data
+    assert 'system' in data
+    assert 'subversion' not in r.stdout
+
+
+def test_introspect_exclude_collections(cli, data_dir, tmp_path):
+    exclude_file = tmp_path / 'exclude.txt'
+    exclude_file.write_text("test.reqfile\ntest.bindep\n")
+
+    r = cli(f'ansible-builder introspect {data_dir} --exclude-collection-reqs={exclude_file}')
+    data = yaml.safe_load(r.stdout)
+
+    assert 'python' in data
+    assert 'system' in data
+    assert 'from collection test.reqfile' not in r.stdout
+    assert 'from collection test.bindep' not in r.stdout
