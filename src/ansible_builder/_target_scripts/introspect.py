@@ -276,10 +276,10 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     return result
 
 
-def simple_combine(reqs: dict[str, list],
-                   exclude: list[str] | None = None,
-                   exclude_collections: list[str] | None = None,
-                   is_python: bool = True) -> list[str]:
+def filter_requirements(reqs: dict[str, list],
+                        exclude: list[str] | None = None,
+                        exclude_collections: list[str] | None = None,
+                        is_python: bool = True) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
     return a list of cleaned up (no source comments) requirements
@@ -296,7 +296,7 @@ def simple_combine(reqs: dict[str, list],
     :param bool is_python: This should be set to True for Python requirements, as each
         will be tested for PEP508 compliance. This should be set to False for system requirements.
 
-    :return: A list of annotated requirements.
+    :return: A list of filtered and annotated requirements.
     """
     exclusions: list[str] = []
     collection_ignore_list: list[str] = []
@@ -377,13 +377,13 @@ def run_introspect(args, log):
 
     excluded_collections = data.pop('excluded_collections', None)
 
-    data['python'] = simple_combine(
+    data['python'] = filter_requirements(
         data['python'],
         exclude=data['python'].pop('exclude', []),
         exclude_collections=excluded_collections,
     )
 
-    data['system'] = simple_combine(
+    data['system'] = filter_requirements(
         data['system'],
         exclude=data['system'].pop('exclude', []),
         exclude_collections=excluded_collections,

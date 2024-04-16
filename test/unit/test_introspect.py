@@ -4,14 +4,14 @@ import pytest
 from ansible_builder._target_scripts.introspect import (parse_args,
                                                         process,
                                                         process_collection,
-                                                        simple_combine,
+                                                        filter_requirements,
                                                         strip_comments)
 
 
 def test_multiple_collection_metadata(data_dir):
     files = process(data_dir)
-    files['python'] = simple_combine(files['python'])
-    files['system'] = simple_combine(files['system'], is_python=False)
+    files['python'] = filter_requirements(files['python'])
+    files['system'] = filter_requirements(files['system'], is_python=False)
 
     assert files == {'python': [
         'pyvcloud>=14  # from collection test.metadata',
@@ -170,12 +170,12 @@ def test_sanitize_pep508():
         "name[quux, strange];python_version<'2.7' and platform_version=='2'  # from collection m.n"
     ]
 
-    assert simple_combine(reqs) == expected
+    assert filter_requirements(reqs) == expected
 
 
 def test_comment_parsing():
     """
-    Test that simple_combine() does not remove embedded URL anchors due to comment parsing.
+    Test that filter_requirements() does not remove embedded URL anchors due to comment parsing.
     """
     reqs = {
         'a.b': [
@@ -196,7 +196,7 @@ def test_comment_parsing():
         'git+https://git.repo/some_pkg.git#egg=AlsoSomePackage',
     ]
 
-    assert simple_combine(reqs) == expected
+    assert filter_requirements(reqs) == expected
 
 
 def test_strip_comments():
@@ -236,7 +236,7 @@ def test_strip_comments():
 
 def test_python_pass_thru():
     """
-    Test that simple_combine() will pass through non-pep508 data.
+    Test that filter_requirements() will pass through non-pep508 data.
     """
     reqs = {
         # various VCS and URL options
@@ -267,7 +267,7 @@ def test_python_pass_thru():
         '-e svn+http://svn.example.com/svn/MyProject/trunk@2019#egg=MyProject',
     ]
 
-    assert simple_combine(reqs) == expected
+    assert filter_requirements(reqs) == expected
 
 
 def test_excluded_system_requirements():
@@ -299,7 +299,7 @@ def test_excluded_system_requirements():
         'foo  # from collection user',
     ]
 
-    assert simple_combine(reqs, exclude=excluded, is_python=False) == expected
+    assert filter_requirements(reqs, exclude=excluded, is_python=False) == expected
 
 
 def test_excluded_python_requirements():
@@ -332,12 +332,12 @@ def test_excluded_python_requirements():
         "req1  # from collection user",
     ]
 
-    assert simple_combine(reqs, excluded) == expected
+    assert filter_requirements(reqs, excluded) == expected
 
 
-def test_simple_combine_excludes_collections():
+def test_filter_requirements_excludes_collections():
     """
-    Test that excluding all requirements from a list of collections works in simple_combine().
+    Test that excluding all requirements from a list of collections works in filter_requirements().
     """
     reqs = {
         "a.b": [
@@ -369,4 +369,4 @@ def test_simple_combine_excludes_collections():
         "req1  # from collection user",
     ]
 
-    assert simple_combine(reqs, exclude_collections=excluded_collections) == expected
+    assert filter_requirements(reqs, exclude_collections=excluded_collections) == expected
