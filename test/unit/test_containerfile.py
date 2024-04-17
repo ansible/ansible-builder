@@ -329,3 +329,45 @@ def test_v2_builder_image_default(build_dir_and_ee_yml):
     c.prepare()
     assert "FROM base as builder" in c.steps
     assert "COPY _build/scripts/pip_install /output/scripts/pip_install" not in c.steps
+
+
+def test_prepare_introspect_assemble_steps(build_dir_and_ee_yml):
+    """
+    Test that the introspect command is built as expected.
+    """
+
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    dependencies:
+        python:
+           - six
+        system:
+           - git
+        galaxy:
+           collections:
+              - name: community.windows
+        exclude:
+           python:
+             - aaa
+           system:
+             - bbb
+           all_from_collections:
+             - a.b
+    """
+
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c._create_folder_copy_files()
+    c._prepare_introspect_assemble_steps()
+
+    expected_introspect_command = "RUN $PYCMD /output/scripts/introspect.py introspect" \
+                                  f" --user-pip={constants.STD_PIP_FILENAME}" \
+                                  f" --exclude-pip-reqs=exclude-{constants.STD_PIP_FILENAME}" \
+                                  f" --user-bindep={constants.STD_BINDEP_FILENAME}" \
+                                  f" --exclude-bindep-reqs=exclude-{constants.STD_BINDEP_FILENAME}" \
+                                  f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}" \
+                                  " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+    assert expected_introspect_command in c.steps
