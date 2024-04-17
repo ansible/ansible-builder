@@ -278,7 +278,9 @@ class Containerfile:
         exclude_deps = self.definition.dependencies.get('exclude')
         if exclude_deps and 'all_from_collections' in exclude_deps:
             collection_ignore_list = exclude_deps['all_from_collections']
-            dest = os.path.join(self.build_context, constants.user_content_subfolder, "exclude-collections.txt")
+            dest = os.path.join(self.build_context,
+                                constants.user_content_subfolder,
+                                constants.EXCL_COLLECTIONS_FILENAME)
             with tempfile.NamedTemporaryFile('w') as fp:
                 fp.write('\n'.join(collection_ignore_list))
                 fp.flush()
@@ -412,7 +414,7 @@ class Containerfile:
 
     def _prepare_galaxy_install_steps(self) -> None:
         env = ""
-        install_opts = (f"-r {constants.CONTEXT_FILES['galaxy']} "
+        install_opts = (f"-r {constants.STD_GALAXY_FILENAME} "
                         f"--collections-path \"{constants.base_collections_path}\"")
 
         if self.galaxy_ignore_signature_status_codes:
@@ -434,7 +436,7 @@ class Containerfile:
 
         self.steps.append(
             f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
-            f"-r {constants.CONTEXT_FILES['galaxy']}"
+            f"-r {constants.STD_GALAXY_FILENAME}"
             f" --roles-path \"{constants.base_roles_path}\"",
         )
         step = f"RUN {env}ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS {install_opts}"
@@ -451,54 +453,54 @@ class Containerfile:
             introspect_cmd = "RUN $PYCMD /output/scripts/introspect.py introspect"
 
             requirements_file_exists = os.path.exists(os.path.join(
-                self.build_outputs_dir, constants.CONTEXT_FILES['python']
+                self.build_outputs_dir, constants.STD_PIP_FILENAME
             ))
 
             if requirements_file_exists:
                 relative_requirements_path = os.path.join(
                     constants.user_content_subfolder,
-                    constants.CONTEXT_FILES['python']
+                    constants.STD_PIP_FILENAME
                 )
-                self.steps.append(f"COPY {relative_requirements_path} {constants.CONTEXT_FILES['python']}")
+                self.steps.append(f"COPY {relative_requirements_path} {constants.STD_PIP_FILENAME}")
                 # WORKDIR is /build, so we use the (shorter) relative paths there
-                introspect_cmd += f" --user-pip={constants.CONTEXT_FILES['python']}"
+                introspect_cmd += f" --user-pip={constants.STD_PIP_FILENAME}"
 
             pip_exclude_exists = os.path.exists(os.path.join(
-                self.build_outputs_dir, f"exclude-{constants.CONTEXT_FILES['python']}"
+                self.build_outputs_dir, f"exclude-{constants.STD_PIP_FILENAME}"
             ))
             if pip_exclude_exists:
                 relative_pip_exclude_path = os.path.join(
                     constants.user_content_subfolder,
-                    f"exclude-{constants.CONTEXT_FILES['python']}"
+                    f"exclude-{constants.STD_PIP_FILENAME}"
                 )
-                self.steps.append(f"COPY {relative_pip_exclude_path} exclude-{constants.CONTEXT_FILES['python']}")
-                introspect_cmd += f" --exclude-pip-reqs=exclude-{constants.CONTEXT_FILES['python']}"
+                self.steps.append(f"COPY {relative_pip_exclude_path} exclude-{constants.STD_PIP_FILENAME}")
+                introspect_cmd += f" --exclude-pip-reqs=exclude-{constants.STD_PIP_FILENAME}"
 
-            bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.CONTEXT_FILES['system']))
+            bindep_exists = os.path.exists(os.path.join(self.build_outputs_dir, constants.STD_BINDEP_FILENAME))
             if bindep_exists:
-                relative_bindep_path = os.path.join(constants.user_content_subfolder, constants.CONTEXT_FILES['system'])
-                self.steps.append(f"COPY {relative_bindep_path} {constants.CONTEXT_FILES['system']}")
-                introspect_cmd += f" --user-bindep={constants.CONTEXT_FILES['system']}"
+                relative_bindep_path = os.path.join(constants.user_content_subfolder, constants.STD_BINDEP_FILENAME)
+                self.steps.append(f"COPY {relative_bindep_path} {constants.STD_BINDEP_FILENAME}")
+                introspect_cmd += f" --user-bindep={constants.STD_BINDEP_FILENAME}"
 
             exclude_bindep_exists = os.path.exists(os.path.join(
-                self.build_outputs_dir, f"exclude-{constants.CONTEXT_FILES['system']}"
+                self.build_outputs_dir, f"exclude-{constants.STD_BINDEP_FILENAME}"
             ))
             if exclude_bindep_exists:
                 relative_exclude_bindep_path = os.path.join(
                     constants.user_content_subfolder,
-                    f"exclude-{constants.CONTEXT_FILES['system']}"
+                    f"exclude-{constants.STD_BINDEP_FILENAME}"
                 )
-                self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.CONTEXT_FILES['system']}")
-                introspect_cmd += f" --exclude-bindep-reqs=exclude-{constants.CONTEXT_FILES['system']}"
+                self.steps.append(f"COPY {relative_exclude_bindep_path} exclude-{constants.STD_BINDEP_FILENAME}")
+                introspect_cmd += f" --exclude-bindep-reqs=exclude-{constants.STD_BINDEP_FILENAME}"
 
             exclude_collections_exists = os.path.exists(os.path.join(
-                self.build_outputs_dir, "exclude-collections.txt"
+                self.build_outputs_dir, constants.EXCL_COLLECTIONS_FILENAME
             ))
             if exclude_collections_exists:
                 relative_exclude_collections_path = os.path.join(
-                    constants.user_content_subfolder, "exclude-collections.txt")
-                self.steps.append(f"COPY {relative_exclude_collections_path} exclude-collections.txt")
-                introspect_cmd += " --exclude-collection-reqs=exclude-collections.txt"
+                    constants.user_content_subfolder, constants.EXCL_COLLECTIONS_FILENAME)
+                self.steps.append(f"COPY {relative_exclude_collections_path} {constants.EXCL_COLLECTIONS_FILENAME}")
+                introspect_cmd += f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
 

@@ -51,9 +51,9 @@ def test_prepare_galaxy_install_steps(build_dir_and_ee_yml):
     c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
+        f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install "
-        f"$ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {constants.CONTEXT_FILES['galaxy']} "
+        f"$ANSIBLE_GALAXY_CLI_COLLECTION_OPTS -r {constants.STD_GALAXY_FILENAME} "
         f"--collections-path \"{constants.base_collections_path}\""
     ]
     assert c.steps == expected
@@ -69,9 +69,9 @@ def test_prepare_galaxy_install_steps_with_keyring(build_dir_and_ee_yml):
     c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
+        f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} "
+        f"-r {constants.STD_GALAXY_FILENAME} "
         f"--collections-path \"{constants.base_collections_path}\" --keyring \"{constants.default_keyring_name}\""
     ]
     assert c.steps == expected
@@ -90,9 +90,9 @@ def test_prepare_galaxy_install_steps_with_sigcount(build_dir_and_ee_yml):
     c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
+        f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} "
+        f"-r {constants.STD_GALAXY_FILENAME} "
         f"--collections-path \"{constants.base_collections_path}\" "
         f"--required-valid-signature-count {sig_count} --keyring \"{constants.default_keyring_name}\""
     ]
@@ -112,9 +112,9 @@ def test_prepare_galaxy_install_steps_with_ignore_code(build_dir_and_ee_yml):
     c._prepare_galaxy_install_steps()
     expected = [
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} --roles-path \"{constants.base_roles_path}\"",
+        f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
-        f"-r {constants.CONTEXT_FILES['galaxy']} "
+        f"-r {constants.STD_GALAXY_FILENAME} "
         f"--collections-path \"{constants.base_collections_path}\" "
         f"--ignore-signature-status-code {codes[0]} --ignore-signature-status-code {codes[1]} "
         f"--keyring \"{constants.default_keyring_name}\""
