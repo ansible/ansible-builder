@@ -237,9 +237,19 @@ The following keys are valid for this section:
       ``requirements.yml`` file (see below for examples). Read more about
       the requirements file format in the `Galaxy user guide <https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
 
+    .. _python-pep508:
+
     ``python``
       The Python installation requirements. This may either be a filename, or a
       list of requirements (see below for an example).
+
+      .. note::
+
+        Python requirement specifications are expected to be limited to features defined by
+        `PEP 508 <https://peps.python.org/pep-0508/>`_. Hash tag comments will always be allowed.
+        Any deviation from this specification will be passed through to pip unverified and unaltered,
+        although this is considered undefined and unsupported behavior. It is not recommended that
+        you depend on this behavior.
 
     ``python_interpreter``
       A dictionary that defines the Python system package name to be installed by

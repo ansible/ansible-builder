@@ -99,13 +99,21 @@ Then, if the ``ansible_collection`` directory is in your home directory, you can
 Python Dependencies
 ^^^^^^^^^^^^^^^^^^^
 
-Ansible Builder combines all the Python requirements files from all collections into a single file using the ``requirements-parser`` library. This library supports complex syntax, including references to other files.
+Ansible Builder combines all the Python requirements files from all collections into a single file.
 
-If multiple collections require the same *package name*, Ansible Builder combines them into a single entry and combines the constraints.
+Certain package names are specifically *ignored* by ``ansible-builder``, meaning that Ansible Builder
+does not include them in the combined file of Python dependencies, even if a collection lists them as
+dependencies. These include test packages and packages that provide Ansible itself. The full list can
+be found in ``EXCLUDE_REQUIREMENTS`` in ``src/ansible_builder/_target_scripts/introspect.py``.
 
-Certain package names are specifically *ignored* by ``ansible-builder``, meaning that Ansible Builder does not include them in the combined file of Python dependencies, even if a collection lists them as dependencies. These include test packages and packages that provide Ansible itself. The full list can be found in ``EXCLUDE_REQUIREMENTS`` in ``src/ansible_builder/_target_scripts/introspect.py``.
+If you need to include one of these ignored package names, use the ``--user-pip`` option of the
+``introspect`` command to list it in the user requirements file. Packages supplied this way are
+not processed against the list of excluded Python packages.
 
-If you need to include one of these ignored package names, use the ``--user-pip`` option of the ``introspect`` command to list it in the user requirements file. Packages supplied this way are not processed against the list of excluded Python packages.
+.. note::
+
+  These dependencies are subject to the same `PEP 508 <https://peps.python.org/pep-0508/>`_ format
+  restrictions described for Python requirements in the :ref:`EE definition specification <python-pep508>`.
 
 System-level Dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
