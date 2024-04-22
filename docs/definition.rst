@@ -265,7 +265,9 @@ The following keys are valid for this section:
       of referenced collections. These exclusions will not apply to the user supplied Python or system
       dependencies, nor will they apply to dependencies of dependencies (top-level only). Python dependency
       exclusions should be a list of package names appearing under the ``python`` key name. System dependency
-      exclusions should be a list of system package names appearing under the ``system`` key name.
+      exclusions should be a list of system package names appearing under the ``system`` key name. If you
+      want to exclude *all* Python and system dependencies from one or more collections, supply the list
+      of collection names under the ``all_from_collections`` key.
 
       The exclusion string should be the simple name of the requirement you want excluded. For example,
       if you need to exclude the system requirement that appears as ``foo [!platform:gentoo]`` within
@@ -282,6 +284,9 @@ The following keys are valid for this section:
                     - docker
                 system:
                     - python3-Cython
+                all_from_collections:
+                    - community.crypto
+                    - community.docker
 
       .. note::
         The ``exclude`` option requires ``ansible-builder`` version ``3.1`` or newer.
