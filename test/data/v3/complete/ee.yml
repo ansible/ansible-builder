@@ -32,6 +32,13 @@ dependencies:
   system:
     - python311
     - mysql
+  exclude:
+    python:
+      - foo
+    system:
+      - bar
+    all_from_collections:
+      - a.b
 
 additional_build_files:
   - src: files/random.cfg

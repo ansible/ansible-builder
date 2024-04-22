@@ -542,3 +542,59 @@ def test_v3_additional_build_files(cli, build_dir_and_ee_yml):
     cfg.touch()
 
     cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+
+def test_exclude_files_created(cli, build_dir_and_ee_yml):
+    """
+    Test that the bindep and Python requirement exclude files are created.
+    """
+    tmpdir, eeyml = build_dir_and_ee_yml(
+        """
+        version: 3
+        images:
+          base_image:
+            name: quay.io/ansible/awx-ee:latest
+        dependencies:
+          galaxy:
+            collections:
+              - name: community.crypto
+          exclude:
+            python:
+              - pyyaml
+            system:
+              - openssh-client
+            all_from_collections:
+              - a.b
+        """
+    )
+
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    # Validate that the bindep exclude file is created with proper content
+    bindep_exclude = tmpdir / constants.user_content_subfolder / f"exclude-{constants.STD_BINDEP_FILENAME}"
+    assert bindep_exclude.exists()
+    text = bindep_exclude.read_text()
+    assert text == "openssh-client"
+
+    # Validate that the Python requirements exclude file is created with proper content
+    pyreq_exclude = tmpdir / constants.user_content_subfolder / f"exclude-{constants.STD_PIP_FILENAME}"
+    assert pyreq_exclude.exists()
+    text = pyreq_exclude.read_text()
+    assert text == "pyyaml"
+
+    # Validate that the collections exclude file is created with proper content
+    coll_exclude = tmpdir / constants.user_content_subfolder / f"{constants.EXCL_COLLECTIONS_FILENAME}"
+    assert coll_exclude.exists()
+    text = coll_exclude.read_text()
+    assert text == "a.b"
+
+    # Validate that the EE will use the exclude files
+    containerfile = tmpdir / "Containerfile"
+    assert containerfile.exists()
+    text = containerfile.read_text()
+    expected_introspect_command = "RUN $PYCMD /output/scripts/introspect.py introspect" \
+                                  f" --exclude-pip-reqs=exclude-{constants.STD_PIP_FILENAME}" \
+                                  f" --exclude-bindep-reqs=exclude-{constants.STD_BINDEP_FILENAME}" \
+                                  f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}" \
+                                  " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt\n"
+    assert expected_introspect_command in text
