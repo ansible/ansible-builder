@@ -81,14 +81,6 @@ jobs:
         run: |
           tox -- --run-destructive
 
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v3
-        with:
-          files: test/coverage/reports/coverage.xml
-          flags: ${{ matrix.py_version.tox_env }}
-          fail_ci_if_error: true
-          verbose: true
-
   unit:
     name: Unit - ${{ matrix.py_version.name}}
     runs-on: ubuntu-22.04
@@ -127,11 +119,3 @@ jobs:
 
       - name: Run tests
         run: tox
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v3
-        with:
-          files: test/coverage/reports/coverage.xml
-          flags: ${{ matrix.py_version.tox_env }}
-          fail_ci_if_error: true
-          verbose: true
