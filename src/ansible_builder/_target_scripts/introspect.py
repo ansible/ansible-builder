@@ -276,6 +276,26 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     return result
 
 
+def should_be_excluded(value: str, exclusion_list: list[str]) -> bool:
+    """
+    Test if `value` matches against any value in `exclusion_list`.
+
+    The exclusion_list values are either strings to be compared in a case-insensitive
+    manner against value, OR, they are regular expressions to be tested against the
+    value. A regular expression will contain '~' as the first character.
+
+    :return: True if the value should be excluded, False otherwise.
+    """
+    for exclude_value in exclusion_list:
+        if exclude_value[0] == "~":
+            pattern = exclude_value[1:]
+            if re.fullmatch(pattern.lower(), value.lower()):
+                return True
+        elif exclude_value.lower() == value.lower():
+            return True
+    return False
+
+
 def filter_requirements(reqs: dict[str, list],
                         exclude: list[str] | None = None,
                         exclude_collections: list[str] | None = None,
@@ -302,16 +322,16 @@ def filter_requirements(reqs: dict[str, list],
     collection_ignore_list: list[str] = []
 
     if exclude:
-        exclusions = [r.lower() for r in exclude]
+        exclusions = exclude.copy()
     if exclude_collections:
-        collection_ignore_list = [c.lower() for c in exclude_collections]
+        collection_ignore_list = exclude_collections.copy()
 
     annotated_lines: list[str] = []
     uncommented_reqs = strip_comments(reqs)
 
     for collection, lines in uncommented_reqs.items():
         # Bypass this collection if we've been told to ignore all requirements from it.
-        if collection.lower() in collection_ignore_list:
+        if should_be_excluded(collection, collection_ignore_list):
             logger.debug("# Excluding all requirements from collection '%s'", collection)
             continue
 
@@ -332,14 +352,16 @@ def filter_requirements(reqs: dict[str, list],
                 # bindep system requirements have the package name as the first "word" on the line
                 name = line.split(maxsplit=1)[0]
 
-            lower_name = name.lower()
+            if collection.lower() not in {'user', 'exclude'}:
+                lower_name = name.lower()
 
-            if lower_name in exclusions and collection not in {'user', 'exclude'}:
-                logger.debug("# Explicitly excluding requirement '%s' from '%s'", name, collection)
-                continue
-            if lower_name in EXCLUDE_REQUIREMENTS and collection not in {'user', 'exclude'}:
-                logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
-                continue
+                if lower_name in EXCLUDE_REQUIREMENTS:
+                    logger.debug("# Excluding requirement '%s' from '%s'", name, collection)
+                    continue
+
+                if should_be_excluded(lower_name, exclusions):
+                    logger.debug("# Explicitly excluding requirement '%s' from '%s'", name, collection)
+                    continue
 
             annotated_lines.append(f'{line}  # from collection {collection}')
 

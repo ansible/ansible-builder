@@ -123,7 +123,7 @@ def test_yaml_extension(data_dir):
     }
 
 
-def test_sanitize_pep508():
+def test_filter_requirements_pep508():
     reqs = {
         'a.b': [
             'foo[ext1,ext3] == 1',
@@ -367,6 +367,62 @@ def test_filter_requirements_excludes_collections():
         "req1<=2.0.0  # from collection c.d",
         "req3  # from collection c.d",
         "req1  # from collection user",
+    ]
+
+    assert filter_requirements(reqs, exclude_collections=excluded_collections) == expected
+
+
+def test_requirement_regex_exclusions():
+    reqs = {
+        "a.b": [
+            "foo",
+            "shimmy",
+            "kungfoo",
+            "aaab",
+        ],
+        "c.d": [
+            "foobar",
+            "shake",
+            "ab",
+        ]
+    }
+
+    excluded = [
+        "Foo",       # straight string comparison (case shouldn't matter)
+        "foo.",      # straight string comparison (shouldn't match)
+        "~foo.",     # regex (shouldn't match b/c not full string match)
+        "~Sh.*",     # regex (case shouldn't matter)
+        "~^.+ab",    # regex
+    ]
+
+    expected = [
+        "kungfoo  # from collection a.b",
+        "foobar  # from collection c.d",
+        "ab  # from collection c.d"
+    ]
+
+    assert filter_requirements(reqs, excluded) == expected
+
+
+def test_collection_regex_exclusions():
+    reqs = {
+        "a.b": ["foo"],
+        "c.d": ["bar"],
+        "ab.cd": ["foobar"],
+        "e.f": ["baz"],
+        "be.fun": ["foobaz"],
+    }
+
+    excluded_collections = [
+        r"~A\..+",     # regex (case shouldn't matter)
+        "E.F",         # straight string comparison (case shouldn't matter)
+        "~b.c",        # regex (shouldn't match b/c not full string match)
+    ]
+
+    expected = [
+        "bar  # from collection c.d",
+        "foobar  # from collection ab.cd",
+        "foobaz  # from collection be.fun",
     ]
 
     assert filter_requirements(reqs, exclude_collections=excluded_collections) == expected
