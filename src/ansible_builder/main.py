@@ -31,6 +31,7 @@ class AnsibleBuilder:
                  container_policy: str | None = None,
                  container_keyring: str | None = None,
                  squash: str | None = None,
+                 extra_build_cli_args: str | None = None,
                  ) -> None:
         """
         Initialize the AnsibleBuilder object.
@@ -101,6 +102,7 @@ class AnsibleBuilder:
             container_keyring
         )
         self.squash = squash
+        self.extra_build_cli_args = extra_build_cli_args or ""
 
     def _handle_image_validation_opts(self,
                                       policy: str | None,
@@ -240,6 +242,7 @@ class AnsibleBuilder:
             if self.container_policy != PolicyChoices.IGNORE:
                 command.append('--pull-always')
 
+        command.extend(self.extra_build_cli_args.split())
         command.append(self.build_context)
 
         return command

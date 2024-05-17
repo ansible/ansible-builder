@@ -266,3 +266,19 @@ def test_galaxy_signing_extra_args(cli, runtime, data_dir, ee_tag, tmp_path):
 
     assert "--ignore-signature-status-code NODATA" in result.stdout
     assert "--required-valid-signature-count 3" in result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_extra_build_cli_args(cli, runtime, data_dir, ee_tag, tmp_path):
+    secret_string = "AAbbCCddEE"
+    secret_file = tmp_path / "mysecret"
+    secret_file.write_text(f"{secret_string}\n")
+
+    ee_def = data_dir / 'v3' / 'extra_build_cli_args' / 'execution-environment.yml'
+
+    result = cli(f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} '
+                 f'--container-runtime {runtime} -v 3 '
+                 f'--extra-build-cli-args="--secret id=mytoken,src={str(secret_file)}"',
+                 allow_error=True)
+
+    assert secret_string in result.stdout

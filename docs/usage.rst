@@ -167,6 +167,15 @@ Specifies the container image validation policy to use. Valid only when :ref:`co
 
 Specifies the path to a GPG keyring file to use for validating container image signatures.
 
+.. _extra-build-cli-args:
+
+``--extra-build-cli-args``
+**************************
+
+.. note:: Added in version 3.1
+
+This option allows the user to pass any additional command line arguments to the container engine
+build command (``docker build`` or ``podman build``).
 
 ``--verbosity``
 ***************

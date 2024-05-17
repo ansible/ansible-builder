@@ -150,6 +150,11 @@ def add_container_options(parser):
         help='Squash layers in the final image (choices: %(choices)s). Defaults to "%(default)s". (podman only)'
     )
 
+    build_command_parser.add_argument(
+        '--extra-build-cli-args',
+        help='Extra arguments to pass to the container build CLI command',
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',

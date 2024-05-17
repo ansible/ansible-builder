@@ -372,3 +372,18 @@ def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
     path = str(exec_env_definition_file(content=content))
     with pytest.raises(ValueError, match=f'maximum verbosity is {constants.max_verbosity}'):
         prepare(['create', '-f', path, '-c', str(tmp_path), verbosity_opt])
+
+
+def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
+    path = str(exec_env_definition_file(content=content))
+    extras = ['--cache-ttl', '--mount=type=secret,id=mytoken', '--compress']
+
+    aee = prepare(['build',
+                   '-f', path,
+                   '-c', str(tmp_path),
+                   '--extra-build-cli-args', ' '.join(extras),
+                   ])
+
+    for extra in extras:
+        assert extra in aee.build_command
