@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shlex
 
 from . import constants
 from .containerfile import Containerfile
@@ -242,7 +243,7 @@ class AnsibleBuilder:
             if self.container_policy != PolicyChoices.IGNORE:
                 command.append('--pull-always')
 
-        command.extend(self.extra_build_cli_args.split())
+        command.extend(shlex.split(self.extra_build_cli_args))
         command.append(self.build_context)
 
         return command

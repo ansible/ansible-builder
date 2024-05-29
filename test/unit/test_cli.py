@@ -1,7 +1,8 @@
 import os
 import runpy
-import pytest
+import shlex
 
+import pytest
 
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
@@ -377,12 +378,12 @@ def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
 def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
     content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
-    extras = ['--cache-ttl', '--mount=type=secret,id=mytoken', '--compress']
+    extras = ['--cache-ttl', '--mount=type=secret,id=mytoken', '--compress', '--env=TEST="blah blah"']
 
     aee = prepare(['build',
                    '-f', path,
                    '-c', str(tmp_path),
-                   '--extra-build-cli-args', ' '.join(extras),
+                   '--extra-build-cli-args', shlex.join(extras),
                    ])
 
     for extra in extras:
