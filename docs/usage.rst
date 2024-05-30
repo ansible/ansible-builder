@@ -175,7 +175,13 @@ Specifies the path to a GPG keyring file to use for validating container image s
 .. note:: Added in version 3.1
 
 This option allows the user to pass any additional command line arguments to the container engine
-build command (``docker build`` or ``podman build``).
+build command (``docker build`` or ``podman build``). Take care when using this option as there is
+no attempt to identify or resolve conflicting argument values from this option and arguments
+normally added by ``ansible-builder``.
+
+.. code::
+
+   $ ansible-builder build --extra-build-cli-args='--pull --env=MY_ENV_VAR'
 
 ``--verbosity``
 ***************
