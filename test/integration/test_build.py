@@ -282,3 +282,19 @@ def test_extra_build_cli_args(cli, runtime, data_dir, ee_tag, tmp_path):
                  allow_error=True)
 
     assert secret_string in result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_empty_galaxy_requirements(cli, runtime, data_dir, ee_tag, tmp_path):
+    """
+    Make sure empty galaxy requirements do not cause the build to fail.
+
+    Bug fix for issues #290 and #641
+    """
+    ee_def = data_dir / 'v3' / 'empty_galaxy_reqs' / 'execution-environment.yml'
+
+    result = cli(f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} '
+                 f'--container-runtime {runtime} -v 3 ',
+                 allow_error=True)
+
+    assert result.rc == 0

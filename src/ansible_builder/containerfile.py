@@ -434,6 +434,10 @@ class Containerfile:
             # in the final image.
             env = "ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 "
 
+        # If nothing actually gets installed, make sure this directory will exist
+        # to prevent the COPY step from failing later.
+        self.steps.append(f"RUN mkdir -p {os.path.dirname(constants.base_collections_path.rstrip('/'))}")
+
         self.steps.append(
             f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
             f"-r {constants.STD_GALAXY_FILENAME}"

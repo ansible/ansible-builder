@@ -1,3 +1,5 @@
+import os
+
 from ansible_builder import constants
 from ansible_builder.containerfile import Containerfile
 from ansible_builder.user_definition import UserDefinition
@@ -50,6 +52,7 @@ def test_prepare_galaxy_install_steps(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path)
     c._prepare_galaxy_install_steps()
     expected = [
+        f"RUN mkdir -p {os.path.dirname(constants.base_collections_path.rstrip('/'))}",
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
         f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ANSIBLE_GALAXY_DISABLE_GPG_VERIFY=1 ansible-galaxy collection install "
@@ -68,6 +71,7 @@ def test_prepare_galaxy_install_steps_with_keyring(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path, galaxy_keyring=constants.default_keyring_name)
     c._prepare_galaxy_install_steps()
     expected = [
+        f"RUN mkdir -p {os.path.dirname(constants.base_collections_path.rstrip('/'))}",
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
         f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
@@ -89,6 +93,7 @@ def test_prepare_galaxy_install_steps_with_sigcount(build_dir_and_ee_yml):
                            galaxy_required_valid_signature_count=sig_count)
     c._prepare_galaxy_install_steps()
     expected = [
+        f"RUN mkdir -p {os.path.dirname(constants.base_collections_path.rstrip('/'))}",
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
         f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
@@ -111,6 +116,7 @@ def test_prepare_galaxy_install_steps_with_ignore_code(build_dir_and_ee_yml):
                            galaxy_ignore_signature_status_codes=codes)
     c._prepare_galaxy_install_steps()
     expected = [
+        f"RUN mkdir -p {os.path.dirname(constants.base_collections_path.rstrip('/'))}",
         f"RUN ansible-galaxy role install $ANSIBLE_GALAXY_CLI_ROLE_OPTS "
         f"-r {constants.STD_GALAXY_FILENAME} --roles-path \"{constants.base_roles_path}\"",
         f"RUN ansible-galaxy collection install $ANSIBLE_GALAXY_CLI_COLLECTION_OPTS "
