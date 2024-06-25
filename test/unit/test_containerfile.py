@@ -145,7 +145,7 @@ def test_v2_custom_builder_image(build_dir_and_ee_yml):
     c.prepare()
 
     assert 'ARG EE_BUILDER_IMAGE="quay.io/user/mycustombuilderimage:latest"' in c.steps
-    assert "FROM $EE_BUILDER_IMAGE as builder" in c.steps
+    assert "FROM $EE_BUILDER_IMAGE AS builder" in c.steps
 
 
 def test_v3_various(build_dir_and_ee_yml):
@@ -295,7 +295,7 @@ def test_v1_builder_image(build_dir_and_ee_yml):
     tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
-    assert "FROM $EE_BUILDER_IMAGE as builder" in c.steps
+    assert "FROM $EE_BUILDER_IMAGE AS builder" in c.steps
     assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
     assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
 
@@ -315,7 +315,7 @@ def test_v2_builder_image(build_dir_and_ee_yml):
     tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
-    assert "FROM $EE_BUILDER_IMAGE as builder" in c.steps
+    assert "FROM $EE_BUILDER_IMAGE AS builder" in c.steps
     assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
     assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
 
@@ -333,7 +333,7 @@ def test_v2_builder_image_default(build_dir_and_ee_yml):
     tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
-    assert "FROM base as builder" in c.steps
+    assert "FROM base AS builder" in c.steps
     assert "COPY _build/scripts/pip_install /output/scripts/pip_install" not in c.steps
 
 

@@ -75,7 +75,7 @@ class Containerfile:
         # 'base' (possibly customized) will be used by future build stages
         self.steps.extend([
             "# Base build stage",
-            "FROM $EE_BASE_IMAGE as base",
+            "FROM $EE_BASE_IMAGE AS base",
             "USER root",
             "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
         ])
@@ -108,7 +108,7 @@ class Containerfile:
             self.steps.extend([
                 "",
                 "# Galaxy build stage",
-                "FROM base as galaxy",
+                "FROM base AS galaxy",
             ])
 
             self._insert_global_args()
@@ -137,7 +137,7 @@ class Containerfile:
         self.steps.extend([
             "",
             "# Builder build stage",
-            f"FROM {image} as builder",
+            f"FROM {image} AS builder",
             "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
             "WORKDIR /build",
         ])
@@ -164,7 +164,7 @@ class Containerfile:
         self.steps.extend([
             "",
             "# Final build stage",
-            "FROM base as final",
+            "FROM base AS final",
             "ENV PIP_BREAK_SYSTEM_PACKAGES=1",
         ])
 
