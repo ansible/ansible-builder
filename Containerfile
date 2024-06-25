@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=quay.io/centos/centos:stream9
 
-FROM $BASE_IMAGE as builder
+FROM $BASE_IMAGE AS builder
 # build this library (meaning ansible-builder)
 COPY . /tmp/src
 COPY ./src/ansible_builder/_target_scripts/* /output/scripts/
