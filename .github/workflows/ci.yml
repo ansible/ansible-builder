@@ -60,7 +60,7 @@ jobs:
           - name: '3.12'
             tox_env: integration-py312
 
-          - name: '3.13.0-alpha - 3.13.0'
+          - name: '3.13'
             tox_env: integration-py313
 
     steps:
@@ -73,6 +73,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py_version.name }}
+          allow-prereleases: true
 
       - name: Install tox
         run: |
@@ -107,7 +108,7 @@ jobs:
           - name: '3.12'
             tox_env: unit-py312
 
-          - name: '3.13.0-alpha - 3.13.0'
+          - name: '3.13'
             tox_env: unit-py313
 
     steps:
@@ -118,6 +119,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.py_version.name }}
+          allow-prereleases: true
 
       - name: Install tox
         run: |
