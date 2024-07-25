@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 # Need to call this directly for multiple tag testing
 from test.conftest import delete_image
@@ -298,3 +299,52 @@ def test_empty_galaxy_requirements(cli, runtime, data_dir, ee_tag, tmp_path):
                  allow_error=True)
 
     assert result.rc == 0
+
+
+@pytest.mark.test_all_runtimes
+def test_ansible_check_is_skipped(cli, runtime, ee_tag, data_dir, tmp_path):
+    """
+    Test that the check_ansible script is skipped will NOT cause build failure.
+    """
+    ee_def = data_dir / 'v3' / 'check_ansible' / 'ee-skip.yml'
+
+    result = cli(
+        f'ansible-builder build --no-cache -c {tmp_path} -f {ee_def} -t {ee_tag} '
+        f'--container-runtime={runtime} -v3'
+    )
+
+    assert result.rc == 0
+
+
+@pytest.mark.test_all_runtimes
+def test_missing_ansible(cli, runtime, ee_tag, data_dir, tmp_path):
+    """
+    Test that the check_ansible script will cause build failure if
+    ansible-core is not installed.
+    """
+    ee_def = data_dir / 'v3' / 'check_ansible' / 'ee-missing-ansible.yml'
+
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -v3'
+        )
+
+    assert "ERROR - Missing Ansible installation" in einfo.value.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_missing_runner(cli, runtime, ee_tag, data_dir, tmp_path):
+    """
+    Test that the check_ansible script will cause build failure if
+    ansible-runner is not installed.
+    """
+    ee_def = data_dir / 'v3' / 'check_ansible' / 'ee-missing-runner.yml'
+
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -v3'
+        )
+
+    assert "ERROR - Missing Ansible Runner installation" in einfo.value.stdout
