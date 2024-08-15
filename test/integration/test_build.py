@@ -348,3 +348,22 @@ def test_missing_runner(cli, runtime, ee_tag, data_dir, tmp_path):
         )
 
     assert "ERROR - Missing Ansible Runner installation" in einfo.value.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_bad_ansible_cfg(cli, runtime, ee_tag, data_dir, tmp_path):
+    """
+    Test that the check_galaxy script will cause build failure with
+    incorrect ansible.cfg
+    """
+    ee_def = data_dir / 'v3' / 'check_galaxy' / 'ee-bad-ansible-cfg.yml'
+
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -v3'
+        )
+
+    assert "ERROR - 'ansible-galaxy' command not functioning as expected" in einfo.value.stdout
+    assert ("ERROR: Error reading config file (/etc/ansible/ansible.cfg): "
+            "Source contains parsing errors:") in einfo.value.stdout
