@@ -1,0 +1,25 @@
+version: 3
+
+images:
+  base_image:
+    name: quay.io/centos/centos:stream9
+
+dependencies:
+  ansible_core:
+    package_pip: ansible-core
+  ansible_runner:
+    package_pip: ansible-runner
+  galaxy:
+    collections:
+      - containers.podman
+
+options:
+  package_manager_path: '/bin/true'
+
+additional_build_files:
+  - src: ./files/bad_ansible.cfg
+    dest: configs
+
+additional_build_steps:
+  prepend_galaxy:
+    - COPY _build/configs/bad_ansible.cfg /etc/ansible/ansible.cfg

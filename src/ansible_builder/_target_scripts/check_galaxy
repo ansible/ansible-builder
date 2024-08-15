@@ -26,11 +26,13 @@ if [ $? -ne 0 ]
 then
     cat<<EOF
 **********************************************************************
-ERROR - Missing Ansible installation
+ERROR - 'ansible-galaxy' command not functioning as expected
 
-  The 'ansible-galaxy' command is not found in the base image. This
-  image is used to create the intermediary image that performs the
-  Galaxy collection and role installation process.
+  There was an error running the 'ansible-galaxy' command. Some
+  possible causes are 'ansible-core' missing from the base image, an
+  incorrect 'ansible.cfg', or 'ansible-galaxy' not being available to
+  the selected Python interpreter. Please use the -vvv option to
+  examine the build output for any errors.
 
   Ansible must be installed in the base image. If you are using a
   recent enough version of the execution environment file, you may
