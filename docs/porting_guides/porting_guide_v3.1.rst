@@ -108,7 +108,7 @@ Environment file by adding these lines to it:
 
     additional_build_steps:
       append_base:
-        - RUN pip3 install -U pip
+        - RUN $PYCMD -m pip install -U pip
 
 That will upgrade ``pip`` to the latest version within the base image. To restrict the upgrade to a specific
 version of ``pip``, alter the upgrade command to specify that version. For example:
@@ -117,4 +117,4 @@ version of ``pip``, alter the upgrade command to specify that version. For examp
 
     additional_build_steps:
       append_base:
-        - RUN pip3 install -U pip==20.3
+        - RUN $PYCMD -m pip install -U pip==20.3
