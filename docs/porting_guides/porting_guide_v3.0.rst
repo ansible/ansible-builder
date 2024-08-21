@@ -1,7 +1,8 @@
-.. _porting_guide_v3:
+.. _porting_guide_v3.0:
 
-Ansible Builder version 3 Porting Guide
-=======================================
+*********************************
+Ansible Builder 3.0 Porting Guide
+*********************************
 
 This section discusses the behavioral changes between ``ansible-builder`` version 1.2 and version 3.0.
 
