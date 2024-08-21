@@ -26,10 +26,10 @@ Builder will *expect* the requirements file to be in this format, but it makes t
 
 #. Comments (lines beginning with ``#``) are ignored.
 #. Any line from the requirements file that is not compliant with PEP508 causes a warning to be emitted and
-   the line passed through to ``pip`` unmodified. It is not recommended to depend on this behavior, as we
+   the line passed through to ``pip`` unmodified. It is not recommended to depend on this behavior, as
    it can change suddenly between ``pip`` releases, and can cause other problems with dependency resolution.
 
-The passthrough of non-PEP508 compliant lines may expose issues that were hidden by the,
+The passthrough of non-PEP508 compliant lines may expose issues that were hidden by the
 version 3.0 dependency sanitizer, which often silently ignored and removed them.
 
 Dependency Sanitization
