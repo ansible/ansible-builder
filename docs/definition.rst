@@ -472,7 +472,7 @@ Example ``options`` section:
             entrypoint: '["dumb-init"]'
             cmd: '["csh"]'
         package_manager_path: /usr/bin/microdnf
-        relax_password_permissions: false
+        relax_passwd_permissions: false
         skip_ansible_check: true
         workdir: /myworkdir
         user: bob
