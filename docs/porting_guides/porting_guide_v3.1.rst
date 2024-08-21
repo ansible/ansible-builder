@@ -6,8 +6,8 @@ This section discusses the behavioral changes between ``ansible-builder`` versio
 
 .. note::
 
-    We highly advise running ``ansible-builder`` with increased verbosity (``--v3``) to fully expose any error
-    messages that may help in diagnosing any problems.
+    We highly advise running ``ansible-builder`` with increased verbosity using the ``-vvv`` option (``--v3`` for
+    versions older than 3.1) to fully expose any error messages that may help in diagnosing any problems.
 
 .. contents:: Topics
 
@@ -25,17 +25,17 @@ Python requirements files are expected to follow the `PEP 508 standard <https://
 Builder will *expect* the requirements file to be in this format, but it makes two exceptions:
 
 #. Comments (lines beginning with ``#``) are ignored.
-#. Any line from the requirements file that is not compliant with PEP508 causes a warning to be omitted, and
-   the line is passed through to ``pip`` unmodified. It is recommended to *not* depend on this behavior as we
-   cannot guarantee that these lines will not cause issues later during the dependency installation process.
+#. Any line from the requirements file that is not compliant with PEP508 causes a warning to be emitted and
+   the line passed through to ``pip`` unmodified. It is not recommended to depend on this behavior, as we
+   it can change suddenly between ``pip`` releases, and can cause other problems with dependency resolution.
 
-The passthrough of lines not following PEP508 may cause issues that may not have been present with version 3.0
-since many of these lines were simply ignored and not passed to ``pip`` with that version.
+The passthrough of non-PEP508 compliant lines may expose issues that were hidden by the,
+version 3.0 dependency sanitizer, which often silently ignored and removed them.
 
 Dependency Sanitization
 -----------------------
 
-Dependency sanitization (the combining of duplicate dependencies into a single dependency entry) is no longer performed.
+Dependency sanitization (the combining of duplicate dependencies into a single dependency entry) is no longer performed by ``ansible-builder``.
 
 .. note::
 
@@ -84,8 +84,8 @@ requirements from included collections and/or from the user supplied requirement
 on the base image defined within the Execution Environment file, and it means that the version of ``pip`` installed
 within that image is too old to handle duplicate requirement entries.
 
-To determine where the duplicate requirements are coming from, run ``ansible-builder`` with the ``--v3`` option
-to get more verbose output, then look for the output from the introspection phase. It will look similar to below:
+To determine where the duplicate requirements are coming from, run ``ansible-builder`` with the ``-vvv`` option
+to get more verbose output, then look for the output from the introspection phase. It will look similar to:
 
 ::
 
