@@ -126,6 +126,14 @@ def add_container_options(parser):
     )
 
     build_command_parser.add_argument(
+        '--ssh',
+        type=str,
+        default=None,
+        dest='ssh',
+        help='SSH agent socket or keys to expose to the build (format: "default|<id>[=<socket>|<key>[,<key>]]")',
+    )
+
+    build_command_parser.add_argument(
         '--prune-images',
         action='store_true',
         help='Remove all dangling images after building the image',

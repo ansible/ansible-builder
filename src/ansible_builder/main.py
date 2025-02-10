@@ -24,6 +24,7 @@ class AnsibleBuilder:
                  container_runtime: str = constants.default_container_runtime,
                  output_filename: str | None = None,
                  no_cache: bool = False,
+                 ssh: str | None = None,
                  prune_images: bool = False,
                  verbosity: int = constants.default_verbosity,
                  galaxy_keyring: str | None = None,
@@ -46,6 +47,7 @@ class AnsibleBuilder:
         :param str output_filename: Name of the resulting instruction file. If not supplied, it
             will default to a value based on container_runtime.
         :param bool no_cache: If True, will not use the build cache when building an image.
+        :param str ssh: SSH agent socket or keys to expose to the build (format: "default|<id>[=<socket>|<key>[,<key>]]").
         :param bool prune_images: If True, will attempt an image prune at the end of a successful build.
         :param int verbosity: Output verbosity level.
         :param str galaxy_keyring: GPG keyring file used by ansible-galaxy to opportunistically
@@ -86,6 +88,7 @@ class AnsibleBuilder:
         self.container_runtime = container_runtime
         self.build_args = build_args or {}
         self.no_cache = no_cache
+        self.ssh = ssh
         self.prune_images = prune_images
 
         self.containerfile = Containerfile(
@@ -206,6 +209,9 @@ class AnsibleBuilder:
 
         if self.no_cache:
             command.append('--no-cache')
+
+        if self.ssh:
+            command.append(f'--ssh={self.ssh}')
 
         # Image layer squashing works only with podman. Still experimental for docker.
         if self.container_runtime == 'podman' and self.squash and self.squash != 'off':
