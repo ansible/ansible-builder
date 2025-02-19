@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import filecmp
 import logging
 import logging.config
@@ -10,58 +12,50 @@ import sys
 from collections import deque
 from pathlib import Path
 
-from .colors import MessageColors
 from . import constants
 
 
 logger = logging.getLogger(__name__)
-logging_levels = {
-    '0': 'ERROR',
-    '1': 'WARNING',
-    '2': 'INFO',
-    '3': 'DEBUG',
-}
 
 
 class ColorFilter(logging.Filter):
+    class MessageColors:
+        ERROR = '\033[91m'    # bright red
+        WARNING = '\033[93m'  # bright yellow
+        INFO = '\033[94m'     # bright blue
+        DEBUG = '\033[95m'    # bright magenta
+        OKGREEN = '\033[92m'  # bright green
+        DEFAULT = '\033[0m'   # terminal default
+
     color_map = {
-        'ERROR': MessageColors.FAIL,
-        'WARNING': MessageColors.WARNING,
-        'INFO': MessageColors.HEADER,
-        'DEBUG': MessageColors.OK
+        logging.CRITICAL: MessageColors.ERROR,
+        logging.ERROR: MessageColors.ERROR,
+        logging.WARNING: MessageColors.WARNING,
+        logging.INFO: MessageColors.INFO,
+        logging.DEBUG: MessageColors.DEBUG,
+        constants.SUCCESS_LOGLEVEL: MessageColors.OKGREEN,
     }
 
     def filter(self, record):
         if sys.stdout.isatty():
-            record.msg = self.color_map[record.levelname] + record.msg + MessageColors.ENDC
+            record.msg = self.color_map[record.levelno] + record.msg + ColorFilter.MessageColors.DEFAULT
         return record
 
 
-LOGGING = {
-    'version': 1,
-    'filters': {
-        'colorize': {
-            '()': ColorFilter
-        }
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'filters': ['colorize'],
-            'stream': 'ext://sys.stdout'
-        }
-    },
-    'loggers': {
-        'ansible_builder': {
-            'handlers': ['console'],
-        }
+def configure_logger(verbosity: int, disable_colors: bool = False):
+    logging_levels = {
+        0: 'ERROR',
+        1: 'WARNING',
+        2: 'INFO',
+        3: 'DEBUG',
     }
-}
 
-
-def configure_logger(verbosity):
-    LOGGING['loggers']['ansible_builder']['level'] = logging_levels[str(verbosity)]
-    logging.config.dictConfig(LOGGING)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging_levels[verbosity])
+    handler = logging.StreamHandler(sys.stdout)
+    if not disable_colors:
+        handler.addFilter(ColorFilter())
+    root_logger.addHandler(handler)
 
 
 def run_command(command, capture_output=False, allow_error=False):
@@ -119,7 +113,7 @@ def run_command(command, capture_output=False, allow_error=False):
         logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
         sys.exit(1)
 
-    return (rc, output)
+    return rc, output
 
 
 def write_file(filename: str, lines: list) -> bool:
@@ -171,9 +165,9 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
     to copy the file if it doesn't exist, or if it has changed between builds.
     See the `copy_directory()` function for the directory copy equivalent.
 
-    :param source str: Path to a source file.
-    :param dest str: Path to a destination file within the context subdir.
-    :param ignore_mtime bool: Whether or not mtime should be considered.
+    :param str source: Path to a source file.
+    :param str dest: Path to a destination file within the context subdir.
+    :param bool ignore_mtime: Whether mtime should be considered.
 
     :returns: True if the file was copied, False if not.
 

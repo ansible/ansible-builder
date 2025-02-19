@@ -48,3 +48,5 @@ FINAL_IMAGE_BIN_PATH = "/opt/builder/bin"
 
 DEFAULT_EE_BASENAME = "execution-environment"
 YAML_FILENAME_EXTENSIONS = ('yml', 'yaml')
+
+SUCCESS_LOGLEVEL = 100

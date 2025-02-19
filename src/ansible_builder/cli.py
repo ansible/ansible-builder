@@ -6,7 +6,6 @@ import importlib.metadata
 
 from . import constants
 
-from .colors import MessageColors
 from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .policies import PolicyChoices
@@ -40,19 +39,55 @@ class CustomVerbosityAction(argparse.Action):
         setattr(namespace, self.dest, self.count)
 
 
+def _should_disable_colors() -> bool:
+    """
+    Check the environment to decide if text colorization should be disabled.
+
+    According to no-color.org, if NO_COLOR is present, and not an empty string (regardless of
+    its value), text should not be colorized.
+
+    According to force-color.org, if FORCE_COLOR is present, and not an empty string (regardless
+    of its value), text should be colorized, and should trump NO_COLOR.
+
+    :returns: True if colors are disabled, False if enabled.
+    """
+    disabled = False
+
+    if os.environ.get('TERM', '') == 'dumb':
+        return True
+
+    no_color = os.environ.get('NO_COLOR', None)
+    force_color = os.environ.get('FORCE_COLOR', None)
+
+    if no_color:
+        disabled = True
+    if force_color:
+        disabled = False
+
+    return disabled
+
+
 def run():
     args = parse_args()
-    configure_logger(args.verbosity)
+
+    # If user explicitly requests to disable colors, that value takes precedence. Otherwise,
+    # we'll check the environment.
+    disable_colors = args.no_colors
+    if '--no-colors' not in sys.argv:
+        disable_colors = _should_disable_colors()
+
+    configure_logger(args.verbosity, disable_colors)
 
     if args.action in ['create', 'build']:
-        ab = AnsibleBuilder(**vars(args))
+        kwargs = vars(args)
+        kwargs.pop('no_colors')  # not a value we should pass along
+
+        ab = AnsibleBuilder(**kwargs)
         action = getattr(ab, ab.action)
         try:
             if action():
-                print(
-                    f"{MessageColors.OKGREEN}Complete! The build context can be found at: "
-                    f"{os.path.abspath(ab.build_context)}{MessageColors.ENDC}"
-                )
+                logger.log(constants.SUCCESS_LOGLEVEL,
+                           "Complete! The build context can be found at: %s", os.path.abspath(ab.build_context))
                 sys.exit(0)
         except DefinitionError as e:
             logger.error(e.args[0])
@@ -199,6 +234,12 @@ def add_container_options(parser):
                             'Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
                             'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). '
                             'Default is %(default)s.')
+
+        n.add_argument('--no-colors',
+                       dest='no_colors',
+                       action='store_true',
+                       help='Disable ANSI text colors (enabled by default). NO_COLOR and FORCE_COLOR environment '
+                            'variables will be honored if this option is not used.')
 
 
 def parse_args(args=None):
