@@ -6,7 +6,7 @@ import pytest
 
 from ansible_builder import constants
 from ansible_builder.main import AnsibleBuilder
-from ansible_builder.cli import parse_args
+from ansible_builder.cli import parse_args, _should_disable_colors
 from ansible_builder.policies import PolicyChoices
 
 
@@ -390,3 +390,31 @@ def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
 
     for extra in extras:
         assert extra in aee.build_command
+
+
+@pytest.fixture
+def env_save():
+    orig = {}
+    for val in ('NO_COLOR', 'FORCE_COLOR', 'TERM'):
+        orig[val] = os.environ.get(val, None)
+    yield
+    for key, value in orig.items():
+        if value:
+            os.environ[key] = value
+
+
+@pytest.mark.parametrize('no_color,force_color,term,expected',
+                         [
+                             ('', '', 'xterm', False),
+                             ('1', '', 'xterm', True),
+                             ('', '1', 'xterm', False),
+                             ('1', '1', 'xterm', False),
+                             ('', '', 'dumb', True),
+                             ('', '1', 'dumb', True),
+                         ])
+def test__should_disable_colors(no_color, force_color, term, expected, env_save):
+    # pylint: disable=W0613,W0621
+    os.environ['NO_COLOR'] = no_color
+    os.environ['FORCE_COLOR'] = force_color
+    os.environ['TERM'] = term
+    assert _should_disable_colors() == expected
