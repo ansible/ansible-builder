@@ -408,7 +408,7 @@ def env_save():
                              ('', '', 'xterm', False),
                              ('1', '', 'xterm', True),
                              ('', '1', 'xterm', False),
-                             ('1', '1', 'xterm', False),
+                             ('1', '1', 'xterm', True),  # NO_COLOR trumps FORCE_COLOR
                              ('', '', 'dumb', True),
                              ('', '1', 'dumb', True),
                          ])

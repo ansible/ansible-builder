@@ -47,7 +47,10 @@ def _should_disable_colors() -> bool:
     its value), text should not be colorized.
 
     According to force-color.org, if FORCE_COLOR is present, and not an empty string (regardless
-    of its value), text should be colorized, and should trump NO_COLOR.
+    of its value), text should be colorized.
+
+    If both NO_COLOR and FORCE_COLOR are present, NO_COLOR will take precedence so that we
+    will err on the safe side for those that use screen readers.
 
     :returns: True if colors are disabled, False if enabled.
     """
@@ -59,10 +62,10 @@ def _should_disable_colors() -> bool:
     no_color = os.environ.get('NO_COLOR', None)
     force_color = os.environ.get('FORCE_COLOR', None)
 
-    if no_color:
-        disabled = True
     if force_color:
         disabled = False
+    if no_color:
+        disabled = True
 
     return disabled
 
