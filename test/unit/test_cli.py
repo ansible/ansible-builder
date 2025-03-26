@@ -12,9 +12,7 @@ from ansible_builder.policies import PolicyChoices
 
 def prepare(args):
     args = parse_args(args)
-    kwargs = vars(args)
-    kwargs.pop('no_colors')
-    return AnsibleBuilder(**kwargs)
+    return AnsibleBuilder(**vars(args))
 
 
 def test_custom_image(exec_env_definition_file, tmp_path):

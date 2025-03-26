@@ -203,16 +203,6 @@ will stack. For example, the following are equivalent to setting the verbosity l
    $ ansible-builder build -v -v -v
 
 
-``--no-colors``
-***************
-
-Disables ANSI text colors.
-
-If this option is not given, the default will be to enable text colors for the output.
-The ``NO_COLOR`` and ``FORCE_COLOR`` environment variables will be honored if this CLI option
-is not supplied. If both environment variables are supplied, ``NO_COLOR`` will take precedence.
-
-
 ``--prune-images``
 ******************
 

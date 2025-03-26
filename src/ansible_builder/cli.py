@@ -73,19 +73,12 @@ def _should_disable_colors() -> bool:
 def run():
     args = parse_args()
 
-    # If user explicitly requests to disable colors, that value takes precedence. Otherwise,
-    # we'll check the environment.
-    disable_colors = args.no_colors
-    if '--no-colors' not in sys.argv:
-        disable_colors = _should_disable_colors()
+    disable_colors = _should_disable_colors()
 
     configure_logger(args.verbosity, disable_colors)
 
     if args.action in ['create', 'build']:
-        kwargs = vars(args)
-        kwargs.pop('no_colors')  # not a value we should pass along
-
-        ab = AnsibleBuilder(**kwargs)
+        ab = AnsibleBuilder(**vars(args))
         action = getattr(ab, ab.action)
         try:
             if action():
@@ -237,12 +230,6 @@ def add_container_options(parser):
                             'Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
                             'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). '
                             'Default is %(default)s.')
-
-        n.add_argument('--no-colors',
-                       dest='no_colors',
-                       action='store_true',
-                       help='Disable ANSI text colors (enabled by default). NO_COLOR and FORCE_COLOR environment '
-                            'variables will be honored if this option is not used.')
 
 
 def parse_args(args=None):
