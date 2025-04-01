@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Callable
 
 import yaml
+from packaging.requirements import InvalidRequirement, Requirement
 
 from . import constants
 from .exceptions import DefinitionError
@@ -158,7 +159,20 @@ class UserDefinition:
 
     @property
     def ansible_core_ref(self):
-        return self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
+        ref = self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
+
+        if ref and constants.REQUIRE_ANSIBLE_CORE_PIN:
+            try:
+                req = Requirement(ref)
+            except InvalidRequirement as e:
+                raise DefinitionError("Invalid package requirement specified for 'ansible_core'") from e
+
+            if not req.specifier:
+                raise DefinitionError(
+                    "Value for 'ansible_core' must contain a version constraint, such as 'ansible-core==2.16.*'"
+                )
+
+        return ref
 
     @property
     def ansible_runner_ref(self):
