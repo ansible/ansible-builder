@@ -58,7 +58,6 @@ jobs:
       check-name: >-
         ${{ matrix.toxenv }}
         under 🐍${{ matrix.python-version }}
-      checkout-src-git-fetch-depth: 0
       python-version: >-
         ${{ matrix.python-version }}
       require-successful-codecov-uploads: >-
@@ -116,6 +115,8 @@ jobs:
       check-name: >-
         ${{ matrix.toxenv }}
         under 🐍${{ matrix.python-version }}
+      checkout-src-git-fetch-depth: >-
+        ${{ matrix.toxenv == 'unit' && 1 || 0 }}
       job-dependencies-context: >-  # context for hooks
         ${{ toJSON(needs) }}
       python-version: >-
