@@ -27,10 +27,29 @@ The Ansible Builder 3.x execution environment definition file accepts seven top-
 * options
 * version
 
-Version 3 sample file
----------------------
+Version 3 sample files
+----------------------
 
-Here is a sample version 3 EE file. To use Ansible Builder 3.x, you must specify the schema version. If your EE file does not specify ``version: 3``, Ansible Builder will assume you want version 1.
+Below are some sample version 3 EE files. To use Ansible Builder 3.x, you must specify the schema version. If your EE file does not specify ``version: 3``, Ansible Builder will assume you want version 1.
+
+This first simple example should successfully build an execution environment using the most recent ``ubi9`` base image and
+the most recently compatible versions of ``ansible-core`` and ``ansible-runner`` for that image.
+
+.. code:: yaml
+
+   ---
+   version: 3
+   images:
+     base_image:
+       name: docker.io/redhat/ubi9:latest
+   dependencies:
+     ansible_core:
+       package_pip: ansible-core
+     ansible_runner:
+       package_pip: ansible-runner
+
+The second example below is more detailed and is not usable without modification and/or the creation of supporting
+requirements and extra files, but does demonstrate more complete EE file syntax.
 
 .. code:: yaml
 
