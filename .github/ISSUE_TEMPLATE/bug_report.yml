@@ -9,23 +9,21 @@ body:
       value: |
         **Thank you for reporting a bug in Ansible Builder.**
 
-        If you are looking for community support, please visit
-        the [Community guide](https://ansible.readthedocs.io/projects/builder/en/latest/community/)
-        for information on how to get in touch.
+        If this is a question about using `ansible-builder`, please do not use a new issue for your question.
+        New issues should be used only for submitting a new bug report. Please consult the [Community guide](https://ansible.readthedocs.io/projects/builder/en/latest/community/)
+        for information on how to submit your question to the [Ansible Forum](https://forum.ansible.com/).
 
   - type: input
     attributes:
       label: Ansible Builder version
       description: Output from `ansible-builder --version`
-      render: console
     validations:
       required: true
 
-  - type: textarea
+  - type: input
     attributes:
       label: Python version
       description: Output from `python -VV`
-      render: console
     validations:
       required: true
 
@@ -42,7 +40,6 @@ body:
     attributes:
       label: Container Runtime
       description: Output from `podman|docker --version`
-      render: console
       placeholder: podman --version
     validations:
       required: true
