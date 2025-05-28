@@ -42,7 +42,7 @@ class CollectionDefinition:
     def __init__(self, collection_path):
         self.reference_path = collection_path
 
-        # NOTE: Filenames should match constants.DEAFULT_EE_BASENAME and constants.YAML_FILENAME_EXTENSIONS.
+        # NOTE: Filenames should match constants.DEFAULT_EE_BASENAME and constants.YAML_FILENAME_EXTENSIONS.
         meta_file_base = os.path.join(collection_path, 'meta', 'execution-environment')
         ee_exists = False
         for ext in ('yml', 'yaml'):
@@ -69,7 +69,7 @@ class CollectionDefinition:
         )
 
     def namespace_name(self):
-        "Returns 2-tuple of namespace and name"
+        """Returns 2-tuple of namespace and name"""
         path_parts = [p for p in self.reference_path.split(os.path.sep) if p]
         return tuple(path_parts[-2:])
 
@@ -149,7 +149,7 @@ def process_collection(path):
     if sys_file:
         bindep_lines = bindep_file_data(os.path.join(path, sys_file))
 
-    return (pip_lines, bindep_lines)
+    return pip_lines, bindep_lines
 
 
 def process(data_dir=BASE_COLLECTIONS_PATH,
@@ -231,6 +231,7 @@ def process(data_dir=BASE_COLLECTIONS_PATH,
         if col_sys_exclude_lines:
             sys_req['exclude'] = col_sys_exclude_lines
 
+    retval: dict[str, dict | list]
     retval = {
         'python': py_req,
         'system': sys_req,
@@ -270,7 +271,7 @@ def strip_comments(reqs: dict[str, list]) -> dict[str, list]:
     for collection, lines in reqs.items():
         for line in lines:
             # strip comments
-            if (base_line := COMMENT_RE.sub('', line.strip())):
+            if base_line := COMMENT_RE.sub('', line.strip()):
                 result.setdefault(collection, []).append(base_line)
 
     return result
@@ -299,14 +300,15 @@ def should_be_excluded(value: str, exclusion_list: list[str]) -> bool:
 def filter_requirements(reqs: dict[str, list],
                         exclude: list[str] | None = None,
                         exclude_collections: list[str] | None = None,
-                        is_python: bool = True) -> list[str]:
+                        is_python: bool = True,
+                        warning_is_error: bool = False) -> list[str]:
     """
     Given a dictionary of Python requirement lines keyed off collections,
     return a list of cleaned up (no source comments) requirements
     annotated with comments indicating the sources based off the collection keys.
 
     Currently, non-pep508 compliant Python entries are passed through. We also no
-    longer attempt to normalize names (replace '_' with '-', etc), other than
+    longer attempt to normalize names (replace '_' with '-', etc.), other than
     lowercasing it for exclusion matching, since we no longer are attempting
     to combine similar entries.
 
@@ -315,6 +317,8 @@ def filter_requirements(reqs: dict[str, list],
     :param list exclude_collections: A list of collection names from which to exclude all requirements.
     :param bool is_python: This should be set to True for Python requirements, as each
         will be tested for PEP508 compliance. This should be set to False for system requirements.
+    :param bool warning_is_error: If True, warnings are treated as errors. This currently affects
+        only Python requirements.
 
     :return: A list of filtered and annotated requirements.
     """
@@ -342,6 +346,12 @@ def filter_requirements(reqs: dict[str, list],
                     parsed_req = Requirement(line)
                     name = parsed_req.name
                 except InvalidRequirement:
+                    if warning_is_error:
+                        logger.error(
+                            "Error on non-PEP508 compliant line '%s' from collection '%s'",
+                            line, collection)
+                        sys.exit(1)
+
                     logger.warning(
                         "Passing through non-PEP508 compliant line '%s' from collection '%s'",
                         line, collection
@@ -389,6 +399,7 @@ def parse_args(args=None):
 
 
 def run_introspect(args, log):
+    logger.debug("Requirements warnings are errors: %s", args.warning_is_error)
     data = process(args.folder,
                    user_pip=args.user_pip,
                    user_bindep=args.user_bindep,
@@ -403,13 +414,14 @@ def run_introspect(args, log):
         data['python'],
         exclude=data['python'].pop('exclude', []),
         exclude_collections=excluded_collections,
+        warning_is_error=args.warning_is_error,
     )
 
     data['system'] = filter_requirements(
         data['system'],
         exclude=data['system'].pop('exclude', []),
         exclude_collections=excluded_collections,
-        is_python=False
+        is_python=False,
     )
 
     print('---')
@@ -471,6 +483,10 @@ def create_introspect_parser(parser):
     introspect_parser.add_argument(
         '--write-bindep', dest='write_bindep',
         help='Write the combined bindep requirements file to this location.'
+    )
+    introspect_parser.add_argument(
+        '--warning-is-error', action='store_true',
+        help='Exit with error if requirement parsing produces warnings.'
     )
 
     return introspect_parser

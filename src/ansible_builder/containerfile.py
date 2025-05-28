@@ -232,6 +232,7 @@ class Containerfile:
                 self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_COLLECTION_OPTS'],
             'ANSIBLE_GALAXY_CLI_ROLE_OPTS': self.definition.build_arg_defaults['ANSIBLE_GALAXY_CLI_ROLE_OPTS'],
             'ANSIBLE_INSTALL_REFS': self.definition.ansible_ref_install_list,
+            'INTROSPECT_OPTS': self.definition.build_arg_defaults.get('INTROSPECT_OPTS'),
         }
 
         if self.definition.version >= 3:
@@ -490,6 +491,9 @@ class Containerfile:
                 introspect_cmd += f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}"
 
             introspect_cmd += " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
+
+            if introspect_opts := self.definition.build_arg_defaults.get('INTROSPECT_OPTS'):
+                introspect_cmd += f" {introspect_opts}"
 
             self.steps.append(introspect_cmd)
             self.steps.append("RUN /output/scripts/assemble")

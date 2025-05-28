@@ -216,6 +216,9 @@ schema_v3 = {
                 "PKGMGR_PRESERVE_CACHE": {
                     "type": "string",
                 },
+                "INTROSPECT_OPTS": {
+                    "type": "string",
+                }
             },
         },
 
