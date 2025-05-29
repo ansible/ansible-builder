@@ -199,9 +199,8 @@ class TestUserDefinition:
         )
         monkeypatch.setattr(constants, 'REQUIRE_ANSIBLE_CORE_PIN', True)
         definition = UserDefinition(path)
-        definition.validate()
         with pytest.raises(DefinitionError) as error:
-            _ = definition.ansible_core_ref
+            definition.validate()
         assert "Value for 'ansible_core' must contain a version constraint" in str(error.value.args[0])
 
     def test_v3_inline_python(self, exec_env_definition_file):

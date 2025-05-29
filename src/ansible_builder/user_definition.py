@@ -159,20 +159,7 @@ class UserDefinition:
 
     @property
     def ansible_core_ref(self):
-        ref = self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
-
-        if ref and constants.REQUIRE_ANSIBLE_CORE_PIN:
-            try:
-                req = Requirement(ref)
-            except InvalidRequirement as e:
-                raise DefinitionError("Invalid package requirement specified for 'ansible_core'") from e
-
-            if not req.specifier:
-                raise DefinitionError(
-                    "Value for 'ansible_core' must contain a version constraint, such as 'ansible-core==2.16.*'"
-                )
-
-        return ref
+        return self.raw.get('dependencies', {}).get('ansible_core', {}).get('package_pip', None)
 
     @property
     def ansible_runner_ref(self):
@@ -253,6 +240,30 @@ class UserDefinition:
             if dest.is_absolute() or '..' in dest.parts:
                 raise DefinitionError(f"'dest' must not be an absolute path or contain '..': {dest}")
 
+    def _validate_ansible_core_ref(self):
+        """
+        If a downstream has patched REQUIRE_ANSIBLE_CORE_PIN validate
+        that the 'ansible_core' ref constains a version constraint.
+
+        :raises: DefinitionError exception if version constraint is invalid or missing
+        """
+        if not constants.REQUIRE_ANSIBLE_CORE_PIN:
+            return
+
+        ref = self.ansible_core_ref
+        if not ref:
+            return
+
+        try:
+            req = Requirement(ref)
+        except InvalidRequirement as e:
+            raise DefinitionError("Invalid package requirement specified for 'ansible_core'") from e
+
+        if not req.specifier:
+            raise DefinitionError(
+                "Value for 'ansible_core' must contain a version constraint, such as 'ansible-core==2.16.*'"
+            )
+
     def validate(self):
         """
         Check that all specified keys in the definition file are valid.
@@ -260,6 +271,8 @@ class UserDefinition:
         :raises: DefinitionError exception if any errors are found.
         """
         validate_schema(self.raw)
+
+        self._validate_ansible_core_ref()
 
         for item in constants.CONTEXT_FILES:
             for exclude in (False, True):
