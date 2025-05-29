@@ -203,6 +203,23 @@ class TestUserDefinition:
             definition.validate()
         assert "Value for 'ansible_core' must contain a version constraint" in str(error.value.args[0])
 
+    def test_v3_ansible_install_ref_bad_req(self, monkeypatch, exec_env_definition_file):
+        path = exec_env_definition_file(
+            """
+            {'version': 3,
+             'images': { 'base_image': {'name': 'base_image:latest'}},
+             'dependencies': {
+                'ansible_core': {'package_pip': 'ansible-core=2.6.0'},
+                'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
+             }
+            }
+            """
+        )
+        monkeypatch.setattr(constants, 'REQUIRE_ANSIBLE_CORE_PIN', True)
+        definition = UserDefinition(path)
+        with pytest.raises(DefinitionError) as error:
+            definition.validate()
+        assert "Invalid package requirement specified for 'ansible_core'" in str(error.value.args[0])
     def test_v3_inline_python(self, exec_env_definition_file):
         """
         Test that inline values for dependencies.python work.

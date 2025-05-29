@@ -243,7 +243,7 @@ class UserDefinition:
     def _validate_ansible_core_ref(self):
         """
         If a downstream has patched REQUIRE_ANSIBLE_CORE_PIN validate
-        that the 'ansible_core' ref constains a version constraint.
+        that the 'ansible_core' ref contains a version constraint.
 
         :raises: DefinitionError exception if version constraint is invalid or missing
         """
