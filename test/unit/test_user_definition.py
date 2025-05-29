@@ -220,6 +220,7 @@ class TestUserDefinition:
         with pytest.raises(DefinitionError) as error:
             definition.validate()
         assert "Invalid package requirement specified for 'ansible_core'" in str(error.value.args[0])
+
     def test_v3_inline_python(self, exec_env_definition_file):
         """
         Test that inline values for dependencies.python work.
