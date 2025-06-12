@@ -208,11 +208,11 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
     return should_copy
 
 
-def set_read_permissions(filename: str) -> None:
-    """Set user/grp/other read permissions, respecting umask"""
+def set_default_file_permissions(filename: str) -> None:
+    """Set user+rw/grp+r/other+r read permissions, respecting umask"""
     umask = os.umask(0o777)
     os.umask(umask)
     os.chmod(
         filename,
-        os.stat(filename).st_mode | ((stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH) & ~umask)
+        os.stat(filename).st_mode | ((stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH) & ~umask)
     )

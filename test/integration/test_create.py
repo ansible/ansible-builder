@@ -143,7 +143,7 @@ def test_inline_requirements_file_perms(cli, build_dir_and_ee_yml):
 
     for out_file in (galaxy_req, python_req, system_req):
         assert out_file.exists()
-        for bit in (stat.S_IRUSR, stat.S_IRGRP, stat.S_IROTH):
+        for bit in (stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP, stat.S_IROTH):
             # If umask doesn't specifically prevent us from setting it, check that we set it
             if bit & ~umask:
                 assert out_file.stat().st_mode & bit
