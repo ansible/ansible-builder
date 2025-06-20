@@ -145,3 +145,48 @@ def test_copy_directory(tmp_path):
     dcmp = filecmp.dircmp(str(src), str(dst))
     assert not dcmp.left_only
     assert not dcmp.right_only
+
+def test_symlink_not_followed(tmp_path):
+    # Create the real file
+    real_file = tmp_path / "real.txt"
+    real_file.write_text("real content")
+
+    # Create a symlink to the real file
+    symlink_file = tmp_path / "link.txt"
+    symlink_file.symlink_to(real_file)
+
+    # Define the destination path
+    dest_file = tmp_path / "copied_link.txt"
+
+    # Call the function
+    copied = copy_file(str(symlink_file), str(dest_file))
+
+    # Assertions
+    assert copied is True
+    assert dest_file.exists()
+    assert dest_file.is_symlink()
+
+    # Confirm the symlink target
+    assert os.readlink(dest_file) == str(real_file)
+
+def test_copy_broken_symlink(tmp_path):
+    # Define the intended target (which does NOT exist)
+    missing_target = tmp_path / "nonexistent.txt"
+
+    # Create a broken symlink
+    broken_symlink = tmp_path / "broken_link.txt"
+    broken_symlink.symlink_to(missing_target)
+
+    # Destination path
+    dest_file = tmp_path / "copied_broken_link.txt"
+
+    # Call the function
+    copied = copy_file(str(broken_symlink), str(dest_file))
+
+    # Assertions
+    assert copied is True
+    assert dest_file.exists() is False
+    assert dest_file.is_symlink()
+
+    # Confirm the symlink still points to the same (non-existent) path
+    assert os.readlink(dest_file) == str(missing_target)
