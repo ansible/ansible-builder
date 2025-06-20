@@ -200,7 +200,7 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
         should_copy = True
 
     if should_copy:
-        shutil.copy2(source, dest)
+        shutil.copy2(source, dest, follow_symlinks=False)
     else:
         logger.debug("File %s is already up-to-date.", dest)
 
