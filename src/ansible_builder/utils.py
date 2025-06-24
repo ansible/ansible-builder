@@ -189,7 +189,17 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
         raise Exception(f"Source {source} can not be a directory. Please use copy_directory instead.")
     if Path(dest).is_dir():
         raise Exception(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
-    if not os.path.exists(dest):
+
+    if os.path.islink(dest):
+        if os.readlink(source) == os.readlink(dest):
+            # src/dest are symlinks which point to the same place
+            logger.debug("Symlink %s already exists.", dest)
+            should_copy = False
+        else:
+            logger.debug("Symlink %s had modifications and will be overwritten.", dest)
+            os.unlink(dest)
+            should_copy = True
+    elif not os.path.exists(dest):
         logger.debug("File %s will be created.", dest)
         should_copy = True
     elif not filecmp.cmp(source, dest, shallow=False):
