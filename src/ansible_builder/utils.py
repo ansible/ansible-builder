@@ -163,54 +163,65 @@ def copy_directory(source_dir: Path, dest: Path):
 
 def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
     """
-    Used to copy a source file to a destination file in the container runtime
-    context subfolder.
+    Copy a source file to a destination file within a container runtime context.
 
-    This utility function helps in maintaining the build cache. We only want
-    to copy the file if it doesn't exist, or if it has changed between builds.
-    See the `copy_directory()` function for the directory copy equivalent.
+    This preserves build cache correctness: the file is only copied if it doesn't exist or has changed.
+    Use `copy_directory()` for directories.
 
-    :param source str: Path to a source file.
-    :param dest str: Path to a destination file within the context subdir.
-    :param ignore_mtime bool: Whether or not mtime should be considered.
-
-    :returns: True if the file was copied, False if not.
-
-    :raises: Exception if called with the path to a directory. This helps to
-        catch programming errors.
+    :param source: Source file path.
+    :param dest: Destination file path.
+    :param ignore_mtime: If True, modification times are ignored in change detection.
+    :returns: True if the file was copied, False otherwise.
+    :raises: Exception if source or destination is a directory.
     """
-
-    should_copy = False
+    source_path = Path(source)
+    dest_path = Path(dest)
 
     if os.path.abspath(source) == os.path.abspath(dest):
         logger.info("File %s was placed in build context by user, leaving unmodified.", dest)
         return False
-    if Path(source).is_dir():
-        raise Exception(f"Source {source} can not be a directory. Please use copy_directory instead.")
-    if Path(dest).is_dir():
-        raise Exception(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
 
-    if os.path.islink(dest):
-        if os.readlink(source) == os.readlink(dest):
-            # src/dest are symlinks which point to the same place
-            logger.debug("Symlink %s already exists.", dest)
-            should_copy = False
-        else:
-            logger.debug("Symlink %s had modifications and will be overwritten.", dest)
-            os.unlink(dest)
+    if source_path.is_dir() or dest_path.is_dir():
+        raise Exception(f"{'Source' if source_path.is_dir() else 'Destination'} {source} can not be a directory. Please use copy_directory instead.")
+
+    # Handle symlink logic
+    if source_path.is_symlink():
+        source_target = os.readlink(source)
+
+        if dest_path.is_symlink():
+            dest_target = os.readlink(dest)
+            if source_target == dest_target:
+                logger.debug("Symlink %s already exists and matches.", dest)
+                return False
+            logger.debug("Symlink %s target differs and will be overwritten.", dest)
+        elif dest_path.exists():
+            logger.debug("Destination %s is a regular file and will be replaced by symlink.", dest)
+
+        should_copy = True
+
+    else:
+        # Regular file logic
+        if not dest_path.exists():
+            logger.debug("File %s will be created.", dest)
             should_copy = True
-    elif not os.path.exists(dest):
-        logger.debug("File %s will be created.", dest)
-        should_copy = True
-    elif not filecmp.cmp(source, dest, shallow=False):
-        logger.warning('File %s had modifications and will be rewritten', dest)
-        should_copy = True
-    elif not ignore_mtime and os.path.getmtime(source) > os.path.getmtime(dest):
-        logger.warning('File %s updated time increased and will be rewritten', dest)
-        should_copy = True
+        elif not ignore_mtime and os.path.getmtime(source) > os.path.getmtime(dest):
+            logger.warning("File %s updated time increased and will be rewritten", dest)
+            should_copy = True
+        elif not filecmp.cmp(source_path, dest_path, shallow=False):
+            logger.warning("File %s had modifications and will be rewritten", dest)
+            should_copy = True
+        else:
+            should_copy = False
 
     if should_copy:
-        shutil.copy2(source, dest, follow_symlinks=False)
+        if dest_path.is_symlink() or dest_path.exists():
+            os.unlink(dest)
+
+        if source_path.is_symlink():
+            os.symlink(os.readlink(source), dest)
+        else:
+            shutil.copy2(source, dest)
+
     else:
         logger.debug("File %s is already up-to-date.", dest)
 
