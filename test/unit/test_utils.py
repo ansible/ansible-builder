@@ -7,6 +7,18 @@ import pytest
 from ansible_builder.utils import configure_logger, write_file, copy_directory, copy_file, run_command
 
 
+def assert_file(path: pathlib.Path, expected_text: str):
+    assert path.exists()
+    assert not path.is_symlink()
+    assert path.read_text() == expected_text
+
+
+def assert_symlink(path: pathlib.Path, target_path: pathlib.Path):
+    assert path.exists()
+    assert path.is_symlink()
+    assert os.readlink(path) == str(target_path)
+
+
 def test_write_file(tmp_path):
     path = tmp_path / 'bar' / 'foo.txt'
     text = [
@@ -146,47 +158,130 @@ def test_copy_directory(tmp_path):
     assert not dcmp.left_only
     assert not dcmp.right_only
 
-def test_symlink_not_followed(tmp_path):
-    # Create the real file
-    real_file = tmp_path / "real.txt"
-    real_file.write_text("real content")
 
-    # Create a symlink to the real file
-    symlink_file = tmp_path / "link.txt"
-    symlink_file.symlink_to(real_file)
+def test_regular_to_missing(tmp_path):
+    source = tmp_path / "source.txt"
+    source.write_text("abc")
+    dest = tmp_path / "dest.txt"
 
-    # Define the destination path
-    dest_file = tmp_path / "copied_link.txt"
-
-    # Call the function
-    copied = copy_file(str(symlink_file), str(dest_file))
-
-    # Assertions
+    # First copy
+    copied = copy_file(str(source), str(dest))
     assert copied is True
-    assert dest_file.exists()
-    assert dest_file.is_symlink()
+    assert_file(dest, "abc")
 
-    # Confirm the symlink target
-    assert os.readlink(dest_file) == str(real_file)
+    # Second copy - no changes
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_file(dest, "abc")
 
-def test_copy_broken_symlink(tmp_path):
-    # Define the intended target (which does NOT exist)
-    missing_target = tmp_path / "nonexistent.txt"
 
-    # Create a broken symlink
-    broken_symlink = tmp_path / "broken_link.txt"
-    broken_symlink.symlink_to(missing_target)
+def test_symlink_to_missing(tmp_path):
+    target = tmp_path / "target.txt"
+    target.write_text("abc")
+    source = tmp_path / "source_symlink"
+    os.symlink(target, source)
 
-    # Destination path
-    dest_file = tmp_path / "copied_broken_link.txt"
+    dest = tmp_path / "dest"
 
-    # Call the function
-    copied = copy_file(str(broken_symlink), str(dest_file))
-
-    # Assertions
+    copied = copy_file(str(source), str(dest))
     assert copied is True
-    assert dest_file.exists() is False
-    assert dest_file.is_symlink()
+    assert_symlink(dest, target)
 
-    # Confirm the symlink still points to the same (non-existent) path
-    assert os.readlink(dest_file) == str(missing_target)
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_symlink(dest, target)
+
+
+def test_symlink_to_same_symlink(tmp_path):
+    target = tmp_path / "target.txt"
+    target.write_text("abc")
+    source = tmp_path / "source_symlink"
+    dest = tmp_path / "dest_symlink"
+    os.symlink(target, source)
+    os.symlink(target, dest)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_symlink(dest, target)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_symlink(dest, target)
+
+
+def test_symlink_to_different_symlink(tmp_path):
+    target1 = tmp_path / "target1.txt"
+    target2 = tmp_path / "target2.txt"
+    target1.write_text("abc")
+    target2.write_text("def")
+
+    source = tmp_path / "source_symlink"
+    dest = tmp_path / "dest_symlink"
+    os.symlink(target1, source)
+    os.symlink(target2, dest)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is True
+    assert_symlink(dest, target1)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_symlink(dest, target1)
+
+
+def test_symlink_overwrites_regular_file(tmp_path):
+    target = tmp_path / "target.txt"
+    target.write_text("abc")
+    source = tmp_path / "source_symlink"
+    os.symlink(target, source)
+
+    dest = tmp_path / "dest.txt"
+    dest.write_text("def")  # existing regular file
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is True
+    assert_symlink(dest, target)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert_symlink(dest, target)
+
+
+def test_regular_file_overwrites_symlink(tmp_path):
+    source = tmp_path / "source.txt"
+    source.write_text("abc")
+
+    old_target = tmp_path / "old_target.txt"
+    old_target.write_text("def")
+    dest = tmp_path / "dest_symlink"
+    os.symlink(old_target, dest)
+
+    # Before Copy
+    assert_symlink(dest, old_target)
+    assert_file(source, "abc")
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is True
+    assert_file(source, "abc")
+    assert_file(dest, "abc")
+
+
+def test_symlink_broken_target(tmp_path):
+    # Broken symlink: still copy as symlink
+    target = tmp_path / "missing_target.txt"  # doesn't exist
+    source = tmp_path / "broken_symlink"
+    os.symlink(target, source)
+
+    dest = tmp_path / "dest"
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is True
+    assert not dest.exists()  # Symlink points to a file that does not exist
+    assert dest.is_symlink()
+    assert os.readlink(dest) == str(target)
+
+    copied = copy_file(str(source), str(dest))
+    assert copied is False
+    assert not dest.exists()
+    assert dest.is_symlink()
+    assert os.readlink(dest) == str(target)
