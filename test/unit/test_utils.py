@@ -324,12 +324,14 @@ def test_symlink_broken_target(tmp_path):
 
     copied = copy_file(str(source), str(dest))
     assert copied is True
+    assert not source.exists()
     assert not dest.exists()  # Symlink points to a file that does not exist
     assert dest.is_symlink()
     assert os.readlink(dest) == str(target)
 
     copied = copy_file(str(source), str(dest))
-    assert copied is True
+    assert copied is False
+    assert not source.exists()
     assert not dest.exists()
     assert dest.is_symlink()
     assert os.readlink(dest) == str(target)
