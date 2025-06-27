@@ -13,6 +13,8 @@ import yaml
 from . import constants
 from .exceptions import DefinitionError
 from .ee_schema import validate_schema
+from .utils import set_default_file_permissions
+
 
 logger = logging.getLogger(__name__)
 
@@ -207,6 +209,7 @@ class UserDefinition:
             tf.flush()  # don't close, it'll clean up on GC
             _tempfiles.append(tf)
             req_file = tf.name
+            set_default_file_permissions(req_file)
         elif (is_list := isinstance(req_file, list)) or (isinstance(req_file, str) and '\n' in req_file):
             # pylint: disable=R1732
             tf = tempfile.NamedTemporaryFile('w')
@@ -217,6 +220,7 @@ class UserDefinition:
             _tempfiles.append(tf)
             tf.flush()  # don't close, it'll clean up on GC
             req_file = tf.name
+            set_default_file_permissions(req_file)
         if not isinstance(req_file, str):
             return None
 

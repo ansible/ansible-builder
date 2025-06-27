@@ -1,4 +1,5 @@
 import os
+import stat
 
 import yaml
 
@@ -112,6 +113,40 @@ def test_inline_mapping_galaxy_requirements(cli, build_dir_and_ee_yml):
     req_out_content = req_out.read_text()
     expected_output = {'collections': [{'name': 'community.general'}], 'roles': [{'name': 'foo.bar'}]}
     assert yaml.safe_load(req_out_content) == expected_output
+
+
+def test_inline_requirements_file_perms(cli, build_dir_and_ee_yml):
+    """Validate that inline requirements are written to files with proper permissions"""
+    ee_str = """
+    version: 3
+    images:
+      base_image:
+        name: 'base_image:latest'
+    dependencies:
+      galaxy:
+        collections:
+        - name: community.general
+      python:
+        - six
+      system:
+        - gcc
+    """
+    umask = os.umask(0o777)
+    os.umask(umask)
+
+    tmpdir, eeyml = build_dir_and_ee_yml(ee_str)
+    cli(f'ansible-builder create -c {tmpdir} -f {eeyml} --output-filename Containerfile')
+
+    galaxy_req = tmpdir / f'_build/{constants.STD_GALAXY_FILENAME}'
+    python_req = tmpdir / f'_build/{constants.STD_PIP_FILENAME}'
+    system_req = tmpdir / f'_build/{constants.STD_BINDEP_FILENAME}'
+
+    for out_file in (galaxy_req, python_req, system_req):
+        assert out_file.exists()
+        for bit in (stat.S_IRUSR, stat.S_IWUSR, stat.S_IRGRP, stat.S_IROTH):
+            # If umask doesn't specifically prevent us from setting it, check that we set it
+            if bit & ~umask:
+                assert out_file.stat().st_mode & bit
 
 
 def test_collection_verification_off(cli, build_dir_and_ee_yml):
