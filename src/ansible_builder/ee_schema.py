@@ -372,6 +372,10 @@ schema_v3 = {
                     "description": "Disables the installation of pip in the base image",
                     "type": "boolean",
                 },
+                "skip_pip_check": {
+                    "description": "Disables verifying installed Python packages have compatible dependencies",
+                    "type": "boolean",
+                },
                 "workdir": {
                     "description": "Default working directory, also often the homedir for ephemeral UIDs",
                     "type": ["string", "null"],
@@ -476,6 +480,7 @@ def _handle_options_defaults(ee_def: dict):
 
     options.setdefault('skip_ansible_check', False)
     options.setdefault('skip_pip_install', False)
+    options.setdefault('skip_pip_check', False)
     options.setdefault('relax_passwd_permissions', True)
     options.setdefault('workdir', '/runner')
     options.setdefault('package_manager_path', '/usr/bin/dnf')

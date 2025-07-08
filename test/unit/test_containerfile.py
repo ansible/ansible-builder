@@ -377,3 +377,37 @@ def test_prepare_introspect_assemble_steps(build_dir_and_ee_yml):
                                   f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}" \
                                   " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt"
     assert expected_introspect_command in c.steps
+
+
+def test_pip_check_v3(build_dir_and_ee_yml):
+    """Make sure we pip check in v3 unless disabled"""
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "RUN $PYCMD -m pip check" in c.steps
+
+    ee_data += """
+    options:
+      skip_pip_check: true
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "RUN $PYCMD -m pip check" not in c.steps
+
+
+def test_pip_check_v1(build_dir_and_ee_yml):
+    """Make sure we do not pip check versions older than v3"""
+    ee_data = """
+    version: 1
+    """
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+    assert "RUN $PYCMD -m pip check" not in c.steps

@@ -457,6 +457,12 @@ builder runtime functionality. Valid keys for this section are:
       pip manually if the current method of pip installation does not work for you.
       The default is ``False``.
 
+    ``skip_pip_check``
+      This boolean value controls whether or not a call to ``pip check`` is performed in the final
+      build stage of the build process. If this call errors because it finds incompatible dependencies
+      of installed Python packages, the build will fail. To disable this validation, set the value to ``True``.
+      The default is ``False``.
+
     ``relax_passwd_permissions``
       This boolean value controls whether the ``root`` group (GID 0) is explicitly granted
       write permission to ``/etc/passwd`` in the final container image. The default entrypoint

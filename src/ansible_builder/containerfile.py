@@ -500,6 +500,9 @@ class Containerfile:
             "RUN /output/scripts/install-from-bindep && rm -rf /output/wheels",
         ])
 
+        if self.definition.version >= 3 and not self.definition.options['skip_pip_check']:
+            self.steps.append("RUN $PYCMD -m pip check")
+
     def _prepare_galaxy_copy_steps(self) -> None:
         if self.definition.get_dep_abs_path('galaxy'):
             dir_name = os.path.dirname(constants.base_collections_path.rstrip('/'))  # /usr/share/ansible
