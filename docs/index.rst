@@ -126,3 +126,4 @@ Collection maintainers can learn to correctly declare dependencies for their col
    scenario_guides/scenario_using_env
    scenario_guides/scenario_custom
    scenario_guides/scenario_secret_passing
+   scenario_guides/scenario_pip_check
