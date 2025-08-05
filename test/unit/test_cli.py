@@ -390,43 +390,32 @@ def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
         assert extra in aee.build_command
 
 
-@pytest.mark.parametrize('force_color,no_color,clicolor,term,ci,expected',
+@pytest.mark.parametrize('no_color,clicolor,term,ci,expected',
                          [
-                             # FORCE_COLOR overrides everything
-                             ('1', '1', '0', 'dumb', '1', False),  # Force color on despite all other indicators
-                             ('1', '', '', 'xterm', '', False),    # Force color on in normal case
-
                              # NO_COLOR standard
-                             ('', '1', '', 'xterm', '', True),     # NO_COLOR disables
-                             ('', '1', '1', 'xterm', '', True),    # NO_COLOR overrides CLICOLOR
+                             ('1', '', 'xterm', '', True),     # NO_COLOR disables
+                             ('1', '1', 'xterm', '', True),    # NO_COLOR overrides CLICOLOR
 
                              # TERM=dumb
-                             ('', '', '', 'dumb', '', True),       # TERM=dumb disables
+                             ('', '', 'dumb', '', True),       # TERM=dumb disables
 
                              # CLICOLOR
-                             ('', '', '0', 'xterm', '', True),     # CLICOLOR=0 disables
-                             ('', '', '1', 'xterm', '', False),    # CLICOLOR=1 enables
-                             ('', '', '', 'xterm', '', False),     # Default CLICOLOR behavior (enabled)
+                             ('', '0', 'xterm', '', True),     # CLICOLOR=0 disables
+                             ('', '1', 'xterm', '', False),    # CLICOLOR=1 enables
+                             ('', '', 'xterm', '', False),     # Default CLICOLOR behavior (enabled)
 
                              # CI environments
-                             ('', '', '', 'xterm', '1', True),     # CI disables colors
-
-                             # Original test cases for backward compatibility
-                             ('', '', '', 'xterm', '', False),     # Normal case - colors enabled
-                             ('', '1', '', 'xterm', '', True),     # NO_COLOR disables
-                             ('', '', '', 'dumb', '', True),       # TERM=dumb disables
+                             ('', '', 'xterm', '1', True),     # CI disables colors
                          ])
-def test__should_disable_colors(force_color, no_color, clicolor, term, ci, expected, monkeypatch, mocker):
+def test__should_disable_colors(no_color, clicolor, term, ci, expected, monkeypatch, mocker):
     # pylint: disable=W0613,W0621
     # Clear environment variables that could interfere with the test
     # monkeypatch.delenv is safe for concurrent execution
-    for var in ['FORCE_COLOR', 'NO_COLOR', 'CLICOLOR', 'TERM',
+    for var in ['NO_COLOR', 'CLICOLOR', 'TERM',
                 'CI', 'CONTINUOUS_INTEGRATION', 'BUILD_NUMBER', 'GITHUB_ACTIONS']:
         monkeypatch.delenv(var, raising=False)
 
     # Set test values using monkeypatch (thread-safe)
-    if force_color:
-        monkeypatch.setenv('FORCE_COLOR', force_color)
     if no_color:
         monkeypatch.setenv('NO_COLOR', no_color)
     if clicolor:
@@ -449,7 +438,7 @@ def test__should_disable_colors(force_color, no_color, clicolor, term, ci, expec
 def test__should_disable_colors_tty_detection(isatty_result, expected, monkeypatch, mocker):
     # pylint: disable=W0613,W0621
     # Clear all color-related environment variables using monkeypatch
-    for var in ['FORCE_COLOR', 'NO_COLOR', 'CLICOLOR', 'TERM',
+    for var in ['NO_COLOR', 'CLICOLOR', 'TERM',
                 'CI', 'CONTINUOUS_INTEGRATION', 'BUILD_NUMBER', 'GITHUB_ACTIONS']:
         monkeypatch.delenv(var, raising=False)
 
