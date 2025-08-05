@@ -401,18 +401,14 @@ def env_save():
             os.environ[key] = value
 
 
-@pytest.mark.parametrize('no_color,force_color,term,expected',
+@pytest.mark.parametrize('no_color,term,expected',
                          [
-                             ('', '', 'xterm', False),
-                             ('1', '', 'xterm', True),
-                             ('', '1', 'xterm', False),
-                             ('1', '1', 'xterm', True),  # NO_COLOR trumps FORCE_COLOR
-                             ('', '', 'dumb', True),
-                             ('', '1', 'dumb', True),
+                             ('', 'xterm', False),
+                             ('1', 'xterm', True),
+                             ('', 'dumb', True),
                          ])
-def test__should_disable_colors(no_color, force_color, term, expected, env_save):
+def test__should_disable_colors(no_color, term, expected, env_save):
     # pylint: disable=W0613,W0621
     os.environ['NO_COLOR'] = no_color
-    os.environ['FORCE_COLOR'] = force_color
     os.environ['TERM'] = term
     assert _should_disable_colors() == expected
