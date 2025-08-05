@@ -7,7 +7,8 @@ Ansible Builder can execute two separate steps. The first step is to create a bu
 
 .. note::
 
-   Ansible Builder honors the ``NO_COLOR`` environment variable. Set it to any non-empty value to avoid color output in the terminal.
+   Ansible Builder is colorized by default when outputting to a terminal. Color output can be disabled by setting the ``NO_COLOR`` environment variable to any non-empty value,
+   or by setting the ``CLICOLOR`` environment variable to ``0``.
 
 
 .. contents::

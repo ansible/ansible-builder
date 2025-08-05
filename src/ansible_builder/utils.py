@@ -37,8 +37,7 @@ class ColorFilter(logging.Filter):
     }
 
     def filter(self, record):
-        if sys.stdout.isatty():
-            record.msg = self.color_map[record.levelno] + record.msg + ColorFilter.MessageColors.DEFAULT
+        record.msg = self.color_map[record.levelno] + record.msg + ColorFilter.MessageColors.DEFAULT
         return record
 
 

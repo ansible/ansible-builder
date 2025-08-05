@@ -43,20 +43,43 @@ def _should_disable_colors() -> bool:
     """
     Check the environment to decide if text colorization should be disabled.
 
-    According to no-color.org, if NO_COLOR is present, and not an empty string (regardless of
-    its value), text should not be colorized.
+    This follows the no-color.org standard and related conventions:
+    - FORCE_COLOR: Force colors on, even when piping
+    - NO_COLOR: Disable colors (no-color.org standard)
+    - CLICOLOR: Enable/disable colors (0 = disabled)
+    - TERM=dumb: Disable colors
+    - TTY detection: Disable colors when not outputting to terminal
+    - CI detection: Disable colors in common CI environments
 
     :returns: True if colors are disabled, False if enabled.
     """
-    disabled = False
+    # First priority: FORCE_COLOR overrides everything else
+    if os.environ.get('FORCE_COLOR', None):
+        return False  # Force colors ON
 
+    # Second priority: NO_COLOR standard
+    if os.environ.get('NO_COLOR', None):
+        return True
+
+    # Third priority: TERM=dumb
     if os.environ.get('TERM', '') == 'dumb':
         return True
 
-    if os.environ.get('NO_COLOR', None):
-        disabled = True
+    # Fourth priority: CLICOLOR=0 explicitly disables colors
+    if os.environ.get('CLICOLOR', '1') == '0':
+        return True
 
-    return disabled
+    # Fifth priority: Common CI environments (usually want plain output)
+    ci_vars = ['CI', 'CONTINUOUS_INTEGRATION', 'BUILD_NUMBER', 'GITHUB_ACTIONS']
+    if any(os.environ.get(var) for var in ci_vars):
+        return True
+
+    # Sixth priority: TTY detection - disable if not outputting to terminal
+    if not sys.stdout.isatty():
+        return True
+
+    # Default: colors enabled
+    return False
 
 
 def run():

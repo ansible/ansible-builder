@@ -1,6 +1,7 @@
 import os
 import runpy
 import shlex
+import unittest.mock
 
 import pytest
 
@@ -393,22 +394,79 @@ def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
 @pytest.fixture
 def env_save():
     orig = {}
-    for val in ('NO_COLOR', 'FORCE_COLOR', 'TERM'):
+    for val in ('NO_COLOR', 'FORCE_COLOR', 'TERM', 'CLICOLOR',
+                'CI', 'CONTINUOUS_INTEGRATION', 'BUILD_NUMBER', 'GITHUB_ACTIONS'):
         orig[val] = os.environ.get(val, None)
     yield
     for key, value in orig.items():
         if value:
             os.environ[key] = value
+        elif key in os.environ:
+            del os.environ[key]
 
 
-@pytest.mark.parametrize('no_color,term,expected',
+@pytest.mark.parametrize('force_color,no_color,clicolor,term,ci,expected',
                          [
-                             ('', 'xterm', False),
-                             ('1', 'xterm', True),
-                             ('', 'dumb', True),
+                             # FORCE_COLOR overrides everything
+                             ('1', '1', '0', 'dumb', '1', False),  # Force color on despite all other indicators
+                             ('1', '', '', 'xterm', '', False),   # Force color on in normal case
+
+                             # NO_COLOR standard
+                             ('', '1', '', 'xterm', '', True),    # NO_COLOR disables
+                             ('', '1', '1', 'xterm', '', True),   # NO_COLOR overrides CLICOLOR
+
+                             # TERM=dumb
+                             ('', '', '', 'dumb', '', True),      # TERM=dumb disables
+
+                             # CLICOLOR
+                             ('', '', '0', 'xterm', '', True),    # CLICOLOR=0 disables
+                             ('', '', '1', 'xterm', '', False),   # CLICOLOR=1 enables
+                             ('', '', '', 'xterm', '', False),    # Default CLICOLOR behavior (enabled)
+
+                             # CI environments
+                             ('', '', '', 'xterm', '1', True),    # CI disables colors
+
+                             # Original test cases for backward compatibility
+                             ('', '', '', 'xterm', '', False),    # Normal case - colors enabled
+                             ('', '1', '', 'xterm', '', True),    # NO_COLOR disables
+                             ('', '', '', 'dumb', '', True),      # TERM=dumb disables
                          ])
-def test__should_disable_colors(no_color, term, expected, env_save):
+def test__should_disable_colors(force_color, no_color, clicolor, term, ci, expected, env_save):
     # pylint: disable=W0613,W0621
-    os.environ['NO_COLOR'] = no_color
-    os.environ['TERM'] = term
-    assert _should_disable_colors() == expected
+    # Clear environment first
+    for var in ['FORCE_COLOR', 'NO_COLOR', 'CLICOLOR', 'TERM', 'CI']:
+        if var in os.environ:
+            del os.environ[var]
+
+    # Set test values
+    if force_color:
+        os.environ['FORCE_COLOR'] = force_color
+    if no_color:
+        os.environ['NO_COLOR'] = no_color
+    if clicolor:
+        os.environ['CLICOLOR'] = clicolor
+    if term:
+        os.environ['TERM'] = term
+    if ci:
+        os.environ['CI'] = ci
+
+    # Mock TTY detection to return True (simulating terminal environment)
+    # This prevents test environment from interfering with color detection logic
+    with unittest.mock.patch('sys.stdout.isatty', return_value=True):
+        assert _should_disable_colors() == expected
+
+
+@pytest.mark.parametrize('isatty_result,expected', [
+    (True, False),   # TTY - colors enabled
+    (False, True),   # Not TTY - colors disabled
+])
+def test__should_disable_colors_tty_detection(isatty_result, expected, env_save):
+    # pylint: disable=W0613,W0621
+    # Clear all color-related environment variables
+    for var in ['FORCE_COLOR', 'NO_COLOR', 'CLICOLOR', 'TERM', 'CI']:
+        if var in os.environ:
+            del os.environ[var]
+
+    # Mock sys.stdout.isatty to control TTY detection
+    with unittest.mock.patch('sys.stdout.isatty', return_value=isatty_result):
+        assert _should_disable_colors() == expected
