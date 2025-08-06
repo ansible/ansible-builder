@@ -48,3 +48,5 @@ FINAL_IMAGE_BIN_PATH = "/opt/builder/bin"
 
 DEFAULT_EE_BASENAME = "execution-environment"
 YAML_FILENAME_EXTENSIONS = ('yml', 'yaml')
+
+REQUIRE_ANSIBLE_CORE_PIN = False

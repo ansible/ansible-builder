@@ -173,7 +173,7 @@ class TestUserDefinition:
             {'version': 3,
              'images': { 'base_image': {'name': 'base_image:latest'}},
              'dependencies': {
-                'ansible_core': {'package_pip': 'ansible-core==2.13'},
+                'ansible_core': {'package_pip': 'ansible-core'},
                 'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
              }
             }
@@ -181,9 +181,45 @@ class TestUserDefinition:
         )
         definition = UserDefinition(path)
         definition.validate()
-        assert definition.ansible_core_ref == "ansible-core==2.13"
+        assert definition.ansible_core_ref == "ansible-core"
         assert definition.ansible_runner_ref == "ansible-runner==2.3.1"
-        assert definition.ansible_ref_install_list == "ansible-core==2.13 ansible-runner==2.3.1"
+        assert definition.ansible_ref_install_list == "ansible-core ansible-runner==2.3.1"
+
+    def test_v3_ansible_install_ref_pin_required(self, monkeypatch, exec_env_definition_file):
+        path = exec_env_definition_file(
+            """
+            {'version': 3,
+             'images': { 'base_image': {'name': 'base_image:latest'}},
+             'dependencies': {
+                'ansible_core': {'package_pip': 'ansible-core'},
+                'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
+             }
+            }
+            """
+        )
+        monkeypatch.setattr(constants, 'REQUIRE_ANSIBLE_CORE_PIN', True)
+        definition = UserDefinition(path)
+        with pytest.raises(DefinitionError) as error:
+            definition.validate()
+        assert "Value for 'ansible_core' must contain a version constraint" in str(error.value.args[0])
+
+    def test_v3_ansible_install_ref_bad_req(self, monkeypatch, exec_env_definition_file):
+        path = exec_env_definition_file(
+            """
+            {'version': 3,
+             'images': { 'base_image': {'name': 'base_image:latest'}},
+             'dependencies': {
+                'ansible_core': {'package_pip': 'ansible-core=2.6.0'},
+                'ansible_runner': { 'package_pip': 'ansible-runner==2.3.1'}
+             }
+            }
+            """
+        )
+        monkeypatch.setattr(constants, 'REQUIRE_ANSIBLE_CORE_PIN', True)
+        definition = UserDefinition(path)
+        with pytest.raises(DefinitionError) as error:
+            definition.validate()
+        assert "Invalid package requirement specified for 'ansible_core'" in str(error.value.args[0])
 
     def test_v3_inline_python(self, exec_env_definition_file):
         """
