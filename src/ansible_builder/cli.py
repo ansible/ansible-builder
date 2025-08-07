@@ -10,6 +10,7 @@ from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .policies import PolicyChoices
 from ._target_scripts.introspect import create_introspect_parser, run_introspect
+from .template import run_template
 from .utils import configure_logger
 
 
@@ -97,6 +98,10 @@ def run():
 
     elif args.action == 'introspect':
         run_introspect(args, logger)
+
+    elif args.action == 'template':
+        run_template(args)
+        sys.exit(0)
 
     logger.error("An error has occurred.")
     sys.exit(1)
@@ -238,6 +243,52 @@ def add_container_options(parser):
                             'Default is %(default)s.')
 
 
+def add_template_options(parser):
+    """
+    Add template sub-command and options.
+    """
+    template_command_parser = parser.add_parser(
+        'template',
+        help='Generate a sample execution environment YAML file from schema.',
+        description=(
+            'Generate a sample execution environment YAML file based on one of the '
+            'supported schema versions. This creates a template with example values '
+            'that can be used as a starting point for building execution environments.'
+        )
+    )
+
+    template_command_parser.add_argument(
+        '--schema-version',
+        type=int,
+        choices=[1, 2, 3],
+        default=3,
+        help='Schema version to generate template for (default: %(default)s)'
+    )
+
+    template_command_parser.add_argument(
+        '--output',
+        help='Output file path (default: write to stdout)'
+    )
+
+    template_command_parser.add_argument(
+        '--minimal',
+        action='store_true',
+        help='Generate minimal template with only required fields'
+    )
+
+    template_command_parser.add_argument(
+        '-v', '--verbosity',
+        dest='verbosity',
+        action=CustomVerbosityAction,
+        nargs='?',
+        default=constants.default_verbosity,
+        help='Set the verbosity output level. '
+             'Adding multiple -v will increase the verbosity to a max of 3 (-vvv). '
+             'Integer values are also accepted (for example, "-v3" or "--verbosity 3"). '
+             'Default is %(default)s.'
+    )
+
+
 def parse_args(args=None):
 
     parser = argparse.ArgumentParser(
@@ -259,6 +310,7 @@ def parse_args(args=None):
     )
 
     add_container_options(subparsers)
+    add_template_options(subparsers)
 
     return parser.parse_args(args)
 

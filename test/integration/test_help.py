@@ -4,13 +4,13 @@ import re
 def test_help(cli):
     result = cli('ansible-builder --help', check=False)
     help_text = result.stdout
-    assert 'usage: ansible-builder [-h] [--version] {create,build,introspect} ...' in help_text
+    assert 'usage: ansible-builder [-h] [--version] {create,build,introspect,template} ...' in help_text
 
 
 def test_no_args(cli):
     result = cli('ansible-builder', check=False)
     stderr = result.stderr
-    assert 'usage: ansible-builder [-h] [--version] {create,build,introspect} ...' in stderr
+    assert 'usage: ansible-builder [-h] [--version] {create,build,introspect,template} ...' in stderr
     assert 'ansible-builder: error: the following arguments are required: action' in stderr
 
 
@@ -40,3 +40,10 @@ def test_introspect_help(cli):
     help_text = result.stdout
     assert 'usage: ansible-builder introspect [-h]' in help_text
     assert re.search(r'Loops over collections in folder', help_text)
+
+
+def test_template_help(cli):
+    result = cli('ansible-builder template --help', check=False)
+    help_text = result.stdout
+    assert 'usage: ansible-builder template [-h]' in help_text
+    assert re.search(r'Generate a sample execution environment', help_text)

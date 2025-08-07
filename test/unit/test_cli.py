@@ -445,3 +445,46 @@ def test__should_disable_colors_tty_detection(isatty_result, expected, monkeypat
     # Mock sys.stdout.isatty to control TTY detection
     mocker.patch('sys.stdout.isatty', return_value=isatty_result)
     assert _should_disable_colors() == expected
+
+
+class TestTemplateArgParsing:
+    """Test template command argument parsing."""
+
+    def test_template_parse_args_default(self):
+        """Test template command with default arguments."""
+        args = parse_args(['template'])
+        assert args.action == 'template'
+        assert args.schema_version == 3
+        assert args.output is None
+        assert args.minimal is False
+
+    def test_template_parse_args_schema_version(self):
+        """Test template command with schema version."""
+        for version in [1, 2, 3]:
+            args = parse_args(['template', '--schema-version', str(version)])
+            assert args.schema_version == version
+
+    def test_template_parse_args_output(self):
+        """Test template command with output file."""
+        args = parse_args(['template', '--output', '/tmp/test.yml'])
+        assert args.output == '/tmp/test.yml'
+
+    def test_template_parse_args_minimal(self):
+        """Test template command with minimal flag."""
+        args = parse_args(['template', '--minimal'])
+        assert args.minimal is True
+
+    def test_template_parse_args_all_options(self):
+        """Test template command with all options."""
+        args = parse_args([
+            'template',
+            '--schema-version', '2',
+            '--output', '/tmp/test.yml',
+            '--minimal',
+            '-v'
+        ])
+        assert args.action == 'template'
+        assert args.schema_version == 2
+        assert args.output == '/tmp/test.yml'
+        assert args.minimal is True
+        assert args.verbosity == 1
