@@ -633,3 +633,11 @@ def test_exclude_files_created(cli, build_dir_and_ee_yml):
                                   f" --exclude-collection-reqs={constants.EXCL_COLLECTIONS_FILENAME}" \
                                   " --write-bindep=/tmp/src/bindep.txt --write-pip=/tmp/src/requirements.txt\n"
     assert expected_introspect_command in text
+
+
+def test_schema_deprecation_warning(cli, data_dir):
+    """Test that a deprecation notice is emitted"""
+    ee_def = os.path.join(data_dir, 'blank', 'execution-environment.yml')
+    r = cli(f'ansible-builder create -f {ee_def}', allow_error=True)
+    assert r.rc == 0
+    assert 'DEPRECATION NOTICE' in (r.stdout + r.stderr), (r.stdout + r.stderr)

@@ -10,17 +10,15 @@ from ansible_builder import constants
 
 
 @pytest.mark.test_all_runtimes
-def test_version_1_warning(cli, runtime, ee_tag, tmp_path, data_dir):
-    """Test that warning about version 1.
-
-    """
+def test_schema_deprecation_warning(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that a deprecation notice is emitted"""
     bc = tmp_path
     ee_def = data_dir / 'blank' / 'execution-environment.yml'
     r = cli(
-        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3",
+        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime}",
         allow_error=True
     )
-    assert 'Found version 1, consider upgrading to version 3 or above' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+    assert 'DEPRECATION NOTICE' in (r.stdout + r.stderr), (r.stdout + r.stderr)
 
 
 @pytest.mark.test_all_runtimes

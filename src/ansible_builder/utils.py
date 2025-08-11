@@ -57,6 +57,11 @@ def configure_logger(verbosity: int, disable_colors: bool = False):
     root_logger.addHandler(handler)
 
 
+def deprecation_notice(msg: str) -> None:
+    """Utility function to standardize deprecation notice logging."""
+    logger.warning("DEPRECATION NOTICE: %s", msg)
+
+
 def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
     logger.info('  %s', ' '.join(command))

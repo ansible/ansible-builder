@@ -10,8 +10,7 @@ from .exceptions import DefinitionError
 from .main import AnsibleBuilder
 from .policies import PolicyChoices
 from ._target_scripts.introspect import create_introspect_parser, run_introspect
-from .utils import configure_logger
-
+from .utils import configure_logger, deprecation_notice
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +84,11 @@ def run():
 
     if args.action in ['create', 'build']:
         ab = AnsibleBuilder(**vars(args))
+
+        if ab.version in (1, 2):
+            deprecation_notice(f'Execution environment schema version {ab.version} is deprecated and will be '
+                               'removed in a future release. Version 3 will be the minimum version supported.')
+
         action = getattr(ab, ab.action)
         try:
             if action():
