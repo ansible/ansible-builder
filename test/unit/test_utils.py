@@ -289,6 +289,9 @@ def test_regular_file_overwrites_symlink(tmp_path):
     assert_file(source, "abc")
     assert_file(dest, "abc")
 
+    # Clear filecmp's cache to ensure the next comparison re-checks file contents
+    filecmp.clear_cache()
+
     copied = copy_file(str(source), str(dest))
     assert copied is False
     assert_file(source, "abc")
