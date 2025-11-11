@@ -56,7 +56,7 @@ To do that, the collection has to be installed locally.
 When installing collections using ansible-galaxy
 ------------------------------------------------
 
-The easiest way to install a collection is to use the `ansible-galaxy <https://docs.ansible.com/ansible/latest/collections_guide/collections_installing.html#installing-collections-with-ansible-galaxy>`_
+The easiest way to install a collection is to use the `ansible-galaxy <https://docs.ansible.com/projects/ansible/latest/collections_guide/collections_installing.html#installing-collections-with-ansible-galaxy>`_
 command which is a part of the ``ansible`` package.
 
 Run the ``introspect`` command against your collection path:
@@ -66,7 +66,7 @@ Run the ``introspect`` command against your collection path:
     ansible-builder introspect COLLECTION_PATH
 
 The default collection path used by the ``ansible-galaxy`` command is ``~/.ansible/collections/``.
-Read more about collection paths in the `Ansible configuration settings <https://docs.ansible.com/ansible/latest/reference_appendices/config.html#collections-paths>`_ guide.
+Read more about collection paths in the `Ansible configuration settings <https://docs.ansible.com/projects/ansible/latest/reference_appendices/config.html#collections-paths>`_ guide.
 
 .. note::
     Use the ``-v3`` option to ``introspect`` to see logging messages about requirements that are being excluded.

@@ -9,13 +9,13 @@ Collections and by the user.
 
 See the readthedocs page for `ansible-builder` at:
 
-https://ansible-builder.readthedocs.io/en/stable/
+https://docs.ansible.com/projects/builder/en/stable/
 
 
 ## Get Involved:
 
 * We welcome your feedback, questions and ideas.
-  See our [Communication guide](https://ansible.readthedocs.io/projects/builder/en/latest/community/)
+  See our [Communication guide](https://docs.ansible.com/projects/builder/en/latest/community/)
   to learn how to join the conversation.
 * We use [GitHub issues](https://github.com/ansible/ansible-builder/issues) to
   track bug reports and feature ideas.
@@ -25,7 +25,7 @@ https://ansible-builder.readthedocs.io/en/stable/
 
 We ask all of our community members and contributors to adhere to the [Ansible
 code of
-conduct](http://docs.ansible.com/ansible/latest/community/code_of_conduct.html). If
+conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html). If
 you have questions, or need assistance, please reach out to our community team
 at [codeofconduct@ansible.com](mailto:codeofconduct@ansible.com).
 

@@ -254,7 +254,7 @@ The following keys are valid for this section:
       Ansible Collections to be installed from Galaxy. This may be a filename, a
       dictionary, or a multi-line string representation of an Ansible Galaxy
       ``requirements.yml`` file (see below for examples). Read more about
-      the requirements file format in the `Galaxy user guide <https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
+      the requirements file format in the `Galaxy user guide <https://docs.ansible.com/projects/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
 
     .. _python-pep508:
 
