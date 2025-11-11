@@ -17,7 +17,7 @@ In the example below, we will take a look at
 
 
 You can provide environment variables such as ``ANSIBLE_GALAXY_SERVER_LIST``, ``ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_URL`` and ``ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_AUTH_URL`` using the ``ENV`` directive.
-See `configuring Galaxy client <https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#configuring-the-ansible-galaxy-client>`_ for more details.
+See `configuring Galaxy client <https://docs.ansible.com/projects/ansible/latest/galaxy/user_guide.html#configuring-the-ansible-galaxy-client>`_ for more details.
 
 For security reasons, we do not want to store sensitive information in this case `ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN`.
 You can use `ARG` directive to receive sensitive information from the user as input. `--build-args` can be used

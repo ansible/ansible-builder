@@ -1,7 +1,7 @@
 # Ansible Builder Contributing Guidelines
 
 If you are looking for community support, please visit
-the [Community guide](https://ansible.readthedocs.io/projects/builder/en/latest/community/)
+the [Community guide](https://docs.ansible.com/projects/builder/en/latest/community/)
 for information on how to get in touch.
 
 ## Things to Know Before Submitting Code
@@ -12,7 +12,7 @@ for information on how to get in touch.
   `git rebase` vs `git merge` for this reason.
 - All source code changes **MUST** include a test! We use `pytest` for testing.
 - We ask all of our community members and contributors to adhere to the
-  [Ansible code of conduct](http://docs.ansible.com/ansible/latest/community/code_of_conduct.html).
+  [Ansible code of conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html).
   If you have questions, or need assistance, please reach out to our community
   team at [codeofconduct@ansible.com](mailto:codeofconduct@ansible.com).
 

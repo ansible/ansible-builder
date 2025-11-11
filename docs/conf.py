@@ -98,7 +98,7 @@ html_title = "Ansible Builder Documentation"
 html_theme_options = {
     'display_version': False,
     'titles_only': False,
-    'documentation_home_url': 'https://ansible-builder.readthedocs.io/en/latest/',
+    'documentation_home_url': 'https://docs.ansible.com/projects/builder/en/latest/',
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
