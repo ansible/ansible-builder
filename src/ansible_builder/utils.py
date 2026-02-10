@@ -66,10 +66,40 @@ def run_command(command, capture_output=False, allow_error=False):
     logger.info('Running command:')
     logger.info('  %s', ' '.join(command))
     try:
-        # pylint: disable=R1732
-        process = subprocess.Popen(command,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT)
+        with subprocess.Popen(command,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT) as process:
+            output = []
+            trailing_output = deque(maxlen=20)
+            for line in iter(process.stdout.readline, b''):
+                line = line.decode(sys.stdout.encoding)
+                if capture_output:
+                    output.append(line.rstrip())
+                trailing_output.append(line.rstrip())
+                logger.debug(line.rstrip('\n'))  # line ends added by logger itself
+            logger.debug('')
+
+            rc = process.wait()
+            if rc is not None and rc != 0 and (not allow_error):
+                main_logger = logging.getLogger('ansible_builder')
+                if main_logger.level > logging.INFO:
+                    logger.error('Command that had error:')
+                    logger.error('  %s', ' '.join(command))
+                if main_logger.level > logging.DEBUG:
+                    if capture_output:
+                        for line in output:
+                            logger.error(line)
+                        logger.error('')
+                    else:
+                        if len(trailing_output) == 20:
+                            logger.error('...showing last 20 lines of output...')
+                        for line in trailing_output:
+                            logger.error(line)
+                        logger.error('')
+                logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
+                sys.exit(1)
+
+            return rc, output
     except FileNotFoundError:
         msg = f"You do not have {command[0]} installed."
         if command[0] in constants.runtime_files:
@@ -86,38 +116,6 @@ def run_command(command, capture_output=False, allow_error=False):
             )
         logger.error(msg)
         sys.exit(1)
-
-    output = []
-    trailing_output = deque(maxlen=20)
-    for line in iter(process.stdout.readline, b''):
-        line = line.decode(sys.stdout.encoding)
-        if capture_output:
-            output.append(line.rstrip())
-        trailing_output.append(line.rstrip())
-        logger.debug(line.rstrip('\n'))  # line ends added by logger itself
-    logger.debug('')
-
-    rc = process.wait()
-    if rc is not None and rc != 0 and (not allow_error):
-        main_logger = logging.getLogger('ansible_builder')
-        if main_logger.level > logging.INFO:
-            logger.error('Command that had error:')
-            logger.error('  %s', ' '.join(command))
-        if main_logger.level > logging.DEBUG:
-            if capture_output:
-                for line in output:
-                    logger.error(line)
-                logger.error('')
-            else:
-                if len(trailing_output) == 20:
-                    logger.error('...showing last 20 lines of output...')
-                for line in trailing_output:
-                    logger.error(line)
-                logger.error('')
-        logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
-        sys.exit(1)
-
-    return rc, output
 
 
 def write_file(filename: str, lines: list) -> bool:
