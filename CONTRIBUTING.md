@@ -1,20 +1,50 @@
 # Ansible Builder Contributing Guidelines
 
-If you are looking for community support, please visit
-the [Community guide](https://docs.ansible.com/projects/builder/en/latest/community/)
+If you are looking for community support, please visit the [Community guide](https://docs.ansible.com/projects/builder/en/latest/community/)
 for information on how to get in touch.
+
+## Code of Conduct
+
+We ask all of our community members and contributors to adhere to the
+[Ansible code of conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html).
+If you have questions, or need assistance, please reach out to our community team
+at [codeofconduct@ansible.com](mailto:codeofconduct@ansible.com).
 
 ## Things to Know Before Submitting Code
 
-- All code and documentation submissions are done through pull requests against
-  the `devel` branch, unless you are creating a backport to an older release.
-- Take care to make sure no merge commits are in the submission, and use
-  `git rebase` vs `git merge` for this reason.
-- All source code changes **MUST** include a test! We use `pytest` for testing.
-- We ask all of our community members and contributors to adhere to the
-  [Ansible code of conduct](https://docs.ansible.com/projects/ansible/latest/community/code_of_conduct.html).
-  If you have questions, or need assistance, please reach out to our community
-  team at [codeofconduct@ansible.com](mailto:codeofconduct@ansible.com).
+### Start Small
+
+If you are a new contributor, we recommend starting with a small change. This
+will help you to become familiar with the project and the development process.
+It will also help the maintainers to become familiar with you and build trust
+with you. Attempting to tackle a large change, with little to no understanding
+of the project, and with no input from maintainers, is likely to result in a
+long review process and a frustrating experience for everyone involved.
+
+### Using AI
+
+We will accept contributions that have used AI to assist with code generation.
+However, we expect you to fully understand any code you submit. When we ask
+questions about your contributions during code review, please respond based on
+your own understanding rather than delegating responses to your AI. We recommend
+keeping AI-generated changes focused and incremental, as large AI-generated code
+changes are challenging to review effectively.
+
+### Tests Are Required
+
+All code changes **must** include tests. There are very few exceptions to this rule. Understand
+how the project test suite works and how to run the tests locally before submitting a pull request.
+
+### Adding New Features
+
+Adding new features is something we would like to see discussed beforehand via
+a [feature request in GitHub](https://github.com/ansible/ansible-builder/issues/new?template=feature_request.yml).
+Please do not submit a pull request that adds a new feature without first discussing it with the project maintainers.
+
+### General Guidelines
+
+- All code and documentation submissions are done through pull requests against the `devel` branch.
+- Take care to make sure no merge commits are in the submission, and use `git rebase` instead `git merge` for this reason.
 
 ## Setting Up Your Development Environment
 
@@ -79,7 +109,3 @@ one or more runtimes, use the `--skip-runtime` pytest option:
 ```bash
   (ansible-builder) $ tox -e integration-py311 -- --skip-runtime docker
 ```
-
-## Gating and Merging
-
-We require at least one approval on a pull request before it can be merged.
