@@ -102,6 +102,7 @@ jobs:
         - 3.11
         - >-
           3.10
+        - ~3.15.0-0
         runner-vm-os:
         - ubuntu-24.04
         toxenv:
