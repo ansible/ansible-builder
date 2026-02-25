@@ -56,16 +56,28 @@ execution environment. You can specify these items:
 - Python packages, with version restrictions
 - other items to download, install, or configure
 
+ .. _choosing_base_image:
+
 Choosing a base image
----------------------
+=====================
 
-You can use any base image you choose.
-The smaller the base image, generally, the smaller the final image.
-However, to make Ansible Builder more efficient, you should know what packages, if any, are already installed on the base image you use.
+Ansible Builder requires RPM-based container images that use the ``dnf`` or ``microdnf`` package manager.
+Non-RPM-based distributions (such as Debian, Ubuntu, or Alpine) are not supported and will fail to build.
 
-For example, some base images already have Python installed. Others do not.
-If you use a base image that already has Python installed, you can omit Python in your execution environment definition file.
-Not all base images have package managers installed.
+Ansible Builder's default configuration and internal tooling assume the use of ``dnf`` package management, which is present
+on RPM-based Linux distributions. The following are examples of images that should work with Ansible Builder:
+
+- **CentOS Stream**: ``quay.io/centos/centos:stream9``
+- **Rocky Linux**: ``quay.io/rockylinux/rockylinux:9``
+- **Fedora**: ``registry.fedoraproject.org/fedora:43``
+- **Red Hat Universal Base Image (UBI)**: ``registry.access.redhat.com/ubi9/ubi:latest``
+- **RHEL-based Ansible Automation Platform images**: ``registry.redhat.io/ansible-automation-platform-*/ee-*``
+
+The examples above demonstrate compatible images, but any RPM-based image with ``dnf`` or ``microdnf`` should work.
+
+When choosing a base image, prefer smaller images when possible, as they result in smaller final execution environment
+images. However, ensure you understand what packages are already installed on the base image to avoid redundant installations.
+For example, some base images already have Python installed, while others do not.
 
 How Ansible Builder executes
 ============================

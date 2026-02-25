@@ -78,12 +78,14 @@ requirements and extra files, but does demonstrate more complete EE file syntax.
     images:
       base_image:
         name: docker.io/redhat/ubi9:latest
-        # Other available base images:
+        # NOTE: Ansible Builder requires RPM-based images (those using dnf package management).
+        # Other RPM-based base images that should work:
         #   - quay.io/rockylinux/rockylinux:9
         #   - quay.io/centos/centos:stream9
         #   - registry.fedoraproject.org/fedora:38
         #   - registry.redhat.io/ansible-automation-platform-23/ee-minimal-rhel8:latest
         #     (needs an account)
+        # Non-RPM images (Debian, Ubuntu, Alpine, etc.) are not supported.
 
     # Custom package manager path for the RHEL based images
     # options:
@@ -440,10 +442,18 @@ builder runtime functionality. Valid keys for this section are:
         The default value is ``dumb-init==1.2.5``.
 
     ``package_manager_path``
-      A string with the path to the package manager (For example - ``dnf`` or ``microdnf``) to use.
-      The default is ``/usr/bin/dnf``. This value will be used to install a
-      Python interpreter, if specified in ``dependencies``, and during the
-      build phase by the ``assemble`` script.
+      A string with the path to the package manager to use. The default is ``/usr/bin/dnf``.
+
+      This option allows you to choose between different RPM package managers available on
+      your base image, such as ``/usr/bin/dnf`` or ``/usr/bin/microdnf``. The package manager
+      is used to install system packages, and if specified in ``dependencies``, to install
+      a Python interpreter during the build phase.
+
+      .. warning::
+
+          Only RPM-based package managers (for example, ``dnf`` or ``microdnf``) are supported. Non-RPM package
+          managers such as ``apt-get`` (Debian/Ubuntu) or ``apk`` (Alpine) are not supported and will
+          cause build failures.
 
     ``skip_ansible_check``
       This boolean value controls whether or not the check for an installation
