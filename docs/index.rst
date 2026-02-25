@@ -59,44 +59,25 @@ execution environment. You can specify these items:
  .. _choosing_base_image:
 
 Choosing a base image
----------------------
+=====================
 
-RPM-based distributions are required
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ansible Builder requires RPM-based container images that use the ``dnf`` or ``microdnf`` package manager.
+Non-RPM-based distributions (such as Debian, Ubuntu, or Alpine) are not supported and will fail to build.
 
-.. warning::
+Ansible Builder's default configuration and internal tooling assume the use of ``dnf`` package management, which is present
+on RPM-based Linux distributions. The following are examples of images that should work with Ansible Builder:
 
-    Ansible Builder requires RPM-based container images that use the dnf or yum package manager.
-    Non-RPM-based distributions (such as Debian, Ubuntu, or Alpine) are not supported and will fail to build.
-
-Ansible Builder's default configuration and internal tooling assume the use of dnf/yum package management, which is present on RPM-based Linux distributions. The following examples are images that should work with Ansible Builder (this is not an exhaustive list):
-
-- **Red Hat Universal Base Image (UBI)**: ``registry.access.redhat.com/ubi9/ubi:latest`` or ``docker.io/redhat/ubi9:latest``
 - **CentOS Stream**: ``quay.io/centos/centos:stream9``
 - **Rocky Linux**: ``quay.io/rockylinux/rockylinux:9``
 - **Fedora**: ``registry.fedoraproject.org/fedora:43``
-- **RHEL-based Ansible Automation Platform images**: ``registry.redhat.io/ansible-automation-platform-*/ee-*`` (requires Red Hat account)
+- **Red Hat Universal Base Image (UBI)**: ``registry.access.redhat.com/ubi9/ubi:latest``
+- **RHEL-based Ansible Automation Platform images**: ``registry.redhat.io/ansible-automation-platform-*/ee-*``
 
-.. note::
+The examples above demonstrate compatible images, but any RPM-based image with ``dnf`` or ``microdnf`` should work.
 
-    These images are expected to work based on their use of RPM packaging and dnf/yum package managers.
-
-When choosing a base image, prefer smaller images when possible, as they result in smaller final execution environment images. However, ensure you understand what packages are already installed on the base image to avoid redundant installations. For example, some base images already have Python installed, while others do not.
-
-Non-RPM-based images are not supported
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-
-    Do not use Debian, Ubuntu, Alpine, or other non-RPM-based distributions as base images.
-    These will fail during the build process because Ansible Builder's tooling expects dnf or yum package management.
-
-Common errors when attempting to use non-RPM images include:
-
-- **Package manager incompatibility**: The default package manager path (``/usr/bin/dnf``) does not exist on non-RPM distributions
-- **System package installation failures**: Target scripts assume RPM-based package management tools
-
-If you encounter build failures with your base image, ensure you are using an RPM-based distribution with dnf, yum, or microdnf available.
+When choosing a base image, prefer smaller images when possible, as they result in smaller final execution environment
+images. However, ensure you understand what packages are already installed on the base image to avoid redundant installations.
+For example, some base images already have Python installed, while others do not.
 
 How Ansible Builder executes
 ============================

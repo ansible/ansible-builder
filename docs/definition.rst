@@ -78,7 +78,7 @@ requirements and extra files, but does demonstrate more complete EE file syntax.
     images:
       base_image:
         name: docker.io/redhat/ubi9:latest
-        # NOTE: Ansible Builder requires RPM-based images (those using dnf/yum package management).
+        # NOTE: Ansible Builder requires RPM-based images (those using dnf package management).
         # Other RPM-based base images that should work:
         #   - quay.io/rockylinux/rockylinux:9
         #   - quay.io/centos/centos:stream9
@@ -442,8 +442,7 @@ builder runtime functionality. Valid keys for this section are:
         The default value is ``dumb-init==1.2.5``.
 
     ``package_manager_path``
-      A string with the path to the package manager to use.
-      The default is ``/usr/bin/dnf``, which is required for supported RPM-based distributions.
+      A string with the path to the package manager to use. The default is ``/usr/bin/dnf``.
 
       This option allows you to choose between different RPM package managers available on
       your base image, such as ``/usr/bin/dnf`` or ``/usr/bin/microdnf``. The package manager
@@ -452,8 +451,8 @@ builder runtime functionality. Valid keys for this section are:
 
       .. warning::
 
-          Only RPM-based package managers (dnf, yum, microdnf) are supported. Non-RPM package
-          managers such as apt-get (Debian/Ubuntu) or apk (Alpine) are not supported and will
+          Only RPM-based package managers (for example, ``dnf`` or ``microdnf``) are supported. Non-RPM package
+          managers such as ``apt-get`` (Debian/Ubuntu) or ``apk`` (Alpine) are not supported and will
           cause build failures.
 
     ``skip_ansible_check``
