@@ -173,6 +173,27 @@ Specifies the container image validation policy to use. Valid only when :ref:`co
 
 Specifies the path to a GPG keyring file to use for validating container image signatures.
 
+.. _platform:
+
+``--platform``
+**************
+
+Specifies the target platform(s) for the build. Accepts a single platform or a
+comma-separated list of platforms (e.g. ``linux/amd64``, ``linux/arm64``, or
+``linux/amd64,linux/arm64`` for multi-arch). The value is passed directly to the
+container runtime build command via ``--platform=<value>``.
+
+.. code::
+
+   $ ansible-builder build --platform linux/arm64
+
+   $ ansible-builder build --platform linux/amd64,linux/arm64
+
+.. note::
+
+   For Docker multi-arch builds targeting more than one platform, buildx must be
+   configured before running ``ansible-builder build``.
+
 .. _extra-build-cli-args:
 
 ``--extra-build-cli-args``

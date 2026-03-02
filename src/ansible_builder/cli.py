@@ -196,6 +196,13 @@ def add_container_options(parser):
         help='Extra arguments to pass to the container build CLI command',
     )
 
+    build_command_parser.add_argument(
+        '--platform',
+        help='Target platform(s) for the build (e.g. linux/amd64, linux/arm64, '
+             'or linux/amd64,linux/arm64 for multi-arch). '
+             'Passed directly to the container runtime build command.',
+    )
+
     for p in [create_command_parser, build_command_parser]:
 
         p.add_argument('-f', '--file',

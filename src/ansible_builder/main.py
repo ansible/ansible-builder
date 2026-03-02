@@ -33,6 +33,7 @@ class AnsibleBuilder:
                  container_keyring: str | None = None,
                  squash: str | None = None,
                  extra_build_cli_args: str | None = None,
+                 platform: str | None = None,
                  ) -> None:
         """
         Initialize the AnsibleBuilder object.
@@ -56,6 +57,7 @@ class AnsibleBuilder:
         :param str container_policy: The container validation policy. A valid string value from the PolicyChoices enum.
         :param str container_keyring: GPG keyring for container image validation.
         :param str squash: With podman, controls layer squashing.
+        :param str platform: Target platform(s) to pass to the container runtime (e.g. linux/amd64).
         """
 
         if not galaxy_keyring and (galaxy_required_valid_signature_count or galaxy_ignore_signature_status_codes):
@@ -101,6 +103,7 @@ class AnsibleBuilder:
         )
         self.squash = squash
         self.extra_build_cli_args = extra_build_cli_args or ""
+        self.platform = platform
 
     def _handle_image_validation_opts(self,
                                       policy: str | None,
@@ -239,6 +242,9 @@ class AnsibleBuilder:
 
             if self.container_policy != PolicyChoices.IGNORE:
                 command.append('--pull-always')
+
+        if self.platform:
+            command.append(f'--platform={self.platform}')
 
         command.extend(shlex.split(self.extra_build_cli_args))
         command.append(self.build_context)

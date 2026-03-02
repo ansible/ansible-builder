@@ -375,6 +375,24 @@ def test_invalid_verbosity(exec_env_definition_file, tmp_path, verbosity_opt):
         prepare(['create', '-f', path, '-c', str(tmp_path), verbosity_opt])
 
 
+def test_platform(exec_env_definition_file, tmp_path):
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path), '--platform', 'linux/arm64'])
+    assert aee.platform == 'linux/arm64'
+    assert '--platform=linux/arm64' in aee.build_command
+
+
+def test_platform_multi_arch(exec_env_definition_file, tmp_path):
+    content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
+    path = str(exec_env_definition_file(content=content))
+
+    aee = prepare(['build', '-f', path, '-c', str(tmp_path), '--platform', 'linux/amd64,linux/arm64'])
+    assert aee.platform == 'linux/amd64,linux/arm64'
+    assert '--platform=linux/amd64,linux/arm64' in aee.build_command
+
+
 def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
     content = {'version': 3, 'images': {'base_image': {'name': 'base_image:latest'}}}
     path = str(exec_env_definition_file(content=content))
