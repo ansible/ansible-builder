@@ -68,17 +68,13 @@ disable = [
     "R0801",  # duplicate-code
     "R0902",  # too-many-instance-attributes
     "R0903",  # too-few-public-methods
-    "R0904",  # too-many-public-methods
-    "R0911",  # too-many-return-statements
     "R0912",  # too-many-branches
     "R0913",  # too-many-arguments
     "R0914",  # too-many-locals
     "R0915",  # too-many-statements
     "R0917",  # too-many-positional-arguments
-    "R1702",  # too-many-nested-blocks
 
     "W0511",  # fixme
     "W1514",  # unspecified-encoding
-    "W0718",  # broad-exception-caught
     "W0719",  # broad-exception-raised
 ]
