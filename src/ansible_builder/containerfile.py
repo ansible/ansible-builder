@@ -19,6 +19,7 @@ class Containerfile:
     newline_char = '\n'
 
     def __init__(self,
+                 *,
                  definition: UserDefinition,
                  build_context: str,
                  container_runtime: str,

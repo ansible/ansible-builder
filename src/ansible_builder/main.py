@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class AnsibleBuilder:
     def __init__(self,
+                 *,
                  action: str,
                  filename: str | None = None,
                  build_args: dict[str, str] | None = None,
