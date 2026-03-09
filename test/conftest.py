@@ -270,7 +270,6 @@ def podman_ee_tag(request):
 
 
 @pytest.fixture
-@pytest.mark.test_all_runtimes
 def ee_tag(request, runtime):
     image_name = gen_image_name(request)
     WORKER_IMAGES.setdefault(runtime, [])
