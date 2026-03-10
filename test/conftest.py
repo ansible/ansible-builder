@@ -258,7 +258,7 @@ def delete_image(runtime, image_name):
     if r.rc != 0:
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
-        raise Exception(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+        raise RuntimeError(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture
