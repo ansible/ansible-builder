@@ -11,7 +11,7 @@ def make_containerfile(tmpdir, ee_path, run_validate=False, **cf_kwargs):
     definition = UserDefinition(ee_path)
     if run_validate:
         definition.validate()
-    c = Containerfile(definition, build_context=str(tmpdir), container_runtime='podman', **cf_kwargs)
+    c = Containerfile(definition=definition, build_context=str(tmpdir), container_runtime='podman', **cf_kwargs)
     return c
 
 

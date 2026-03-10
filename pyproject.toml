@@ -72,7 +72,6 @@ disable = [
     "R0913",  # too-many-arguments
     "R0914",  # too-many-locals
     "R0915",  # too-many-statements
-    "R0917",  # too-many-positional-arguments
 
     "W0511",  # fixme
     "W1514",  # unspecified-encoding

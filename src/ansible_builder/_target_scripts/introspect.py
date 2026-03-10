@@ -152,7 +152,8 @@ def process_collection(path):
     return (pip_lines, bindep_lines)
 
 
-def process(data_dir=BASE_COLLECTIONS_PATH,
+def process(*,
+            data_dir=BASE_COLLECTIONS_PATH,
             user_pip=None,
             user_bindep=None,
             exclude_pip=None,
@@ -389,7 +390,7 @@ def parse_args(args=None):
 
 
 def run_introspect(args, log):
-    data = process(args.folder,
+    data = process(data_dir=args.folder,
                    user_pip=args.user_pip,
                    user_bindep=args.user_bindep,
                    exclude_pip=args.exclude_pip,
