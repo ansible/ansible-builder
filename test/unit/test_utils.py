@@ -65,11 +65,11 @@ def test_copy_file_with_destination_directory(dest_file, source_file):
     # Change source file to trigger copy_file
     source_file.write_text('foo\nbar\nzoo')
 
-    with pytest.raises(Exception) as err:
+    with pytest.raises(ValueError) as err:
         copy_file(source_file, '/tmp')
     assert "can not be a directory" in str(err.value.args[0])
 
-    with pytest.raises(Exception) as err:
+    with pytest.raises(ValueError) as err:
         copy_file('/tmp', dest_file)
     assert "can not be a directory" in str(err.value.args[0])
 
@@ -131,7 +131,7 @@ def test_copy_directory_notadir(tmp_path):
     """
     notadir = tmp_path / 'xyz'
     notadir.touch()
-    with pytest.raises(Exception, match="Expected a directory at *"):
+    with pytest.raises(ValueError, match="Expected a directory at *"):
         copy_directory(notadir, 'abc')
 
 

@@ -146,7 +146,7 @@ def copy_directory(source_dir: Path, dest: Path):
     """
 
     if not source_dir.is_dir():
-        raise Exception(f"Expected a directory at '{source_dir}'")
+        raise ValueError(f"Expected a directory at '{source_dir}'")
 
     for child in source_dir.iterdir():
         copy_location = dest / child.name
@@ -173,7 +173,7 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
 
     :returns: True if the file was copied, False if not.
 
-    :raises: Exception if called with the path to a directory. This helps to
+    :raises: ValueError if called with the path to a directory. This helps to
         catch programming errors.
     """
 
@@ -183,9 +183,9 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
         logger.info("File %s was placed in build context by user, leaving unmodified.", dest)
         return False
     if Path(source).is_dir():
-        raise Exception(f"Source {source} can not be a directory. Please use copy_directory instead.")
+        raise ValueError(f"Source {source} can not be a directory. Please use copy_directory instead.")
     if Path(dest).is_dir():
-        raise Exception(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
+        raise ValueError(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
     if Path(source).is_symlink() and Path(dest).is_symlink() and os.readlink(source) == os.readlink(dest):
         logger.debug("Symlink %s already exists and matches.", dest)
         should_copy = False

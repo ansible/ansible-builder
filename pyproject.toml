@@ -75,5 +75,4 @@ disable = [
 
     "W0511",  # fixme
     "W1514",  # unspecified-encoding
-    "W0719",  # broad-exception-raised
 ]
