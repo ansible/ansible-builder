@@ -268,6 +268,15 @@ def parse_args(args=None):
 
 
 class BuildArgAction(argparse.Action):
+    """
+    Custom argparse.Action for handling build arguments.
+
+    The BuildArgAction class is designed to parse and handle build arguments
+    provided as key-value pairs via a command-line interface. This is often used
+    in container build tools like Docker or Podman. The class ensures that build
+    arguments are properly processed and stored within the argparse.Namespace for
+    further use.
+    """
     def __call__(self, parser, namespace, values, option_string=None):
         key, sep, value = values.partition("=")
         attr = getattr(namespace, self.dest)

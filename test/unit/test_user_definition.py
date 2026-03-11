@@ -8,6 +8,7 @@ from ansible_builder.user_definition import UserDefinition, ImageDescription
 
 
 class TestUserDefinition:
+    """Tests for the UserDefinition class."""
 
     def test_definition_syntax_error(self, data_dir):
         path = os.path.join(data_dir, 'definition_files/bad.yml')
@@ -290,6 +291,7 @@ class TestUserDefinition:
 
 
 class TestImageDescription:
+    """Tests for the ImageDescription class."""
 
     def test_bad_programmer(self):
         with pytest.raises(ValueError) as error:
