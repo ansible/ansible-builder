@@ -47,10 +47,9 @@ class BaseImagePolicy(ABC):
     """
     Defines an abstract base class for creating and managing podman policy files.
 
-    This class serves as a blueprint for derived classes that aim to define signed
-    identity types and generate policy data for podman. It provides an interface
-    to specify the signed identity types and generate corresponding policy data,
-    and implements functionality to save the generated policy to a file.
+    This class provides an interface to specify the signed identity types and generate
+    corresponding policy data, and implements functionality to save the generated policy
+    to a file.
     """
     @property
     @abstractmethod
