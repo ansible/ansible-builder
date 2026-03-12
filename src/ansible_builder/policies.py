@@ -6,17 +6,29 @@ from pathlib import Path
 
 
 class PolicyChoices(Enum):
-    # SYSTEM: relies on podman's consumption of system policy/signature with
-    # inline keyring paths, no builder-specific overrides are possible
+    """
+    Defines the PolicyChoices enumeration for representing different policy options.
+
+    The PolicyChoices enumeration provides three distinct options for managing
+    podman container policies. These options determine the behavior related to
+    signature handling, verification, and keyring configurations while interacting
+    with builder containers. Each option reflects a specific policy strategy
+    for dealing with podman's container management processes.
+
+    Attributes:
+        SYSTEM (str): Relies on podman's native consumption of system-defined
+            policies and signature validation using inline keyring paths without
+            any builder-specific overrides.
+        IGNORE (str): Configures podman to ignore all signatures by generating
+            a policy that bypasses all signature checks.
+        SIG_REQ (str): Configures podman to always pull containers (`--pull-always`)
+            and utilize a policy that rejects all by default. This policy adds
+            identity requirements for referenced builder containers, using an
+            explicitly provided keyring and any applicable prefix overrides from
+            the Execution Environment (EE) definition.
+    """
     SYSTEM = 'system'
-
-    # IGNORE: run podman with generated policy that ignores all signatures
     IGNORE = 'ignore_all'
-
-    # SIG_REQ: run podman with `--pull-always` and generated policy that rejects
-    # all by default, with generated identity requirements for referenced builder
-    # containers using explicitly-provided keyring and any prefix overrides from
-    # EE definition as necessary.
     SIG_REQ = 'signature_required'
 
 
@@ -32,7 +44,13 @@ class SignedIdentityType(Enum):
 
 
 class BaseImagePolicy(ABC):
+    """
+    Defines an abstract base class for creating and managing podman policy files.
 
+    This class provides an interface to specify the signed identity types and generate
+    corresponding policy data, and implements functionality to save the generated policy
+    to a file.
+    """
     @property
     @abstractmethod
     def identity_type(self):

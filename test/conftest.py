@@ -277,7 +277,7 @@ def ee_tag(request, runtime):
     yield image_name
 
 
-class CompletedProcessProxy:
+class CompletedProcessProxy:  # pylint: disable=C0115
     def __init__(self, result):
         self.rc = 0
         self.result = result

@@ -19,7 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class ColorFilter(logging.Filter):
+    """
+    Custom logging filter for adding colors to log messages based on their severity levels.
+
+    This class enhances the readability of log messages by applying specific colors to
+    messages depending on their log level. The colors are defined using ANSI escape codes, and
+    are mapped to each log level through a predefined color map.
+    """
     class MessageColors:
+        """Contains ANSI color codes for different color themes used in log messages."""
         ERROR = '\033[91m'    # bright red
         WARNING = '\033[93m'  # bright yellow
         INFO = '\033[94m'     # bright blue
