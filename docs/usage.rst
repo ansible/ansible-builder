@@ -245,6 +245,110 @@ The ``create`` command
 The ``ansible-builder create`` command accepts an execution environment definition as an input and outputs the build context necessary for building an execution environment image. However, the ``create`` command *will not* build the execution environment image; this is useful for creating just the build context and a ``Containerfile`` that can then be shared.
 
 
+The ``introspect`` command
+---------------------------
+
+The ``ansible-builder introspect`` command loops over collections in a specified folder and returns data about their
+dependencies. This command is used internally by ``ansible-builder`` and is exposed here for verification purposes. It is
+primarily targeted toward collection authors and maintainers who need to understand or validate collection dependencies.
+
+To introspect collections in the default location:
+
+.. code::
+
+   $ ansible-builder introspect
+
+
+Flags for the ``introspect`` command
+-------------------------------------
+
+``folder``
+**********
+
+The Ansible collections path to introspect. This is a positional argument that specifies the location of the
+collections to analyze. The folder must contain an :file:`ansible_collections` subdirectory. If not supplied, it
+will default to collections installed in :file:`/usr/share/ansible/collections`.
+
+.. code::
+
+   $ ansible-builder introspect /path/to/collections
+
+``--write-pip``
+***************
+
+Write the combined pip requirements to a file. This option outputs all Python dependencies found across the
+introspected collections to the specified file.
+
+.. code::
+
+   $ ansible-builder introspect --write-pip=requirements.txt /path/to/collections
+
+``--write-bindep``
+******************
+
+Write the combined bindep requirements to a file. This option outputs all system-level dependencies found across the
+introspected collections to the specified file.
+
+.. code::
+
+   $ ansible-builder introspect --write-bindep=bindep.txt /path/to/collections
+
+``--user-pip``
+**************
+
+Specify an additional pip requirements file to combine with collection requirements. This is useful when you have
+custom Python dependencies that should be included alongside the collection dependencies.
+
+.. code::
+
+   $ ansible-builder introspect --user-pip=user-requirements.txt --write-pip=combined.txt /path/to/collections
+
+``--user-bindep``
+*****************
+
+Specify an additional bindep requirements file to combine with collection requirements. This is useful when you have
+custom system-level dependencies that should be included alongside the collection dependencies.
+
+.. code::
+
+   $ ansible-builder introspect --user-bindep=user-bindep.txt --write-bindep=combined.txt /path/to/collections
+
+``--exclude-pip-reqs``
+**********************
+
+Exclude specific pip requirements listed in a file. Each line in the file should contain one Python package name to
+exclude from the final output.
+
+.. code::
+
+   $ ansible-builder introspect --exclude-pip-reqs=exclude.txt --write-pip=filtered.txt /path/to/collections
+
+``--exclude-bindep-reqs``
+*************************
+
+Exclude specific bindep requirements listed in a file. Each line in the file should contain one system package name to
+exclude from the final output.
+
+.. code::
+
+   $ ansible-builder introspect --exclude-bindep-reqs=exclude.txt --write-bindep=filtered.txt /path/to/collections
+
+``--exclude-collection-reqs``
+******************************
+
+Exclude all requirements from specific collections listed in a file. Each line in the file should contain one
+collection name (in the format ``namespace.name``) whose requirements should be excluded from the final output.
+
+.. code::
+
+   $ ansible-builder introspect --exclude-collection-reqs=collections-to-skip.txt /path/to/collections
+
+.. note::
+
+   The ``introspect`` command also supports the ``--verbosity`` flag, which works the same way as described in
+   the ``build`` command documentation above.
+
+
 Examples
 --------
 
