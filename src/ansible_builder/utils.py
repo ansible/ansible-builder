@@ -89,11 +89,13 @@ def run_command(command, capture_output=False, allow_error=False):
 
             rc = process.wait()
             if rc is not None and rc != 0 and (not allow_error):
-                main_logger = logging.getLogger('ansible_builder')
-                if main_logger.level > logging.INFO:
+                # Show command that had error if logging level is -v (WARNING) (already shown at higher logging)
+                if logging.root.level > logging.INFO:
                     logger.error('Command that had error:')
                     logger.error('  %s', ' '.join(command))
-                if main_logger.level > logging.DEBUG:
+                # Show error summary with -v (WARNING) or -vv (INFO) verbosity. We expect -vvv (DEBUG) will have
+                # the full output, so a summary shouldn't be necessary.
+                if logging.root.level > logging.DEBUG:
                     if capture_output:
                         for line in output:
                             logger.error(line)
@@ -104,7 +106,7 @@ def run_command(command, capture_output=False, allow_error=False):
                         for line in trailing_output:
                             logger.error(line)
                         logger.error('')
-                logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
+                logger.error("An error occurred (rc=%s). Use -vvv for full details.", rc)
                 sys.exit(1)
 
             return rc, output
