@@ -53,6 +53,23 @@ def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
+def test_build_fail_invalid_bindep(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that build fails with proper error when bindep.txt contains unparsable content.
+
+    Bindep exits with code 2 when it encounters unparsable content in bindep.txt.
+    The assemble script should detect this and exit with an error message.
+    """
+    bc = tmp_path
+    ee_def = data_dir / 'bindep_invalid' / 'execution-environment.yml'
+    r = cli(
+        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3",
+        allow_error=True
+    )
+    assert r.rc != 0, (r.stdout + r.stderr)
+    assert 'bindep.txt contains unparsable content' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+
+
+@pytest.mark.test_all_runtimes
 def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     """Just makes sure that the build process does not require any particular input"""
     bc = tmp_path
