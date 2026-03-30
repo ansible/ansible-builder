@@ -5,7 +5,7 @@ formats:
   - pdf
 
 build:
-  os: ubuntu-20.04
+  os: ubuntu-lts-latest
   tools:
     python: '3.10'
 
