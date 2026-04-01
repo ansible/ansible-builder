@@ -19,8 +19,26 @@
 #
 
 import datetime
+import os
 from importlib.metadata import version as _retrieve_metadata_version_for
+from pathlib import Path
 from tomllib import loads as _parse_toml
+
+# -- Path setup --------------------------------------------------------------
+
+DOCS_ROOT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT_DIR = DOCS_ROOT_DIR.parent.resolve()
+IS_RTD_ENV = os.getenv('READTHEDOCS', 'False') == 'True'
+IS_RELEASE_ON_RTD = (
+    IS_RTD_ENV and os.environ['READTHEDOCS_VERSION_TYPE'] == 'tag'
+)
+tags: set[str]
+if IS_RELEASE_ON_RTD:
+    # pylint: disable-next=used-before-assignment
+    tags.add('is_release')  # noqa: F821
+elif IS_RTD_ENV:
+    # pylint: disable-next=used-before-assignment
+    tags.add('is_unversioned')  # noqa: F821
 
 
 # -- General configuration ------------------------------------------------
@@ -58,11 +76,24 @@ project = _parse_toml(
 copyright = f'2020-{datetime.datetime.today().year}, Red Hat, Inc'
 author = 'Red Hat, Inc.'
 
+# NOTE: Using the "unversioned" static string improves rebuild
+# NOTE: performance by keeping the doctree cache valid for longer.
+
 # The full version, including alpha/beta/rc tags
-release = _retrieve_metadata_version_for(project)
+release = (
+    # pylint: disable-next=used-before-assignment
+    'unversioned'
+    if tags.has('is_unversioned')  # noqa: F821
+    else _retrieve_metadata_version_for(project)
+)
 
 # The short X.Y version
-version = '.'.join(release.split('.')[:2])
+version = (
+    # pylint: disable-next=used-before-assignment
+    'unversioned'
+    if tags.has('is_unversioned')  # noqa: F821
+    else '.'.join(release.split('.')[:2])
+)
 
 rst_epilog = f"""
 .. |project| replace:: {project}
