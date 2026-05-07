@@ -1,4 +1,5 @@
 import os
+import platform
 import subprocess
 
 # Need to call this directly for multiple tag testing
@@ -7,6 +8,21 @@ from test.conftest import delete_image
 import pytest
 
 from ansible_builder import constants
+
+
+def _linux_platform_for_host():
+    machine = platform.machine().lower()
+    arch_map = {
+        'x86_64': 'amd64',
+        'amd64': 'amd64',
+        'aarch64': 'arm64',
+        'arm64': 'arm64',
+    }
+
+    if machine not in arch_map:
+        pytest.skip(f'unsupported host architecture for --platform integration test: {machine}')
+
+    return f"linux/{arch_map[machine]}"
 
 
 @pytest.mark.test_all_runtimes
@@ -79,6 +95,23 @@ def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     )
     result = cli(f'{runtime} run --rm {ee_tag} echo "This is a simple test"')
     assert 'This is a simple test' in result.stdout, result.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_platform(cli, runtime, ee_tag, tmp_path, data_dir):
+    bc = tmp_path
+    ee_def = data_dir / 'minimal_fast' / 'execution-environment.yml'
+    target_platform = _linux_platform_for_host()
+
+    result = cli(
+        f'ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} '
+        f'--container-runtime {runtime} --platform {target_platform}'
+    )
+
+    assert f'--platform={target_platform}' in result.stdout, result.stdout
+
+    result = cli(f'{runtime} run --rm {ee_tag} echo "This is a platform test"')
+    assert 'This is a platform test' in result.stdout, result.stdout
 
 
 @pytest.mark.test_all_runtimes
