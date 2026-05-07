@@ -85,7 +85,7 @@ class TestPolicies:
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
     @pytest.mark.parametrize('version', ('v2', 'v3'))
-    def test_system(self, cli, tmp_path, data_dir, podman_ee_tag, version):
+    def test_system(self, *, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that a system level policy.json file will be used with the
         `system` policy.
@@ -111,7 +111,7 @@ class TestPolicies:
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
     @pytest.mark.parametrize('version', ('v2', 'v3'))
-    def test_signature_required_success(self, cli, tmp_path, data_dir, podman_ee_tag, version):
+    def test_signature_required_success(self, *, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that signed images are validated when using the signature_required policy.
 
@@ -132,7 +132,7 @@ class TestPolicies:
         assert f"Complete! The build context can be found at: {tmp_path}" in result.stdout
 
     @pytest.mark.parametrize('version', ('v2', 'v3'))
-    def test_signature_required_fail(self, cli, tmp_path, data_dir, podman_ee_tag, version):
+    def test_signature_required_fail(self, *, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that failure to validate a signed image will fail.
 
@@ -150,7 +150,7 @@ class TestPolicies:
         assert "Source image rejected: None of the signatures were accepted" in einfo.value.stdout
 
     @pytest.mark.parametrize('version', ('v2', 'v3'))
-    def test_signature_required_no_orig(self, cli, tmp_path, data_dir, podman_ee_tag, version):
+    def test_signature_required_no_orig(self, *, cli, tmp_path, data_dir, podman_ee_tag, version):
         """
         Test that using a signed image, but not specifying the original image name, fails.
 

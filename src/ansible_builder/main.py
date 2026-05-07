@@ -15,7 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 class AnsibleBuilder:
+    """
+    Handles the configuration and execution of building Ansible execution environments.
+
+    The AnsibleBuilder class is a utility for creating and managing execution environments for
+    Ansible automation. It processes the configuration file, prepares build-related parameters,
+    and generates container files for building containerized execution environments. This class
+    facilitates the control of a variety of build-time options, such as caching, tagging, and
+    policy enforcement.
+    """
     def __init__(self,
+                 *,
                  action: str,
                  filename: str | None = None,
                  build_args: dict[str, str] | None = None,

@@ -425,7 +425,7 @@ def test_extra_build_cli_args(exec_env_definition_file, tmp_path):
                              # CI environments
                              ('', '', 'xterm', '1', True),     # CI disables colors
                          ])
-def test__should_disable_colors(no_color, clicolor, term, ci, expected, monkeypatch, mocker):
+def test__should_disable_colors(*, no_color, clicolor, term, ci, expected, monkeypatch, mocker):
     # pylint: disable=W0613,W0621
     # Clear environment variables that could interfere with the test
     # monkeypatch.delenv is safe for concurrent execution

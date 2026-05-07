@@ -6,7 +6,13 @@ from typing import Sequence
 
 
 class DefinitionError(RuntimeError):
-    # Eliminate the output of traceback before our custom error message prints out
+    """
+    Represents a custom runtime error for definition-related issues.
+
+    This class is designed to handle and customize error messages specifically for
+    definition errors, such as invalid configurations or missing definitions. It also
+    suppresses the traceback output for cleaner error handling.
+    """
     sys.tracebacklimit = 0
 
     def __init__(self, msg: str, path: Sequence[str | int] | None = None):

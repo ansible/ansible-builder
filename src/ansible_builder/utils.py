@@ -19,7 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 class ColorFilter(logging.Filter):
+    """
+    Custom logging filter for adding colors to log messages based on their severity levels.
+
+    This class enhances the readability of log messages by applying specific colors to
+    messages depending on their log level. The colors are defined using ANSI escape codes, and
+    are mapped to each log level through a predefined color map.
+    """
     class MessageColors:
+        """Contains ANSI color codes for different color themes used in log messages."""
         ERROR = '\033[91m'    # bright red
         WARNING = '\033[93m'  # bright yellow
         INFO = '\033[94m'     # bright blue
@@ -81,11 +89,13 @@ def run_command(command, capture_output=False, allow_error=False):
 
             rc = process.wait()
             if rc is not None and rc != 0 and (not allow_error):
-                main_logger = logging.getLogger('ansible_builder')
-                if main_logger.level > logging.INFO:
+                # Show command that had error if logging level is -v (WARNING) (already shown at higher logging)
+                if logging.root.level > logging.INFO:
                     logger.error('Command that had error:')
                     logger.error('  %s', ' '.join(command))
-                if main_logger.level > logging.DEBUG:
+                # Show error summary with -v (WARNING) or -vv (INFO) verbosity. We expect -vvv (DEBUG) will have
+                # the full output, so a summary shouldn't be necessary.
+                if logging.root.level > logging.DEBUG:
                     if capture_output:
                         for line in output:
                             logger.error(line)
@@ -96,7 +106,7 @@ def run_command(command, capture_output=False, allow_error=False):
                         for line in trailing_output:
                             logger.error(line)
                         logger.error('')
-                logger.error("An error occurred (rc=%s), see output line(s) above for details.", rc)
+                logger.error("An error occurred (rc=%s). Use -vvv for full details.", rc)
                 sys.exit(1)
 
             return rc, output
@@ -146,7 +156,7 @@ def copy_directory(source_dir: Path, dest: Path):
     """
 
     if not source_dir.is_dir():
-        raise Exception(f"Expected a directory at '{source_dir}'")
+        raise ValueError(f"Expected a directory at '{source_dir}'")
 
     for child in source_dir.iterdir():
         copy_location = dest / child.name
@@ -173,7 +183,7 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
 
     :returns: True if the file was copied, False if not.
 
-    :raises: Exception if called with the path to a directory. This helps to
+    :raises: ValueError if called with the path to a directory. This helps to
         catch programming errors.
     """
 
@@ -183,9 +193,9 @@ def copy_file(source: str, dest: str, ignore_mtime: bool = False) -> bool:
         logger.info("File %s was placed in build context by user, leaving unmodified.", dest)
         return False
     if Path(source).is_dir():
-        raise Exception(f"Source {source} can not be a directory. Please use copy_directory instead.")
+        raise ValueError(f"Source {source} can not be a directory. Please use copy_directory instead.")
     if Path(dest).is_dir():
-        raise Exception(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
+        raise ValueError(f"Destination {dest} can not be a directory. Please use copy_directory instead.")
     if Path(source).is_symlink() and Path(dest).is_symlink() and os.readlink(source) == os.readlink(dest):
         logger.debug("Symlink %s already exists and matches.", dest)
         should_copy = False

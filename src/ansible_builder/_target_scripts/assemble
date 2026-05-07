@@ -63,12 +63,26 @@ function install_bindep {
     # sibling packages in here too
     if [ -f bindep.txt ] ; then
         bindep -l newline | sort >> /output/bindep/run.txt || true
+        rc=${PIPESTATUS[0]}
+        if [ $rc -eq 2 ] ; then
+            echo "Error: bindep.txt contains unparsable content" >&2
+            exit 2
+        fi
         if [ "$RELEASE" == "centos" ] ; then
             bindep -l newline -b epel | sort >> /output/bindep/stage.txt || true
+            rc=${PIPESTATUS[0]}
+            if [ $rc -eq 2 ] ; then
+                echo "Error: bindep.txt contains unparsable content" >&2
+                exit 2
+            fi
             grep -Fxvf /output/bindep/run.txt /output/bindep/stage.txt >> /output/bindep/epel.txt || true
             rm -rf /output/bindep/stage.txt
         fi
-        compile_packages=$(bindep -b compile || true)
+        compile_packages=$(bindep -b compile) || rc=$?
+        if [ "${rc:-0}" -eq 2 ] ; then
+            echo "Error: bindep.txt contains unparsable content" >&2
+            exit 2
+        fi
         if [ ! -z "$compile_packages" ] ; then
             $PKGMGR install -y $PKGMGR_OPTS ${compile_packages}
         fi

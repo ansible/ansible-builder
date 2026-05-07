@@ -9,7 +9,7 @@ from ansible_builder._target_scripts.introspect import (parse_args,
 
 
 def test_multiple_collection_metadata(data_dir):
-    files = process(data_dir)
+    files = process(data_dir=data_dir)
     files['python'] = filter_requirements(files['python'])
     files['system'] = filter_requirements(files['system'], is_python=False)
 
@@ -33,7 +33,7 @@ def test_process_returns_excluded_python(data_dir, tmp_path):
     pip_ignore_file = tmp_path / "exclude-requirements.txt"
     pip_ignore_file.write_text("req1\nreq2")
 
-    retval = process(data_dir, exclude_pip=str(pip_ignore_file))
+    retval = process(data_dir=data_dir, exclude_pip=str(pip_ignore_file))
 
     assert 'python' in retval
     assert 'exclude' in retval['python']
@@ -47,7 +47,7 @@ def test_process_returns_excluded_system(data_dir, tmp_path):
     bindep_ignore_file = tmp_path / "exclude-bindep.txt"
     bindep_ignore_file.write_text("req1\nreq2")
 
-    retval = process(data_dir, exclude_bindep=str(bindep_ignore_file))
+    retval = process(data_dir=data_dir, exclude_bindep=str(bindep_ignore_file))
 
     assert 'system' in retval
     assert 'exclude' in retval['system']
@@ -61,7 +61,7 @@ def test_process_returns_excluded_collections(data_dir, tmp_path):
     col_ignore_file = tmp_path / "ignored_collections"
     col_ignore_file.write_text("a.b\nc.d")
 
-    retval = process(data_dir, exclude_collections=str(col_ignore_file))
+    retval = process(data_dir=data_dir, exclude_collections=str(col_ignore_file))
 
     assert 'excluded_collections' in retval
     assert retval['excluded_collections'] == ['a.b', 'c.d']
@@ -116,7 +116,7 @@ def test_yaml_extension(data_dir):
     found.
     """
     col_path = os.path.join(data_dir, 'alternate_collections')
-    files = process(col_path)
+    files = process(data_dir=col_path)
     assert files == {
         'python': {'test_collection.test_yaml_extension': ['python-six']},
         'system': {},

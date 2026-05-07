@@ -16,9 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class Containerfile:
+    """
+    Represents a Containerfile for building container images with specifications.
+
+    This class is responsible for constructing container definition files for specific
+    run-time environments based on user-defined requirements. It supports multiple
+    stages in the container build process, including preparing base images, installing
+    dependencies, and customizing the final image. The generated instruction file can
+    be used with various container runtimes.
+    """
     newline_char = '\n'
 
     def __init__(self,
+                 *,
                  definition: UserDefinition,
                  build_context: str,
                  container_runtime: str,

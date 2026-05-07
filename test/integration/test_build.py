@@ -53,6 +53,23 @@ def test_build_fail_exitcode(cli, runtime, ee_tag, tmp_path, data_dir):
 
 
 @pytest.mark.test_all_runtimes
+def test_build_fail_invalid_bindep(cli, runtime, ee_tag, tmp_path, data_dir):
+    """Test that build fails with proper error when bindep.txt contains unparsable content.
+
+    Bindep exits with code 2 when it encounters unparsable content in bindep.txt.
+    The assemble script should detect this and exit with an error message.
+    """
+    bc = tmp_path
+    ee_def = data_dir / 'bindep_invalid' / 'execution-environment.yml'
+    r = cli(
+        f"ansible-builder build -c {bc} -f {ee_def} -t {ee_tag} --container-runtime {runtime} -v3",
+        allow_error=True
+    )
+    assert r.rc != 0, (r.stdout + r.stderr)
+    assert 'bindep.txt contains unparsable content' in (r.stdout + r.stderr), (r.stdout + r.stderr)
+
+
+@pytest.mark.test_all_runtimes
 def test_blank_execution_environment(cli, runtime, ee_tag, tmp_path, data_dir):
     """Just makes sure that the build process does not require any particular input"""
     bc = tmp_path
@@ -346,6 +363,44 @@ def test_missing_runner(cli, runtime, ee_tag, data_dir, tmp_path):
         )
 
     assert "ERROR - Missing Ansible Runner installation" in einfo.value.stdout
+
+
+@pytest.mark.test_all_runtimes
+def test_target_script_logging_summary(cli, runtime, ee_tag, data_dir, tmp_path):
+    """
+    Test that the error summary output is correct at each logging level.
+    """
+    ee_def = data_dir / 'v3' / 'check_ansible' / 'ee-missing-runner.yml'
+
+    # Logging level -v should have a summary and the command in error
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -v'
+        )
+    assert "Command that had error" in einfo.value.stdout
+    assert "showing last 20 lines of output" in einfo.value.stdout
+    assert "An error occurred (rc=1). Use -vvv for full details." in einfo.value.stdout
+
+    # Logging level -vv should have a summary but not the command in error
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -vv'
+        )
+    assert "Command that had error" not in einfo.value.stdout
+    assert "showing last 20 lines of output" in einfo.value.stdout
+    assert "An error occurred (rc=1). Use -vvv for full details." in einfo.value.stdout
+
+    # Logging level -vvv should not have a summary
+    with pytest.raises(subprocess.CalledProcessError) as einfo:
+        cli(
+            f'ansible-builder build -c {tmp_path} -f {ee_def} -t {ee_tag} '
+            f'--container-runtime={runtime} -vvv'
+        )
+    assert "Command that had error" not in einfo.value.stdout
+    assert "showing last 20 lines of output" not in einfo.value.stdout
+    assert "An error occurred (rc=1). Use -vvv for full details." in einfo.value.stdout
 
 
 @pytest.mark.test_all_runtimes

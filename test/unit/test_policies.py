@@ -13,6 +13,7 @@ KEY_PATH = '/some/path/to/keyring.gpg'
 
 
 class TestRejectAll:
+    """Tests for RejectAll class."""
 
     def test_init(self):
         expected = {'default': [{'type': 'reject'}]}
@@ -33,6 +34,7 @@ class TestRejectAll:
 
 
 class TestIgnoreAll:
+    """Tests for IgnoreAll class."""
 
     def test_init(self):
         expected = {'default': [{'type': 'insecureAcceptAnything'}]}
@@ -53,6 +55,7 @@ class TestIgnoreAll:
 
 
 class TestExactReference:
+    """Tests for ExactReference class."""
 
     def test_init(self):
         expected = {

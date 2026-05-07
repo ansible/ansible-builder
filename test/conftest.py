@@ -258,7 +258,7 @@ def delete_image(runtime, image_name):
     if r.rc != 0:
         if regexp.search(r.stdout) or regexp.search(r.stderr):
             return
-        raise Exception(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
+        raise RuntimeError(f'Image cleanup failed (rc={r.rc}):\n{r.stdout}\n{r.stderr}')
 
 
 @pytest.fixture
@@ -270,7 +270,6 @@ def podman_ee_tag(request):
 
 
 @pytest.fixture
-@pytest.mark.test_all_runtimes
 def ee_tag(request, runtime):
     image_name = gen_image_name(request)
     WORKER_IMAGES.setdefault(runtime, [])
@@ -278,7 +277,7 @@ def ee_tag(request, runtime):
     yield image_name
 
 
-class CompletedProcessProxy:
+class CompletedProcessProxy:  # pylint: disable=C0115
     def __init__(self, result):
         self.rc = 0
         self.result = result
