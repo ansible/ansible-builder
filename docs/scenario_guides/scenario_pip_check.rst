@@ -6,8 +6,8 @@ dependencies installed when the final container image is built. This is especial
 important if you have excluded any external collection dependencies and manually
 specified any replacements.
 
-The ``pip`` utility includes a `check option <https://pip-python3.readthedocs.io/en/latest/reference/pip_check.html>`_
-that can perform this validation. When ``pip check`` is run, it will do the validation of the
+The :program:`pip` utility includes a `check option <https://pip-python3.readthedocs.io/en/latest/reference/pip_check.html>`_
+that can perform this validation. When :command:`pip check` is run, it will do the validation of the
 currently installed Python packages, and if any errors are identified, it will exit with a
 non-zero status. A good place to call this check is during the end of the final build phase, just
 after all dependencies have been installed. Add the code below to your execution
@@ -20,5 +20,5 @@ satisfied:
     append_final:
       - RUN $PYCMD -m pip check
 
-Using the ``$PYCMD -m pip`` calling form, instead of calling ``pip`` directly, will guarantee that the same
+Using the ``$PYCMD -m pip`` calling form, instead of calling :program:`pip` directly, will guarantee that the same
 Python executable that was used to install the Python packages is used to do the validation.

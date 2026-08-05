@@ -9,14 +9,14 @@ Installation
 Requirements
 ************
 
-- To build images, you must install a containerization tool - either ``podman`` or ``docker`` - as well as the ``ansible-builder`` Python package.
+- To build images, you must install a containerization tool - either :program:`podman` or :program:`docker` - as well as the ``ansible-builder`` Python package.
 - The ``--container-runtime`` option must correspond to the containerization tool you use.
 - ``ansible-builder`` version ``3.x`` requires Python ``3.9`` or higher.
 
 Base Image Requirements
 ************************
 
-Ansible Builder requires RPM-based container images (those using ``dnf`` or ``microdnf`` package management) as the base for execution environments. Non-RPM-based distributions such as Debian, Ubuntu, or Alpine are not supported.
+Ansible Builder requires RPM-based container images (those using :program:`dnf` or :program:`microdnf` package management) as the base for execution environments. Non-RPM-based distributions such as Debian, Ubuntu, or Alpine are not supported.
 
 For detailed information about choosing an appropriate base image and a list of images that should work, see the :ref:`choosing_base_image` section.
 

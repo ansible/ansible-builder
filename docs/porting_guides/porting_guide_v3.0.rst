@@ -31,7 +31,7 @@ additional_build_files
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This is a new configuration that can be used to specify files to be added to the build context directory.
-These can then be referenced or copied by `additional_build_steps` during any build stage.
+These can then be referenced or copied by ``additional_build_steps`` during any build stage.
 
 See the :ref:`additional_build_files <additional_build_files>` section for more details.
 
@@ -40,7 +40,7 @@ additional_build_steps
 
 With Ansible Builder 3, you can specify more fine-grained build steps or custom commands for any build phase.
 These commands will be inserted directly into the build instruction file for the
-container runtime (For example, `Containerfile` or `Dockerfile`). The commands must conform to any rules required by the containerization tool.
+container runtime (For example, :file:`Containerfile` or :file:`Dockerfile`). The commands must conform to any rules required by the containerization tool.
 
 These are additional build steps -
 
@@ -60,7 +60,7 @@ dependencies
 
 Specifies dependencies to install into the final image, including ``ansible-core``, ``ansible-runner``, Python packages, system packages, and Ansible Collections. Ansible Builder automatically installs dependencies for any Ansible Collections you install.
 
-In general, you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
+In general, you can use standard syntax to constrain package versions. Use the same syntax you would pass to :program:`dnf`, :program:`pip`, :program:`ansible-galaxy`, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
 
 The following keys are valid for this section:
 
@@ -82,7 +82,7 @@ See the :ref:`images <images>` section for more details.
 
 image verification
 """"""""""""""""""
-You can verify signed container images if you are using the ``podman`` container
+You can verify signed container images if you are using the :program:`podman` container
 runtime.
 
 See the :ref:`image verification <image_verification>` section for more details.
