@@ -57,6 +57,13 @@ extensions = [
 
 autosectionlabel_prefix_document = True
 
+# Environment variables referenced with :envvar: are defined externally
+# (OS, ansible-core, CLI conventions), so ignore nitpicky "target not found"
+# warnings for any envvar cross-reference.
+nitpick_ignore_regex = [
+    ('envvar', r'.*'),
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

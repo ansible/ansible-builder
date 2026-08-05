@@ -3,9 +3,9 @@
 Execution environment definition
 ================================
 
-You define the content of your execution environment in a YAML file. By default, this file is called ``execution-environment.yml``
-or ``execution-environment.yaml``. This file tells Ansible Builder how to create the build instruction file
-(``Containerfile`` for Podman, ``Dockerfile`` for Docker) and build context for your container image.
+You define the content of your execution environment in a YAML file. By default, this file is called :file:`execution-environment.yml`
+or :file:`execution-environment.yaml`. This file tells Ansible Builder how to create the build instruction file
+(:file:`Containerfile` for Podman, :file:`Dockerfile` for Docker) and build context for your container image.
 
 .. note::
    This page documents the definition schema for Ansible Builder 3.x. If you are running an older version of Ansible Builder, you need an older schema version. Please consult older versions of the docs for more information. We recommend using version 3, which is more configurable and functional than previous versions.
@@ -129,15 +129,15 @@ Each list item must be a dictionary containing the following (non-optional) keys
 
     ``src``
       Specifies the source file(s) to copy into the build context directory. This
-      may either be an absolute path (e.g., ``/home/user/.ansible.cfg``),
+      may either be an absolute path (e.g., :file:`/home/user/.ansible.cfg`),
       or a path that is relative to the execution environment file. Relative paths may be
-      a glob expression matching one or more files (e.g. ``files/*.cfg``). Note
+      a glob expression matching one or more files (e.g. :file:`files/*.cfg`). Note
       that an absolute path may *not* include a regular expression. If ``src`` is
       a directory, the entire contents of that directory are copied to ``dest``.
 
     ``dest``
-      Specifies a subdirectory path underneath the ``_build`` subdirectory of the
-      build context directory that should contain the source file(s) (e.g., ``files/configs``).
+      Specifies a subdirectory path underneath the :file:`_build` subdirectory of the
+      build context directory that should contain the source file(s) (e.g., :file:`files/configs`).
       This may not be an absolute path or contain ``..`` within the path. This directory
       will be created for you if it does not exist.
 
@@ -148,9 +148,9 @@ additional_build_steps
 
 Specifies custom build commands for any build phase.
 These commands will be inserted directly into the build instruction file for the
-container runtime (e.g., `Containerfile` or `Dockerfile`). The commands must conform to any rules required by the containerization tool.
+container runtime (e.g., :file:`Containerfile` or :file:`Dockerfile`). The commands must conform to any rules required by the containerization tool.
 
-You can add build steps before or after any stage of the image creation process. For example, if you need ``git`` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
+You can add build steps before or after any stage of the image creation process. For example, if you need :program:`git` to be installed before you install your dependencies, you can add a build step at the end of the ``base`` build stage.
 
 Below are the valid keys for this section. Each supports either a multi-line
 string, or a list of strings.
@@ -191,18 +191,18 @@ build_arg_defaults
 Specifies default values for build args as a dictionary. This is an alternative
 to using the :ref:`build-arg` CLI flag.
 
-Build args used by ``ansible-builder`` are the following:
+Build args used by :program:`ansible-builder` are the following:
 
     ``ANSIBLE_GALAXY_CLI_COLLECTION_OPTS``
-      This allows the user to pass the `--pre` flag (or others) to enable the installation of pre-release collections.
+      This allows the user to pass the ``--pre`` flag (or others) to enable the installation of pre-release collections.
 
     ``ANSIBLE_GALAXY_CLI_ROLE_OPTS``
-      This allows the user to pass any flags, such as `--no-deps`, to the role installation.
+      This allows the user to pass any flags, such as ``--no-deps``, to the role installation.
 
     ``PKGMGR_PRESERVE_CACHE``
       This controls how often the package manager cache is cleared during the image build process.
       If this value is not set, which is the default, the cache is cleared frequently.
-      If it is set to the string `always`, the cache is never cleared.
+      If it is set to the string ``always``, the cache is never cleared.
       Any other value forces the cache to be cleared only after the system dependencies are installed
       in the final build stage.
 
@@ -218,15 +218,15 @@ dependencies
 
 Specifies dependencies to install into the final image, including ``ansible-core``, ``ansible-runner``, Python packages, system packages, and Ansible Collections. Ansible Builder automatically installs dependencies for any Ansible Collections you install.
 
-In general, you can use standard syntax to constrain package versions. Use the same syntax you would pass to ``dnf``, ``pip``, ``ansible-galaxy``, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
+In general, you can use standard syntax to constrain package versions. Use the same syntax you would pass to :program:`dnf`, :program:`pip`, :program:`ansible-galaxy`, or any other package management utility. You can also define your packages or collections in separate files and reference those files in the ``dependencies`` section of your execution environment definition file.
 
 The following keys are valid for this section:
 
     ``ansible_core``
       The version of the ``ansible-core`` Python package to be installed. This value is
       a dictionary with a single key, ``package_pip``. The ``package_pip`` value
-      is passed directly to `pip` for installation and can be in any format that
-      pip supports. Below are some example values:
+      is passed directly to :program:`pip` for installation and can be in any format that
+      :program:`pip` supports. Below are some example values:
 
       .. code:: yaml
 
@@ -240,8 +240,8 @@ The following keys are valid for this section:
     ``ansible_runner``
       The version of the Ansible Runner Python package to be installed. This value
       is a dictionary with a single key, ``package_pip``. The ``package_pip`` value
-      is passed directly to `pip` for installation and can be in any format that
-      pip supports. Below are some example values:
+      is passed directly to :program:`pip` for installation and can be in any format that
+      :program:`pip` supports. Below are some example values:
 
       .. code:: yaml
 
@@ -274,7 +274,7 @@ The following keys are valid for this section:
 
     ``python_interpreter``
       A dictionary that defines the Python system package name to be installed by
-      ``dnf`` (``package_system``) and/or a path to the Python interpreter to be used
+      :program:`dnf` (``package_system``) and/or a path to the Python interpreter to be used
       (``python_path``).
 
     ``system``
@@ -389,22 +389,22 @@ Valid keys for this section are:
 
 image verification
 """"""""""""""""""
-You can verify signed container images if you are using the ``podman`` container
+You can verify signed container images if you are using the :program:`podman` container
 runtime. Set the :ref:`container-policy` CLI option to control how this data is used with a Podman
 `policy.json <https://github.com/containers/image/blob/main/docs/containers-policy.json.5.md>`_
 file for container image signature validation.
 
-  * ``ignore_all`` policy: Generate a `policy.json` file in the build
+  * ``ignore_all`` policy: Generate a :file:`policy.json` file in the build
     :ref:`context directory <context>` where no signature validation is
     performed.
 
   * ``system`` policy: Signature validation is performed using pre-existing
-    `policy.json` files in standard system locations. ``ansible-builder`` assumes
+    :file:`policy.json` files in standard system locations. :program:`ansible-builder` assumes
     no responsibility for the content within these files, and the user has complete
     control over the content.
 
-  * ``signature_required`` policy: ``ansible-builder`` will use the container
-    image definitions here to generate a `policy.json` file in the build
+  * ``signature_required`` policy: :program:`ansible-builder` will use the container
+    image definitions here to generate a :file:`policy.json` file in the build
     :ref:`context directory <context>` that will be used during the build to
     validate the images.
 
@@ -431,7 +431,7 @@ builder runtime functionality. Valid keys for this section are:
         Literal value for the ``ENTRYPOINT`` Containerfile directive. The
         default entrypoint behavior handles signal propagation to subprocesses, as well as attempting to
         ensure at runtime that the container user has a proper environment with a valid writeable
-        home directory, represented in ``/etc/passwd``, with the ``HOME`` envvar set to match. The default
+        home directory, represented in :file:`/etc/passwd`, with the :envvar:`HOME` envvar set to match. The default
         entrypoint script may emit warnings to ``stderr`` in cases where it is unable to suitably adjust the
         user runtime environment. This behavior can be ignored or elevated to a fatal error; consult the
         source for the ``entrypoint`` target script for more details. The default value is
@@ -442,17 +442,17 @@ builder runtime functionality. Valid keys for this section are:
         The default value is ``dumb-init==1.2.5``.
 
     ``package_manager_path``
-      A string with the path to the package manager to use. The default is ``/usr/bin/dnf``.
+      A string with the path to the package manager to use. The default is :file:`/usr/bin/dnf`.
 
       This option allows you to choose between different RPM package managers available on
-      your base image, such as ``/usr/bin/dnf`` or ``/usr/bin/microdnf``. The package manager
+      your base image, such as :file:`/usr/bin/dnf` or :file:`/usr/bin/microdnf`. The package manager
       is used to install system packages, and if specified in ``dependencies``, to install
       a Python interpreter during the build phase.
 
       .. warning::
 
-          Only RPM-based package managers (for example, ``dnf`` or ``microdnf``) are supported. Non-RPM package
-          managers such as ``apt-get`` (Debian/Ubuntu) or ``apk`` (Alpine) are not supported and will
+          Only RPM-based package managers (for example, :program:`dnf` or :program:`microdnf`) are supported. Non-RPM package
+          managers such as :program:`apt-get` (Debian/Ubuntu) or :program:`apk` (Alpine) are not supported and will
           cause build failures.
 
     ``skip_ansible_check``
@@ -469,19 +469,19 @@ builder runtime functionality. Valid keys for this section are:
 
     ``relax_passwd_permissions``
       This boolean value controls whether the ``root`` group (GID 0) is explicitly granted
-      write permission to ``/etc/passwd`` in the final container image. The default entrypoint
-      script may attempt to update ``/etc/passwd`` under some container runtimes with dynamically
+      write permission to :file:`/etc/passwd` in the final container image. The default entrypoint
+      script may attempt to update :file:`/etc/passwd` under some container runtimes with dynamically
       created users to ensure a fully functional POSIX user environment and home directory. Disabling
       this capability can cause failures of software features that require users to be listed in
-      ``/etc/passwd`` with a valid and writeable home directory (eg, ``async`` in ansible-core, and the
+      :file:`/etc/passwd` with a valid and writeable home directory (eg, ``async`` in ansible-core, and the
       ``~username`` shell expansion). The default is ``True``.
 
     ``workdir``
       Default current working directory for new processes started under the final container
-      image. Some container runtimes also use this value as ``HOME`` for dynamically-created
+      image. Some container runtimes also use this value as :envvar:`HOME` for dynamically-created
       users in the ``root`` (GID 0) group. When this value is specified, the directory will be
       created (if it doesn't already exist), set to ``root`` group ownership, and ``rwx`` group
-      permissions recursively applied to it. The default value is ``/runner``.
+      permissions recursively applied to it. The default value is :file:`/runner`.
 
     ``user``
       This sets the username or UID to use as the default user for the final container image.

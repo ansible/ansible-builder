@@ -10,8 +10,8 @@ New Features
 Disabling Colorized Output
 --------------------------
 
-Colorized terminal output can be disabled by either setting the ``NO_COLOR`` environment variable to
-any non-empty value, or by setting the ``CLICOLOR`` environment variable to ``0``.
+Colorized terminal output can be disabled by either setting the :envvar:`NO_COLOR` environment variable to
+any non-empty value, or by setting the :envvar:`CLICOLOR` environment variable to ``0``.
 
 Behavior Changes
 ================
@@ -28,12 +28,12 @@ more information.
 Bindep Parse Error Detection
 ----------------------------
 
-This release adds improved error detection and reporting for invalid ``bindep.txt`` files.
-Previously, when ``bindep`` encountered unparsable content in a ``bindep.txt`` file, the build
+This release adds improved error detection and reporting for invalid :file:`bindep.txt` files.
+Previously, when :program:`bindep` encountered unparsable content in a :file:`bindep.txt` file, the build
 would continue and potentially fail later with unclear error messages. Now, the build will fail
-immediately with a clear error message when bindep reports a parse error.
+immediately with a clear error message when :program:`bindep` reports a parse error.
 
-When the ``bindep`` program exits with code 2 (indicating unparsable content in ``bindep.txt``),
+When the :program:`bindep` program exits with code 2 (indicating unparsable content in :file:`bindep.txt`),
 the build process will now:
 
 #. Stop immediately at the point where the parse error is detected
@@ -51,7 +51,7 @@ Deprecations
 ============
 
 Execution environment schema versions 1 and 2 are deprecated and scheduled to be removed from Ansible Builder 3.3.
-If you are currently using one of these versions, you will need to update your ``execution-environment.yml``
+If you are currently using one of these versions, you will need to update your :file:`execution-environment.yml`
 files to the :ref:`version 3 format <version_3_format>`.
 
 A warning about the deprecation is sent to the logging output of the ``create`` or ``build`` commands when

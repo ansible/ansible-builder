@@ -3,12 +3,12 @@
 CLI Usage
 =========
 
-Ansible Builder can execute two separate steps. The first step is to create a build instruction file (Containerfile for Podman, Dockerfile for Docker) and a build context based on your :ref:`definition <builder_ee_definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The ``ansible-builder build`` command executes both steps, giving you a build instruction file, a build context, and a fully built container image. The ``ansible-builder create`` command only executes the first step, giving you a build instruction file and a build context. If you use ``ansible-builder create``, you can use the resulting build instruction file and build context to build your container images on the platform of your choice.
+Ansible Builder can execute two separate steps. The first step is to create a build instruction file (:file:`Containerfile` for Podman, :file:`Dockerfile` for Docker) and a build context based on your :ref:`definition <builder_ee_definition>` file. The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context. The :command:`ansible-builder build` command executes both steps, giving you a build instruction file, a build context, and a fully built container image. The :command:`ansible-builder create` command only executes the first step, giving you a build instruction file and a build context. If you use :command:`ansible-builder create`, you can use the resulting build instruction file and build context to build your container images on the platform of your choice.
 
 .. note::
 
-   Ansible Builder is colorized by default when outputting to a terminal. Color output can be disabled by setting the ``NO_COLOR`` environment variable to any non-empty value,
-   or by setting the ``CLICOLOR`` environment variable to ``0``.
+   Ansible Builder is colorized by default when outputting to a terminal. Color output can be disabled by setting the :envvar:`NO_COLOR` environment variable to any non-empty value,
+   or by setting the :envvar:`CLICOLOR` environment variable to ``0``.
 
 
 .. contents::
@@ -17,14 +17,14 @@ Ansible Builder can execute two separate steps. The first step is to create a bu
 The ``build`` command
 ---------------------
 
-The ``ansible-builder build`` command:
+The :command:`ansible-builder build` command:
 
 * takes an :ref:`execution environment definition file<builder_ee_definition>` as an input,
-* outputs a build instruction file (Containerfile for Podman, Dockerfile for Docker),
+* outputs a build instruction file (:file:`Containerfile` for Podman, :file:`Dockerfile` for Docker),
 * creates a build context necessary for building an execution environment image,
 * builds the image.
 
-By default, it looks for a file named ``execution-environment.yml`` (or ``execution-environment.yaml``) in the current directory.
+By default, it looks for a file named :file:`execution-environment.yml` (or :file:`execution-environment.yaml`) in the current directory.
 
 To build an execution environment using the default definition file, run:
 
@@ -49,7 +49,7 @@ Customizes the tagged name applied to the built image. To create an image with a
 
    $ ansible-builder build --tag=my-custom-ee
 
-More recent versions of ``ansible-builder`` support multiple tags:
+More recent versions of :program:`ansible-builder` support multiple tags:
 
 .. code::
 
@@ -67,7 +67,7 @@ Specifies the execution environment file. To use a file other than the default:
 ``--galaxy-keyring``
 ********************
 
-Specifies a keyring for ``ansible-galaxy`` to use to verify collection signatures during installation. To verify collection signatures:
+Specifies a keyring for :program:`ansible-galaxy` to use to verify collection signatures during installation. To verify collection signatures:
 
 .. code::
 
@@ -79,7 +79,7 @@ If you do not pass this option, no signature verification is performed. If you d
 ``--galaxy-ignore-signature-status-code``
 *****************************************
 
-Ignores certain errors that may occur while verifying collections. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
+Ignores certain errors that may occur while verifying collections. This option is passed unmodified to :program:`ansible-galaxy` calls. Valid only when ``--galaxy-keyring`` is also set. See the :program:`ansible-galaxy` documentation for more information.
 
 .. code::
 
@@ -89,7 +89,7 @@ Ignores certain errors that may occur while verifying collections. This option i
 ``--galaxy-required-valid-signature-count``
 *******************************************
 
-Overrides the number of required valid collection signatures. This option is passed unmodified to ``ansible-galaxy`` calls. Valid only when ``--galaxy-keyring`` is also set. See the ``ansible-galaxy`` documentation for more information.
+Overrides the number of required valid collection signatures. This option is passed unmodified to :program:`ansible-galaxy` calls. Valid only when ``--galaxy-keyring`` is also set. See the :program:`ansible-galaxy` documentation for more information.
 
 .. code::
 
@@ -102,7 +102,7 @@ Overrides the number of required valid collection signatures. This option is pas
 ``--context``
 *************
 
-Specifies the directory name for the build context Ansible Builder creates. Default directory name is ``context`` in the current working directory. To specify another location:
+Specifies the directory name for the build context Ansible Builder creates. Default directory name is :file:`context` in the current working directory. To specify another location:
 
 .. code::
 
@@ -114,9 +114,9 @@ Specifies the directory name for the build context Ansible Builder creates. Defa
 ``--build-arg``
 ***************
 
-Passes build-time arguments to Podman or Docker. Specify these flags or variables the same way you would with ``podman build`` or ``docker build``.
+Passes build-time arguments to Podman or Docker. Specify these flags or variables the same way you would with :command:`podman build` or :command:`docker build`.
 
-By default, the Containerfile / Dockerfile created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding execution environments without modifying any files.
+By default, the :file:`Containerfile` / :file:`Dockerfile` created by Ansible Builder contains a build argument ``EE_BASE_IMAGE``, which can be useful for rebuilding execution environments without modifying any files.
 
 .. code::
 
@@ -154,12 +154,12 @@ Specifies the containerization tool used to build images. Default is Podman. To 
 
 .. note:: Added in version 1.2
 
-Specifies the container image validation policy to use. Valid only when :ref:`container-runtime` is ``podman``. Valid values are one of:
+Specifies the container image validation policy to use. Valid only when :ref:`container-runtime` is :program:`podman`. Valid values are one of:
 
-* ``ignore_all``: Run podman with generated policy that ignores all signatures.
-* ``system``: Relies on podman's consumption of system policy/signature with
+* ``ignore_all``: Run :program:`podman` with generated policy that ignores all signatures.
+* ``system``: Relies on :program:`podman`'s consumption of system policy/signature with
   inline keyring paths. No builder-specific overrides are possible.
-* ``signature_required``: Run podman with ``--pull-always`` and a generated
+* ``signature_required``: Run :program:`podman` with ``--pull-always`` and a generated
    policy that rejects all by default, with generated identity requirements for
    referenced container images, using an explicitly-provided keyring (specified
    with the :ref:`container-keyring` CLI option).
@@ -181,9 +181,9 @@ Specifies the path to a GPG keyring file to use for validating container image s
 .. note:: Added in version 3.1
 
 This option allows the user to pass any additional command line arguments to the container engine
-build command (``docker build`` or ``podman build``). Take care when using this option as there is
+build command (:command:`docker build` or :command:`podman build`). Take care when using this option as there is
 no attempt to identify or resolve conflicting argument values from this option and arguments
-normally added by ``ansible-builder``.
+normally added by :program:`ansible-builder`.
 
 .. code::
 
@@ -220,7 +220,7 @@ Removes unused images created after the build process:
 
 .. note::
 
-   This flag removes all the dangling images on the given machine whether they already existed or were created by ``ansible-builder`` build process.
+   This flag removes all the dangling images on the given machine whether they already existed or were created by :program:`ansible-builder` build process.
 
 
 ``--squash``
@@ -236,20 +236,20 @@ Controls the final image layer squashing. Valid values are:
 
 .. note::
 
-   This flag is compatible only with the ``podman`` runtime and will be ignored for any other runtime. Docker does not support layer squashing; it is considered an experimental feature.
+   This flag is compatible only with the :program:`podman` runtime and will be ignored for any other runtime. Docker does not support layer squashing; it is considered an experimental feature.
 
 
 The ``create`` command
 ----------------------
 
-The ``ansible-builder create`` command accepts an execution environment definition as an input and outputs the build context necessary for building an execution environment image. However, the ``create`` command *will not* build the execution environment image; this is useful for creating just the build context and a ``Containerfile`` that can then be shared.
+The :command:`ansible-builder create` command accepts an execution environment definition as an input and outputs the build context necessary for building an execution environment image. However, the ``create`` command *will not* build the execution environment image; this is useful for creating just the build context and a :file:`Containerfile` that can then be shared.
 
 
 The ``introspect`` command
 ---------------------------
 
-The ``ansible-builder introspect`` command loops over collections in a specified folder and returns data about their
-dependencies. This command is used internally by ``ansible-builder`` and is exposed here for verification purposes. It is
+The :command:`ansible-builder introspect` command loops over collections in a specified folder and returns data about their
+dependencies. This command is used internally by :program:`ansible-builder` and is exposed here for verification purposes. It is
 primarily targeted toward collection authors and maintainers who need to understand or validate collection dependencies.
 
 To introspect collections in the default location:
@@ -352,15 +352,15 @@ collection name (in the format ``namespace.name``) whose requirements should be 
 Examples
 --------
 
-The example in ``test/data/pytz`` requires the ``awx.awx`` collection in the execution environment definition. The lookup plugin
+The example in :file:`test/data/pytz` requires the ``awx.awx`` collection in the execution environment definition. The lookup plugin
 ``awx.awx.schedule_rrule`` requires the PyPI ``pytz`` and another
-library to work. If ``test/data/pytz/execution-environment.yml`` file is
-given to the ``ansible-builder build`` command, then it will install the
-collection inside the image, read ``requirements.txt`` inside of the
+library to work. If :file:`test/data/pytz/execution-environment.yml` file is
+given to the :command:`ansible-builder build` command, then it will install the
+collection inside the image, read :file:`requirements.txt` inside of the
 collection, and then install ``pytz`` into the image.
 
-The image produced can be used inside of an ``ansible-runner`` project
-by placing these variables inside the ``env/settings`` file, inside of
+The image produced can be used inside of an :program:`ansible-runner` project
+by placing these variables inside the :file:`env/settings` file, inside of
 the private data directory.
 
 

@@ -8,7 +8,7 @@
 Introduction to Ansible Builder
 *******************************
 
-With ``ansible-builder`` you can configure and build portable, consistent, customized Ansible control nodes that are packaged as containers by Podman or Docker.
+With :program:`ansible-builder` you can configure and build portable, consistent, customized Ansible control nodes that are packaged as containers by Podman or Docker.
 These containers are known as execution environments. You can use them on AWX or Ansible Controller, with Ansible Navigator, for local playbook development and testing, in your CI pipelines, and anywhere else you run automation.
 
 You can design and distribute specialized execution environments for your Ansible content, choosing the versions of Python and
@@ -28,7 +28,7 @@ Ansible Builder depends on more generalized containerization tools like Podman o
 
 Before you start using Ansible Builder, you should understand the following concepts and terms relevant to any use of containers:
 
-- **Build instruction file** (called a ``Containerfile`` in Podman and a ``Dockerfile`` in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies.
+- **Build instruction file** (called a :file:`Containerfile` in Podman and a :file:`Dockerfile` in Docker): an instruction file for creating a container image by installing and configuring the code and dependencies.
 - **Container**: a package of code and dependencies that runs a service or an application across a variety of computing environments.
 - **Image**: a complete but inactive version of a container - you can distribute images and create one or more containers based on each image.
 
@@ -40,10 +40,10 @@ Refer to the `Getting started with Execution Environments guide <https://docs.an
 Quickstart for Ansible Builder
 ==============================
 
-To get started with Ansible Builder, you must install the ``ansible-builder`` utility and a containerization tool.
+To get started with Ansible Builder, you must install the :program:`ansible-builder` utility and a containerization tool.
 
 Once you have the tools you need, create an :ref:`execution environment definition <builder_ee_definition>` file.
-By default, this file is called ``execution-environment.yml`` (the ``.yaml`` extension is also accepted).
+By default, this file is called :file:`execution-environment.yml` (the ``.yaml`` extension is also accepted).
 In the execution environment definition file, you can specify the exact content you want to include in your
 execution environment. You can specify these items:
 
@@ -61,10 +61,10 @@ execution environment. You can specify these items:
 Choosing a base image
 =====================
 
-Ansible Builder requires RPM-based container images that use the ``dnf`` or ``microdnf`` package manager.
+Ansible Builder requires RPM-based container images that use the :program:`dnf` or :program:`microdnf` package manager.
 Non-RPM-based distributions (such as Debian, Ubuntu, or Alpine) are not supported and will fail to build.
 
-Ansible Builder's default configuration and internal tooling assume the use of ``dnf`` package management, which is present
+Ansible Builder's default configuration and internal tooling assume the use of :program:`dnf` package management, which is present
 on RPM-based Linux distributions. The following are examples of images that should work with Ansible Builder:
 
 - **CentOS Stream**: ``quay.io/centos/centos:stream9``
@@ -73,7 +73,7 @@ on RPM-based Linux distributions. The following are examples of images that shou
 - **Red Hat Universal Base Image (UBI)**: ``registry.access.redhat.com/ubi9/ubi:latest``
 - **RHEL-based Ansible Automation Platform images**: ``registry.redhat.io/ansible-automation-platform-*/ee-*``
 
-The examples above demonstrate compatible images, but any RPM-based image with ``dnf`` or ``microdnf`` should work.
+The examples above demonstrate compatible images, but any RPM-based image with :program:`dnf` or :program:`microdnf` should work.
 
 When choosing a base image, prefer smaller images when possible, as they result in smaller final execution environment
 images. However, ensure you understand what packages are already installed on the base image to avoid redundant installations.
@@ -84,18 +84,18 @@ How Ansible Builder executes
 
 Ansible Builder can execute two separate steps:
 
-- The first step is to create a build instruction file (``Containerfile`` for Podman, ``Dockerfile`` for Docker) and a build context based on the execution environment definition file.
+- The first step is to create a build instruction file (:file:`Containerfile` for Podman, :file:`Dockerfile` for Docker) and a build context based on the execution environment definition file.
 - The second step is to run a containerization tool (Podman or Docker) to build an image based on the build instruction file and build context.
 
-The ``ansible-builder build`` command runs both steps.
+The :command:`ansible-builder build` command runs both steps.
 
-The ``ansible-builder create`` command runs only the first step. For more details, read through the :ref:`CLI usage docs <builder_cli>`.
+The :command:`ansible-builder create` command runs only the first step. For more details, read through the :ref:`CLI usage docs <builder_cli>`.
 
 How Ansible Builder builds images
 ---------------------------------
 
 Ansible Builder executes four stages when it runs your containerization tool to build a container image.
-The same four stages get executed if you build your container image directly with Podman or Docker, using a build instruction file and context generated by ``ansible-builder create``. These stages are:
+The same four stages get executed if you build your container image directly with Podman or Docker, using a build instruction file and context generated by :command:`ansible-builder create`. These stages are:
 
 1. **Base**: uses Podman or Docker to pull the base image you defined, then installs the Python version (if defined and different from any Python on the base image), pip, ansible-runner, and ansible-core or ansible. All three later stages of the build process build on the output of the Base stage.
 2. **Galaxy**: downloads the collections you defined from Galaxy and stashes them locally as files.
@@ -105,7 +105,7 @@ The same four stages get executed if you build your container image directly wit
 Ansible Builder injects hooks at each stage of the container build process so you can add custom steps before and after every build stage.
 
 You may need to install certain packages or utilities before the Galaxy and Builder stages.
-For example, if you need to install a collection from GitHub, you must install git after the Base stage to make it available during the Galaxy stage.
+For example, if you need to install a collection from GitHub, you must install :program:`git` after the Base stage to make it available during the Galaxy stage.
 
 To add custom build steps, add an ``additional_build_steps`` section to your execution environment definition. For more details, read through the :ref:`CLI usage docs <builder_cli>`.
 

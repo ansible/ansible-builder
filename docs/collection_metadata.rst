@@ -14,7 +14,7 @@ For Ansible Builder to find and install collection dependencies, those dependenc
 
 If you are a collection maintainer, make sure the controller-side dependencies are specified and :ref:`verified<verify_collection_metadata>`.
 
-We recommend you specify paths to dependency files in the ``meta/execution-environment.yml`` file.
+We recommend you specify paths to dependency files in the :file:`meta/execution-environment.yml` file.
 Here is an example of its content:
 
 .. code:: yaml
@@ -23,14 +23,14 @@ Here is an example of its content:
       python: meta/ee-requirements.txt  # List Python package requirements in the file
       system: meta/ee-bindep.txt  # List system package requirements in the file
 
-If the ``meta/execution-environment.yml`` file is not present, by default, Ansible Builder will expect the dependencies to be defined in:
+If the :file:`meta/execution-environment.yml` file is not present, by default, Ansible Builder will expect the dependencies to be defined in:
 
-* the ``requirements.txt`` file in the collection root directory for Python package requirements
-* the ``bindep.txt`` file in the collection root directory for system package requirements
+* the :file:`requirements.txt` file in the collection root directory for Python package requirements
+* the :file:`bindep.txt` file in the collection root directory for system package requirements
 
 .. note::
 
-  If your collection uses the ``requirements.txt`` or ``bindep.txt`` files in its root directory for anything else but its controller-side dependencies, for example, for listing testing requirements, make sure you use the ``meta/execution-environment.yml`` file to specify other dependency files for execution environment purposes.
+  If your collection uses the :file:`requirements.txt` or :file:`bindep.txt` files in its root directory for anything else but its controller-side dependencies, for example, for listing testing requirements, make sure you use the :file:`meta/execution-environment.yml` file to specify other dependency files for execution environment purposes.
 
 Dependency introspection
 ========================
@@ -38,7 +38,7 @@ Dependency introspection
 If any dependencies are given, the introspection is run by Ansible Builder so that the requirements are found before container image assembly.
 
 A user can see the introspection output during
-the builder intermediate phase using the ``build -v3`` option.
+the builder intermediate phase using the :command:`build -v3` option.
 
 .. _verify_collection_metadata:
 
@@ -65,7 +65,7 @@ Run the ``introspect`` command against your collection path:
 
     ansible-builder introspect COLLECTION_PATH
 
-The default collection path used by the ``ansible-galaxy`` command is ``~/.ansible/collections/``.
+The default collection path used by the :program:`ansible-galaxy` command is :file:`~/.ansible/collections/`.
 Read more about collection paths in the `Ansible configuration settings <https://docs.ansible.com/projects/ansible/latest/reference_appendices/config.html#collections-paths>`_ guide.
 
 .. note::
@@ -88,7 +88,7 @@ For example, if you need to inspect the ``community.docker`` collection, the pat
 
   ansible_collections/community/docker
 
-Then, if the ``ansible_collection`` directory is in your home directory, you can run ``introspect`` with the following command:
+Then, if the :file:`ansible_collection` directory is in your home directory, you can run ``introspect`` with the following command:
 
 ::
 
@@ -101,10 +101,10 @@ Python Dependencies
 
 Ansible Builder combines all the Python requirements files from all collections into a single file.
 
-Certain package names are specifically *ignored* by ``ansible-builder``, meaning that Ansible Builder
+Certain package names are specifically *ignored* by :program:`ansible-builder`, meaning that Ansible Builder
 does not include them in the combined file of Python dependencies, even if a collection lists them as
 dependencies. These include test packages and packages that provide Ansible itself. The full list can
-be found in ``EXCLUDE_REQUIREMENTS`` in ``src/ansible_builder/_target_scripts/introspect.py``.
+be found in ``EXCLUDE_REQUIREMENTS`` in :file:`src/ansible_builder/_target_scripts/introspect.py`.
 
 If you need to include one of these ignored package names, use the ``--user-pip`` option of the
 ``introspect`` command to list it in the user requirements file. Packages supplied this way are
