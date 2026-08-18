@@ -1,0 +1,40 @@
+---
+name: Nightly
+
+on:
+  schedule:
+    - cron: "5 0 * * *"
+      timezone: "America/New_York"
+
+run-name: "Nightly run of commit ${{ github.sha }}"
+
+jobs:
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Make certain our max supported Python is used
+      - name: Install Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: 3.14
+
+      - name: Install tox
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install tox
+
+      - name: Run unit and integration tests
+        run: |
+          tox -e clean, unit
+          tox -e integration -- --run-destructive
+
+      - name: Upload coverage data
+        uses: codecov/codecov-action@v7
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
