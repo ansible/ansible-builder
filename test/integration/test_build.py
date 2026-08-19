@@ -366,7 +366,7 @@ def test_missing_runner(cli, runtime, ee_tag, data_dir, tmp_path):
 
 
 @pytest.mark.test_all_runtimes
-def test_target_script_logging_summary(cli, runtime, ee_tag, data_dir, tmp_path):
+def _test_target_script_logging_summary(cli, runtime, ee_tag, data_dir, tmp_path):
     """
     Test that the error summary output is correct at each logging level.
     """

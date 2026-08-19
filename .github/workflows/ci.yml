@@ -14,7 +14,7 @@ jobs:
   pre-setup:
     name: ⚙️ Pre-set global build settings
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     timeout-minutes: 1
 
@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         runner-vm-os:
-        - ubuntu-24.04
+        - ubuntu-26.04
         python-version:
         - 3.12
         toxenv:
@@ -101,7 +101,7 @@ jobs:
         - 3.12
         - ~3.15.0-0
         runner-vm-os:
-        - ubuntu-24.04
+        - ubuntu-26.04
         toxenv:
         - integration
         - unit
@@ -160,7 +160,7 @@ jobs:
     - sanity
     - tests
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     timeout-minutes: 1
 
