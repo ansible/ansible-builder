@@ -366,10 +366,18 @@ def test_missing_runner(cli, runtime, ee_tag, data_dir, tmp_path):
 
 
 @pytest.mark.test_all_runtimes
-def test_target_script_logging_summary(cli, runtime, ee_tag, data_dir, tmp_path):
+def test_target_script_logging_summary(request, cli, runtime, ee_tag, data_dir, tmp_path):  # pylint: disable=R0917
     """
     Test that the error summary output is correct at each logging level.
     """
+    # Temporarily xfail under podman. A buildah bug causes this test to fail because
+    # buildah crashes during the build. Likely fixed in buildah 1.43.1 so this can be
+    # re-enabled when that version is available in the CI runner.
+    if runtime == 'podman':
+        request.node.add_marker(
+            pytest.mark.xfail(reason="buildah bug (podman-container-tools/buildah issue #6688)")
+        )
+
     ee_def = data_dir / 'v3' / 'check_ansible' / 'ee-missing-runner.yml'
 
     # Logging level -v should have a summary and the command in error
