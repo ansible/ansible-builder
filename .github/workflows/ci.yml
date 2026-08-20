@@ -52,7 +52,7 @@ jobs:
           3.12
         toxenv:
         - linters
-        - docs
+        - build-docs
         xfail:
         - false
 
