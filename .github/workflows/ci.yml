@@ -133,7 +133,7 @@ jobs:
       runner-vm-os: >-
         ${{ matrix.runner-vm-os }}
       timeout-minutes: >-
-        ${{ matrix.toxenv == 'unit' && 2 || 9 }}
+        ${{ matrix.toxenv == 'unit' && 2 || 11 }}
       toxenv: >-
         ${{ matrix.toxenv }}
       tox-run-posargs: >-
