@@ -1,0 +1,292 @@
+requires = ["tox>=4.21.2,<=4.60.0"]
+env_list = [
+    "linters",
+    "unit",
+    "integration",
+]
+
+[env_run_base]
+description = "Run all tests with {base_python}"
+use_develop = true
+deps = ["-r {tox_root}{/}test{/}requirements.txt"]
+# disable color codes for test string comparisons
+set_env.NO_COLOR = "1"
+pass_env = [
+    "CI",
+    "GITHUB_*",
+    "HOME",
+    "KEEP_IMAGES",
+    "NO_COLOR",
+    "SSH_AUTH_SOCK",
+    "TERM",
+]
+commands = [["pytest", "-n", "auto", { replace = "posargs", extend = true }]]
+
+[env.linters]
+description = "Run code linters"
+commands = [
+    ["flake8", "--version"],
+    ["flake8", "src/ansible_builder", "test"],
+    ["yamllint", "--version"],
+    ["yamllint", "-s", "."],
+    ["mypy", "src/ansible_builder"],
+    ["pylint", "src/ansible_builder", "test"],
+]
+
+[env.unit]
+description = "Run unit tests"
+commands = [
+    [
+        "pytest", "-vv", "-n", "auto", "test/unit",
+        "--cov", "--cov-report", "term", "--cov-report", "html",
+        "-rxXs",
+        { replace = "posargs", default = ["--cov-report=html:{env_tmp_dir}{/}htmlcov{/}"], extend = true },
+    ],
+]
+commands_post = [
+    # Publish the coverage report to the GitHub Actions step summary. This
+    # replaces the INI leading "-" (ignore exit code) prefix, which native TOML
+    # does not support, by making the script itself never exit non-zero.
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import atexit
+import os
+import sys
+
+if os.getenv("GITHUB_ACTIONS") != "true":
+    sys.exit()
+try:
+    import coverage
+    gh_summary_fd = open(
+        os.environ["GITHUB_STEP_SUMMARY"], encoding="utf-8", mode="a",
+    )
+    atexit.register(gh_summary_fd.close)
+    cov = coverage.Coverage()
+    cov.load()
+    cov.report(file=gh_summary_fd, output_format="markdown")
+except Exception:
+    pass
+''',
+    ],
+    # Expose the coverage/test report file names to GitHub Actions outputs.
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import os
+import pathlib
+import sys
+
+if os.getenv("GITHUB_ACTIONS") != "true":
+    sys.exit()
+cov_report_arg_prefix = "--cov-report=xml:"
+test_report_arg_prefix = "--junitxml="
+cov_reports = [
+    arg[len(cov_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(cov_report_arg_prefix)
+]
+test_reports = [
+    arg[len(test_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(test_report_arg_prefix)
+]
+cov_report_file = cov_reports[-1] if cov_reports else None
+test_report_file = test_reports[-1] if test_reports else None
+gh_output_fd = open(
+    os.environ["GITHUB_OUTPUT"], encoding="utf-8", mode="a",
+)
+if cov_report_file:
+    print(f"cov-report-files=\{cov_report_file !s\}", file=gh_output_fd)
+if test_report_file:
+    print(f"test-result-files=\{test_report_file !s\}", file=gh_output_fd)
+print("codecov-flags=pytest", file=gh_output_fd)
+gh_output_fd.close()
+''',
+        { replace = "posargs", extend = true },
+    ],
+    # Print out the output coverage dir and a way to serve html:
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import pathlib
+import shlex
+import sys
+
+cov_html_report_arg_prefix = "--cov-report=html:"
+cov_html_reports = [
+    arg[len(cov_html_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(cov_html_report_arg_prefix)
+]
+if not cov_html_reports:
+    sys.exit()
+cov_html_report_dir = pathlib.Path(cov_html_reports[-1])
+index_file = cov_html_report_dir / "index.html"
+if not index_file.exists():
+    sys.exit()
+html_url = f"file://\{index_file\}"
+browse_cmd = shlex.join(("python3", "-Im", "webbrowser", html_url))
+serve_cmd = shlex.join((
+    "python3", "-Im", "http.server",
+    "--directory", str(cov_html_report_dir), "0",
+))
+print(f"\nTo open the HTML coverage report, run\n\n\t\{browse_cmd !s\}\n")
+print(f"To serve the HTML coverage report with a local web server, use\n\n\t\{serve_cmd !s\}\n")
+''',
+        { replace = "posargs", default = ["--cov-report=html:{env_tmp_dir}{/}htmlcov{/}"], extend = true },
+    ],
+]
+
+[env.integration]
+description = "Run integration tests"
+commands = [
+    [
+        "pytest", "-vv", "-n", "auto", "-m", "not serial", "test/integration",
+        "--cov", "--cov-report", "term", "--cov-report", "html",
+        "-rxXs",
+        { replace = "posargs", default = ["--cov-report=html:{env_tmp_dir}{/}htmlcov{/}"], extend = true },
+    ],
+    [
+        "pytest", "-vv", "-n", "0", "-m", "serial", "test/integration",
+        "--cov", "--cov-report", "term", "--cov-report", "html",
+        "--cov-append",
+        "-rxXs",
+        { replace = "posargs", default = ["--cov-report=html:{env_tmp_dir}{/}htmlcov{/}"], extend = true },
+    ],
+]
+commands_post = [
+    # Publish the coverage report to the GitHub Actions step summary. This
+    # replaces the INI leading "-" (ignore exit code) prefix, which native TOML
+    # does not support, by making the script itself never exit non-zero.
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import atexit
+import os
+import sys
+
+if os.getenv("GITHUB_ACTIONS") != "true":
+    sys.exit()
+try:
+    import coverage
+    gh_summary_fd = open(
+        os.environ["GITHUB_STEP_SUMMARY"], encoding="utf-8", mode="a",
+    )
+    atexit.register(gh_summary_fd.close)
+    cov = coverage.Coverage()
+    cov.load()
+    cov.report(file=gh_summary_fd, output_format="markdown")
+except Exception:
+    pass
+''',
+    ],
+    # Expose the coverage/test report file names to GitHub Actions outputs.
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import os
+import pathlib
+import sys
+
+if os.getenv("GITHUB_ACTIONS") != "true":
+    sys.exit()
+cov_report_arg_prefix = "--cov-report=xml:"
+test_report_arg_prefix = "--junitxml="
+cov_reports = [
+    arg[len(cov_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(cov_report_arg_prefix)
+]
+test_reports = [
+    arg[len(test_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(test_report_arg_prefix)
+]
+cov_report_file = cov_reports[-1] if cov_reports else None
+test_report_file = test_reports[-1] if test_reports else None
+gh_output_fd = open(
+    os.environ["GITHUB_OUTPUT"], encoding="utf-8", mode="a",
+)
+if cov_report_file:
+    print(f"cov-report-files=\{cov_report_file !s\}", file=gh_output_fd)
+if test_report_file:
+    print(f"test-result-files=\{test_report_file !s\}", file=gh_output_fd)
+print("codecov-flags=pytest", file=gh_output_fd)
+gh_output_fd.close()
+''',
+        { replace = "posargs", extend = true },
+    ],
+    # Print out the output coverage dir and a way to serve html:
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import pathlib
+import shlex
+import sys
+
+cov_html_report_arg_prefix = "--cov-report=html:"
+cov_html_reports = [
+    arg[len(cov_html_report_arg_prefix):] for arg in sys.argv
+    if arg.startswith(cov_html_report_arg_prefix)
+]
+if not cov_html_reports:
+    sys.exit()
+cov_html_report_dir = pathlib.Path(cov_html_reports[-1])
+index_file = cov_html_report_dir / "index.html"
+if not index_file.exists():
+    sys.exit()
+html_url = f"file://\{index_file\}"
+browse_cmd = shlex.join(("python3", "-Im", "webbrowser", html_url))
+serve_cmd = shlex.join((
+    "python3", "-Im", "http.server",
+    "--directory", str(cov_html_report_dir), "0",
+))
+print(f"\nTo open the HTML coverage report, run\n\n\t\{browse_cmd !s\}\n")
+print(f"To serve the HTML coverage report with a local web server, use\n\n\t\{serve_cmd !s\}\n")
+''',
+        { replace = "posargs", default = ["--cov-report=html:{env_tmp_dir}{/}htmlcov{/}"], extend = true },
+    ],
+]
+
+[env.build-docs]
+# NOTE: Passing the `is_unversioned` tag speeds up rebuilds in dev env
+description = "Build The Docs"
+change_dir = "docs"
+deps = ["-r {tox_root}{/}docs{/}requirements.txt"]
+pass_env = [
+    { replace = "ref", of = ["env_run_base", "pass_env"], extend = true },
+    "READTHEDOCS*",  # Present @ RTD
+]
+commands = [
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror",
+        "-m", "sphinx",
+        "-j", "auto",
+        "-b", "html",
+        "{tty:--color:--no-color}",
+        "-a",
+        "-n",
+        "-W", "--keep-going",
+        "-T", "-E",
+        "-d", "{temp_dir}{/}.doctrees",
+        ".",
+        { replace = "posargs", default = ["{env_tmp_dir}{/}html", "-t", "is_unversioned"], extend = true },
+    ],
+]
+commands_post = [
+    # Print out the output docs dir and a way to serve html:
+    [
+        "{env_python}", "-bb", "-E", "-s", "-I", "-Werror", "-c", '''
+import os
+import pathlib
+
+IS_RTD_ENV = os.getenv("READTHEDOCS", "False") == "True"
+docs_dir = pathlib.Path(r"{env_dir}") / r"{env_tmp_dir}" / "html"
+index_file = docs_dir / "index.html"
+docs_url = os.environ["READTHEDOCS_CANONICAL_URL"] if IS_RTD_ENV else f"file://\{index_file\}"
+print(f"\nTo open the documentation, run\n\n\tpython3 -Im webbrowser \N\{QUOTATION MARK\}\{docs_url !s\}\N\{QUOTATION MARK\}\n")
+if not IS_RTD_ENV:
+    print(f"To serve the docs with a local web server, use\n\n\tpython3 -Im http.server --directory \N\{QUOTATION MARK\}\{docs_dir\}\N\{QUOTATION MARK\} 0\n")
+''',
+    ],
+]
+
+[env.clean]
+description = "Erase docs and coverage artifacts"
+deps = []
+skip_install = true
+allowlist_externals = ["/bin/sh"]
+commands = [
+    ["/bin/sh", "-c", "rm -rf {tox_root}/test/coverage/*"],
+    ["/bin/sh", "-c", "rm -frv {work_dir}{/}build-docs{/}tmp {temp_dir}{/}.doctrees"],
+]
