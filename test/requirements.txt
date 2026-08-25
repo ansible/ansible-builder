@@ -1,4 +1,5 @@
 coverage
+filelock
 flake8==7.3.0
 mypy==1.19.1
 pytest<=9.0.2
@@ -7,6 +8,5 @@ pytest-mock
 pytest-xdist
 types-jsonschema
 types-pyyaml
-tox
 yamllint<=1.38.0
 pylint<=4.0.5
