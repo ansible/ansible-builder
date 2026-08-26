@@ -26,19 +26,18 @@ Inside of a virtual environment, simply run:
 ## Linting, Unit, and Integration Tests
 
 `tox` is used to run code linting (`flake8`, `yamllint`, and `mypy`), and to invoke
-`pytest` to run unit and integration tests for Python 3. There are multiple `tox`
-targets that use specific supported versions of Python. For example, to run the
-linters tests for Python 3.11, you would execute:
+`pytest` to run unit and integration tests for Python 3. For example, to run the
+linters tests, you would execute:
 
 ```bash
-  (ansible-builder) $ tox -e linters-py311
+  (ansible-builder) $ tox -e linters
 ```
 
 Some integration tests are marked as `destructive` (they can modify your container
 runtime environment). You must pass a special flag if you want `tox` to run those.
 
 ```bash
-  (ansible-builder) $ tox -e integration-py311 -- --run-destructive
+  (ansible-builder) $ tox -e integration -- --run-destructive
 ```
 
 By default, `tox` will attempt to use as many processes as it can on the
@@ -50,7 +49,7 @@ of this, you should instead run `pytest` directly (see below).
 You can use `tox` to run all of the tests. For example:
 
 ```bash
-  (ansible-builder) $ tox -e unit-py311
+  (ansible-builder) $ tox -e unit
 ```
 
 However, sometimes you just want to run a single test. To run only one test,
@@ -58,9 +57,9 @@ first use `tox` to build your selected virtual environment, then activate it
 and run `pytest` directly.
 
 ```bash
-  (ansible-builder) $ tox -e unit-py311 --notest
-  (ansible-builder) $ source .tox/unit-py311/bin/activate
-  (unit-py311) $ pytest -vvv -n1 test/unit/test_main.py::test_defnition_version
+  (ansible-builder) $ tox -e unit --notest
+  (ansible-builder) $ source .tox/unit/bin/activate
+  (unit) $ pytest -vvv -n1 test/unit/test_main.py::test_defnition_version
 ```
 
 You have greater control over `pytest` options this way, like limiting it to
@@ -76,7 +75,7 @@ engine it can identify (for example, podman or docker). If you want to skip
 one or more runtimes, use the `--skip-runtime` pytest option:
 
 ```bash
-  (ansible-builder) $ tox -e integration-py311 -- --skip-runtime docker
+  (ansible-builder) $ tox -e integration -- --skip-runtime docker
 ```
 
 ## Gating and Merging
