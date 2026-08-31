@@ -159,7 +159,7 @@ class Containerfile:
         else:
             # For an EE schema earlier than v3 with a custom builder image, we always make sure pip is available.
             context_dir = Path(self.build_outputs_dir).stem
-            self.steps.append(f'COPY {context_dir}/scripts/pip_install /output/scripts/pip_install')
+            self.steps.append(f'COPY --chmod=755 {context_dir}/scripts/pip_install /output/scripts/pip_install')
             self.steps.append("RUN /output/scripts/pip_install $PYCMD")
 
         self._insert_custom_steps('prepend_builder')
@@ -323,11 +323,11 @@ class Containerfile:
         # Later intermediate stages depend on base image containing these scripts.
         # Copy them to a location that we do not need in the final image.
         context_dir = Path(self.build_outputs_dir).stem
-        self.steps.append(f'COPY {context_dir}/scripts/ /output/scripts/')
+        self.steps.append(f'COPY --chmod=755 {context_dir}/scripts/ /output/scripts/')
 
         # The final image will have /output purged, but certain scripts we want
         # to retain in that image.
-        self.steps.append(f'COPY {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint')
+        self.steps.append(f'COPY --chmod=755 {context_dir}/scripts/entrypoint {constants.FINAL_IMAGE_BIN_PATH}/entrypoint')
 
     def _handle_additional_build_files(self) -> None:
         """

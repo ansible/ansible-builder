@@ -1,4 +1,5 @@
 import os
+import posixpath
 
 from jsonschema import validate, SchemaError, ValidationError
 
@@ -472,7 +473,7 @@ def _handle_options_defaults(ee_def: dict):
     """
     options = ee_def.setdefault('options', {})
 
-    entrypoint_path = os.path.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
+    entrypoint_path = posixpath.join(constants.FINAL_IMAGE_BIN_PATH, "entrypoint")
 
     options.setdefault('skip_ansible_check', False)
     options.setdefault('skip_pip_install', False)
