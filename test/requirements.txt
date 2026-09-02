@@ -1,12 +1,12 @@
 coverage
 filelock
 flake8==7.3.0
-mypy==1.19.1
-pytest<=9.0.2
+mypy==2.3.1
+pytest<=9.1.1
 pytest-cov
 pytest-mock
 pytest-xdist
 types-jsonschema
 types-pyyaml
 yamllint<=1.38.0
-pylint<=4.0.5
+pylint<=4.0.8
