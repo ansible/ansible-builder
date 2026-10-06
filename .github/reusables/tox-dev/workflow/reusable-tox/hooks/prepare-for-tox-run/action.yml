@@ -1,0 +1,54 @@
+---
+
+inputs:
+  calling-job-context:
+    description: A JSON with the calling job inputs
+    type: string
+  current-job-steps:
+    description: >-
+      The `$ {{ steps }}` context passed from the reusable workflow's
+      tox job encoded as a JSON string. The caller passes it this input
+      as follows:
+      `current-job-steps: $ {{ toJSON(steps) }}`.
+    type: string
+  job-dependencies-context:
+    default: >-
+      {}
+    description: >-
+      The `$ {{ needs }}` context passed from the calling workflow
+      encoded as a JSON string. The caller is expected to form this
+      input as follows:
+      `job-dependencies-context: $ {{ toJSON(needs) }}`.
+    required: false
+    type: string
+
+runs:
+  using: composite
+  steps:
+  - name: 🐳 Initialize isolated Podman storage for integration tests
+    if: >-
+      fromJSON(inputs.calling-job-context).toxenv == 'integration'
+    env:
+      _PODMAN_STORE: ${{ runner.temp }}/podman
+      _PODMAN_RUNROOT: ${{ runner.temp }}/podman/runroot
+      _PODMAN_GRAPHROOT: ${{ runner.temp }}/podman/graphroot
+      XDG_RUNTIME_DIR: ${{ runner.temp }}/podman/runroot
+    run: |
+      rm -frv "${_PODMAN_STORE}"
+      mkdir -pv "${_PODMAN_RUNROOT}" "${_PODMAN_GRAPHROOT}"
+      chmod 700 "${_PODMAN_STORE}" "${_PODMAN_RUNROOT}" "${_PODMAN_GRAPHROOT}"
+
+      mkdir -pv "${HOME}/.config/containers"
+      cat > "${HOME}/.config/containers/storage.conf" <<EOF
+      [storage]
+      driver = "overlay"
+      runroot = "${_PODMAN_RUNROOT}"
+      graphroot = "${_PODMAN_GRAPHROOT}"
+      EOF
+
+      echo "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}" >> "${GITHUB_ENV}"
+
+      podman info
+    shell: bash -eEuxo pipefail {0}
+
+...
