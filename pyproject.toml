@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77.0.3, <=82.0.0", "setuptools-scm[toml]>=6.2, <=9.2.2"]  # pin max versions of build deps and update as needed
+requires = ["setuptools>=77.0.3, <=84.0.0", "setuptools-scm[toml]>=6.2, <=10.3.4"]  # pin max versions of build deps and update as needed
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development :: Build Tools",
     "Topic :: System :: Systems Administration",
