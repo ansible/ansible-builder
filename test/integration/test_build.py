@@ -119,7 +119,7 @@ def test_user_python_requirement(cli, runtime, ee_tag, tmp_path, data_dir):
     assert 'The official command line interface for Ansible AWX' in result.stdout, result.stdout
 
     # TODO: not sure why we're checking for this be missing...
-    for py_library in ('requirements-parser'):
+    for py_library in ('requirements-parser',):
         result = cli(
             f'{runtime} run --rm {ee_tag} /usr/libexec/platform-python -m pip show {py_library}', allow_error=True
         )
