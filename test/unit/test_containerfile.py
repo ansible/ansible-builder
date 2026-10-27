@@ -189,6 +189,26 @@ def test_v3_various(build_dir_and_ee_yml):
     assert 'CMD ["csh"]' in c.steps
 
 
+def test__posix_separator_in_entrypoint_on_windows(build_dir_and_ee_yml, mocker):
+    """
+    Test that the generated entrypoint uses the POSIX separator on Windows.
+    """
+    ee_data = """
+    version: 3
+    images:
+      base_image:
+        name: quay.io/user/mycustombaseimage:latest
+    """
+    import ntpath
+    mocker.patch("os.path", ntpath)
+
+    tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
+    c = make_containerfile(tmpdir, ee_path, run_validate=True)
+    c.prepare()
+
+    assert 'ENTRYPOINT ["/opt/builder/bin/entrypoint", "dumb-init"]' in c.steps
+
+
 def test__handle_additional_build_files(build_dir_and_ee_yml):
     """
     Test additional build file handling works as expected.
@@ -296,7 +316,7 @@ def test_v1_builder_image(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
     assert "FROM $EE_BUILDER_IMAGE AS builder" in c.steps
-    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
+    assert "COPY --chmod=755 _build/scripts/pip_install /output/scripts/pip_install" in c.steps
     assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
 
 
@@ -315,8 +335,9 @@ def test_v2_builder_image(build_dir_and_ee_yml):
     tmpdir, ee_path = build_dir_and_ee_yml(ee_data)
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
+    print(c.steps)
     assert "FROM $EE_BUILDER_IMAGE AS builder" in c.steps
-    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" in c.steps
+    assert "COPY --chmod=755 _build/scripts/pip_install /output/scripts/pip_install" in c.steps
     assert "RUN /output/scripts/pip_install $PYCMD" in c.steps
 
 
@@ -334,7 +355,7 @@ def test_v2_builder_image_default(build_dir_and_ee_yml):
     c = make_containerfile(tmpdir, ee_path, run_validate=True)
     c.prepare()
     assert "FROM base AS builder" in c.steps
-    assert "COPY _build/scripts/pip_install /output/scripts/pip_install" not in c.steps
+    assert "COPY --chmod=755 _build/scripts/pip_install /output/scripts/pip_install" not in c.steps
 
 
 def test_prepare_introspect_assemble_steps(build_dir_and_ee_yml):
