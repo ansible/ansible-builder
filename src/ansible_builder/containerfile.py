@@ -96,7 +96,7 @@ class Containerfile:
 
         if not self.definition.builder_image:
             if self.definition.python_package_system:
-                step = 'RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi'
+                step = 'RUN $PKGMGR install -y $PYPKG ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi'
                 self.steps.append(step)
 
             # pip needs to be available for later stages.

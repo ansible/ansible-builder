@@ -183,7 +183,7 @@ def test_v3_various(build_dir_and_ee_yml):
     assert "RUN mkdir -p /myworkdir && chgrp 0 /myworkdir && chmod -R ug+rwx /myworkdir" in c.steps
     assert "RUN $PYCMD -m pip install --no-cache-dir 'dumb-init==x.y.z'" in c.steps
     assert "USER myuser" in c.steps
-    assert "RUN $PKGMGR install $PYPKG -y ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi" in c.steps
+    assert "RUN $PKGMGR install -y $PYPKG ; if [ -z $PKGMGR_PRESERVE_CACHE ]; then $PKGMGR clean all; fi" in c.steps
     assert "RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS" in c.steps
     assert 'ENTRYPOINT ["dumb-init"]' in c.steps
     assert 'CMD ["csh"]' in c.steps
