@@ -30,3 +30,6 @@ disable = [
   "W0718",  # broad-exception-caught
   "W0719",  # broad-exception-raised
 ]
+
+[tool.mypy]
+warn_unreachable = true
