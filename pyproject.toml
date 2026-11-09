@@ -74,3 +74,6 @@ disable = [
     "W0511",  # fixme
     "W1514",  # unspecified-encoding
 ]
+
+[tool.mypy]
+warn_unreachable = true

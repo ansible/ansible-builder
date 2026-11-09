@@ -23,7 +23,7 @@ FOUND_RUNTIMES = set()
 GOOD_CONTENT = {'version': 1}
 
 # List of image names indexed by runtime name. E.g., {'podman', ['image1', ...]}
-WORKER_IMAGES = {}
+WORKER_IMAGES: dict[str, list] = {}
 
 
 # This will be called once for each pytest-xdist worker (-n value).
