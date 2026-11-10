@@ -253,11 +253,13 @@ The following keys are valid for this section:
             package_pip: https://github.com/example_user/ansible-runner/archive/refs/heads/ansible-runner.tar.gz
 
     ``galaxy``
-      Ansible Collections to be installed from Galaxy. This may be a filename, a
+      Ansible Collections and roles to be installed from Galaxy. This may be a filename, a
       dictionary, or a multi-line string representation of an Ansible Galaxy
-      ``requirements.yml`` file (see below for examples). The dictionary form
-      accepts only the ``collections`` and ``roles`` keys, each being a list of
-      requirements. Read more about
+      ``requirements.yml`` file (see below for examples). The dictionary form must use
+      the ``requirements.yml`` mapping format: only the ``collections`` and ``roles``
+      keys are accepted, and each must be a list of requirements. Giving ``galaxy`` a
+      plain list of requirements (the old, role-only ``requirements.yml`` format) is
+      not valid, since that format cannot be used to install collections. Read more about
       the requirements file format in the `Galaxy user guide <https://docs.ansible.com/projects/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file>`_.
 
     .. _python-pep508:

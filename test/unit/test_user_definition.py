@@ -1,5 +1,9 @@
 import os
+import pathlib
+import textwrap
+
 import pytest
+import yaml
 
 from jsonschema import ValidationError, validate
 
@@ -367,6 +371,29 @@ class TestDefaultEEFilename:
             UserDefinition()
 
 
+#
+# A complete 'requirements.yml' file, as it would be given inline to the
+# 'dependencies.galaxy' key. Modeled after the awx-ee definition file:
+# https://github.com/ansible/awx-ee/blob/devel/execution-environment.yml
+#
+FULL_GALAXY_STRING = """---
+collections:
+  - name: awx.awx
+  - name: azure.azcollection
+    version: ">=2.1.0"
+  - name: https://github.com/ansible/ansible.receptor.git
+    type: git
+    version: devel
+  - name: community.vmware
+  - name: kubernetes.core
+roles:
+  - name: openshift
+  - src: https://github.com/geerlingguy/ansible-role-java
+    scm: git
+    version: 1.10.0
+"""
+
+
 class TestGalaxyDefinition:
     """Tests for the 'dependencies.galaxy' schema."""
 
@@ -375,6 +402,7 @@ class TestGalaxyDefinition:
         ("", True),
         ("requirements.yml", True),
         ("collections:\n  - community.okd\n", True),
+        (FULL_GALAXY_STRING, True),
 
         # an inline mapping must use the Galaxy requirements file format
         ({}, True),
@@ -419,3 +447,69 @@ class TestGalaxyDefinition:
         except ValidationError:
             test_passed = False
         assert test_passed == expected
+
+    def test_full_string_requirements(self, exec_env_definition_file):
+        """
+        Test that an entire requirements file, given inline as a string, validates
+        and is written to the build context unmodified.
+        """
+        ee_data = "version: 3\ndependencies:\n  galaxy: |\n" + textwrap.indent(FULL_GALAXY_STRING, " " * 4)
+
+        path = exec_env_definition_file(ee_data)
+        definition = UserDefinition(path)
+        definition.validate()
+
+        requirements_path = definition.get_dep_abs_path('galaxy')
+        contents = pathlib.Path(requirements_path).read_text()
+        assert contents == FULL_GALAXY_STRING
+
+        # and it is still a usable requirements file
+        requirements = yaml.safe_load(contents)
+        assert [entry['name'] for entry in requirements['collections']] == [
+            'awx.awx',
+            'azure.azcollection',
+            'https://github.com/ansible/ansible.receptor.git',
+            'community.vmware',
+            'kubernetes.core',
+        ]
+        assert len(requirements['roles']) == 2
+
+    def test_string_requirements_file_reference(self, exec_env_definition_file, galaxy_requirements_file):
+        """
+        Test that a string naming a requirements file is treated as a file reference.
+        """
+        requirements_file = galaxy_requirements_file({'collections': ['community.okd']})
+
+        path = exec_env_definition_file(
+            f"{{'version': 3, 'dependencies': {{'galaxy': '{requirements_file}'}}}}"
+        )
+        definition = UserDefinition(path)
+        definition.validate()
+
+        assert definition.get_dep_abs_path('galaxy') == str(requirements_file)
+
+    def test_inline_mapping_requirements(self, exec_env_definition_file):
+        """
+        Test that an inline mapping is written to the build context as a requirements file.
+        """
+        galaxy = {'collections': [{'name': 'community.okd', 'version': '2.3.0'}], 'roles': ['openshift']}
+
+        path = exec_env_definition_file(content={'version': 3, 'dependencies': {'galaxy': galaxy}})
+        definition = UserDefinition(path)
+        definition.validate()
+
+        requirements_path = definition.get_dep_abs_path('galaxy')
+        assert yaml.safe_load(pathlib.Path(requirements_path).read_text()) == galaxy
+
+    def test_bad_requirements_definition(self, exec_env_definition_file):
+        """
+        Test that an invalid inline mapping is rejected by the schema.
+        """
+        path = exec_env_definition_file(
+            "{'version': 3, 'dependencies': {'galaxy': {'collection': ['community.okd']}}}"
+        )
+        definition = UserDefinition(path)
+
+        with pytest.raises(DefinitionError) as error:
+            definition.validate()
+        assert "Additional properties are not allowed ('collection' was unexpected)" in str(error.value.args[0])
