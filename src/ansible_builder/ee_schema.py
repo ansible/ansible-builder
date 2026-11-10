@@ -18,16 +18,27 @@ TYPE_StringOrListOfStrings = {
     ]
 }
 
-TYPE_DictOrStringOrListOfStrings = {
+TYPE_GalaxyRequirements = {
     "anyOf": [
-        {"type": "object"},
         {"type": "string"},
         {
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        }
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "collections": {
+                    "type": "array",
+                    "items": {
+                        "type": ["string", "object"],
+                    },
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": ["string", "object"],
+                    },
+                },
+            },
+        },
     ]
 }
 
@@ -225,7 +236,7 @@ schema_v3 = {
             "additionalProperties": False,
             "properties": {
                 "python": TYPE_StringOrListOfStrings,
-                "galaxy": TYPE_DictOrStringOrListOfStrings,
+                "galaxy": TYPE_GalaxyRequirements,
                 "system": TYPE_StringOrListOfStrings,
                 "python_interpreter": {
                     "description": "Python package name and path",
