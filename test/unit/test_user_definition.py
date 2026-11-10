@@ -1,7 +1,10 @@
 import os
 import pytest
 
+from jsonschema import ValidationError, validate
+
 from ansible_builder import constants
+from ansible_builder.ee_schema import TYPE_GalaxyRequirements
 from ansible_builder.exceptions import DefinitionError
 from ansible_builder.main import AnsibleBuilder
 from ansible_builder.user_definition import UserDefinition, ImageDescription
@@ -362,3 +365,57 @@ class TestDefaultEEFilename:
         os.chdir(str(tmp_path))
         with pytest.raises(DefinitionError, match="Default execution environment file not found in current directory."):
             UserDefinition()
+
+
+class TestGalaxyDefinition:
+    """Tests for the 'dependencies.galaxy' schema."""
+
+    instances = [
+        # a requirements file reference, or inline file contents, is a string
+        ("", True),
+        ("requirements.yml", True),
+        ("collections:\n  - community.okd\n", True),
+
+        # an inline mapping must use the Galaxy requirements file format
+        ({}, True),
+        ({"roles": []}, True),
+        ({"collections": []}, True),
+        ({"roles": [], "collections": []}, True),
+        ({"roles": ["openshift"], "collections": []}, True),
+        ({"roles": ["openshift"], "collections": ["community.okd"]}, True),
+        ({"roles": [], "collections": ["community.okd"]}, True),
+        ({"collections": ["community.okd"]}, True),
+        ({"roles": ["openshift"]}, True),
+
+        # entries may also be mappings describing the requirement
+        ({"collections": [{"name": "community.okd", "version": "2.3.0"}]}, True),
+        ({"roles": [{"src": "openshift", "version": "1.0.0"}]}, True),
+        ({"collections": ["community.okd", {"name": "community.general"}]}, True),
+
+        # a bare list is not a valid requirements definition
+        ([], False),
+        (["community.okd"], False),
+
+        # unknown keys are rejected
+        ({"invalid_key": []}, False),
+        ({"roles": [], "collections2": []}, False),
+        ({"roles2": [], "collections": []}, False),
+
+        # 'roles' and 'collections' must be lists of entries
+        ({"roles": "", "collections": []}, False),
+        ({"roles": [], "collections": ""}, False),
+        ({"roles": [1], "collections": []}, False),
+        ({"roles": [], "collections": [1]}, False),
+    ]
+
+    @pytest.mark.parametrize("test_input,expected", instances)
+    def test_galaxy_requirements(self, test_input, expected):
+        """
+        Test Galaxy definition
+        """
+        try:
+            validate(instance=test_input, schema=TYPE_GalaxyRequirements)
+            test_passed = True
+        except ValidationError:
+            test_passed = False
+        assert test_passed == expected
