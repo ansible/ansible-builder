@@ -104,7 +104,8 @@ class Containerfile:
                 self.steps.append('RUN /output/scripts/pip_install $PYCMD')
 
             if self.definition.ansible_ref_install_list:
-                self.steps.append('RUN $PYCMD -m pip install --no-cache-dir $ANSIBLE_INSTALL_REFS')
+                self.steps.append(
+                    'RUN --mount=type=cache,dst=/root/.cache/pip $PYCMD -m pip install -q $ANSIBLE_INSTALL_REFS')
 
         self._insert_custom_steps('append_base')
 
